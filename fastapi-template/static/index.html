@@ -470,7 +470,7 @@
             }
         }
 
-        // Mobile menu toggle functions
+        // Mobile menu toggle functions - PROTECTED AGAINST DUPLICATES
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileNavMenu');
             const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
@@ -479,6 +479,13 @@
                 console.error('Mobile menu elements not found');
                 return;
             }
+            
+            // Prevent rapid clicking
+            if (menu.dataset.transitioning === 'true') {
+                return;
+            }
+            
+            menu.dataset.transitioning = 'true';
             
             if (menu.classList.contains('show')) {
                 menu.classList.remove('show');
@@ -489,32 +496,41 @@
                 btn.textContent = 'close';
                 document.body.style.overflow = 'hidden';
             }
+            
+            // Reset transition flag after animation
+            setTimeout(() => {
+                menu.dataset.transitioning = 'false';
+            }, 300);
         }
 
         function closeMobileMenu() {
             const menu = document.getElementById('mobileNavMenu');
             const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
             
-            if (menu && btn) {
+            if (menu && btn && menu.classList.contains('show')) {
                 menu.classList.remove('show');
                 btn.textContent = 'menu';
                 document.body.style.overflow = 'auto';
+                menu.dataset.transitioning = 'false';
             }
         }
 
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const menu = document.getElementById('mobileNavMenu');
-            const btn = document.querySelector('.mobile-menu-btn');
-            
-            if (menu && menu.classList.contains('show') && 
-                !menu.contains(event.target) && 
-                !btn.contains(event.target)) {
-                closeMobileMenu();
-            }
-        });
+        // Close mobile menu when clicking outside - SINGLE LISTENER
+        if (!window.mobileMenuClickListenerAdded) {
+            document.addEventListener('click', function(event) {
+                const menu = document.getElementById('mobileNavMenu');
+                const btn = document.querySelector('.mobile-menu-btn');
+                
+                if (menu && menu.classList.contains('show') && 
+                    !menu.contains(event.target) && 
+                    !btn.contains(event.target)) {
+                    closeMobileMenu();
+                }
+            });
+            window.mobileMenuClickListenerAdded = true;
+        }
 
-        // Handle window resize for responsive behavior
+        // Handle window resize for responsive behavior - SINGLE LISTENER
         function handleResize() {
             const menu = document.getElementById('mobileNavMenu');
             if (window.innerWidth > 991 && menu && menu.classList.contains('show')) {
@@ -522,23 +538,29 @@
             }
         }
 
-        window.addEventListener('resize', handleResize);
+        if (!window.resizeListenerAdded) {
+            window.addEventListener('resize', handleResize);
+            window.resizeListenerAdded = true;
+        }
 
-        // Handle orientation change for mobile devices
-        window.addEventListener('orientationchange', function() {
-            setTimeout(function() {
-                handleResize();
-                // Adjust iframe height after orientation change
-                const iframe = document.getElementById('contentFrame');
-                if (iframe) {
-                    const isMobile = window.innerWidth <= 991;
-                    if (isMobile) {
-                        const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 70;
-                        iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
+        // Handle orientation change for mobile devices - SINGLE LISTENER  
+        if (!window.orientationListenerAdded) {
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    handleResize();
+                    // Adjust iframe height after orientation change
+                    const iframe = document.getElementById('contentFrame');
+                    if (iframe) {
+                        const isMobile = window.innerWidth <= 991;
+                        if (isMobile) {
+                            const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 80;
+                            iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
+                        }
                     }
-                }
-            }, 100);
-        });
+                }, 100);
+            });
+            window.orientationListenerAdded = true;
+        }
 
         // Initialize responsive iframe height
         function setResponsiveHeight() {
@@ -631,13 +653,21 @@
             document.body.appendChild(statusElement);
         }
 
-        // Initialize server test on page load
+        // Initialize server test on page load - SINGLE INITIALIZATION
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Admin panel DOM loaded');
+            
+            // Prevent multiple initializations
+            if (window.adminPanelInitialized) {
+                console.log('⚠️ Admin panel already initialized, skipping...');
+                return;
+            }
+            window.adminPanelInitialized = true;
+            
             testServerConnectivity();
             setResponsiveHeight();
             
-            // Debug mobile navigation - CRITICAL
+            // Debug mobile navigation - CRITICAL (ONE TIME ONLY)
             const mobileNav = document.getElementById('mobileNavBar');
             const screenWidth = window.innerWidth;
             console.log(`📱 Screen width: ${screenWidth}px`);
@@ -647,10 +677,8 @@
                 const computedStyle = window.getComputedStyle(mobileNav);
                 console.log(`📱 Mobile nav display:`, computedStyle.display);
                 console.log(`📱 Mobile nav visibility:`, computedStyle.visibility);
-                console.log(`📱 Mobile nav position:`, computedStyle.position);
-                console.log(`📱 Mobile nav z-index:`, computedStyle.zIndex);
                 
-                // Force visibility for mobile screens
+                // Force visibility for mobile screens - ONE TIME ONLY
                 if (screenWidth <= 991) {
                     console.log('📱 FORCING mobile nav visibility');
                     mobileNav.style.display = 'flex';
@@ -664,29 +692,22 @@
                     mobileNav.style.background = '#fff';
                     mobileNav.style.borderBottom = '3px solid #1976d2';
                     
-                    // Add a test indicator
-                    mobileNav.style.outline = '2px solid red';
-                    console.log('📱 Added red outline for debugging');
-                    
-                    setTimeout(() => {
-                        mobileNav.style.outline = 'none';
-                    }, 3000);
+                    // Add a test indicator - ONE TIME ONLY
+                    if (!mobileNav.dataset.debugged) {
+                        mobileNav.style.outline = '2px solid red';
+                        mobileNav.dataset.debugged = 'true';
+                        console.log('📱 Added red outline for debugging');
+                        
+                        setTimeout(() => {
+                            mobileNav.style.outline = 'none';
+                        }, 3000);
+                    }
                 }
             } else {
                 console.error('❌ Mobile nav element not found!');
             }
         });
 
-        // If DOMContentLoaded already fired, run immediately
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                testServerConnectivity();
-                setResponsiveHeight();
-            });
-        } else {
-            testServerConnectivity();
-            setResponsiveHeight();
-        }
     </script>
 
     <!-- Firebase SDKs -->
