@@ -2,10 +2,307 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>إدارة الطلبات - النظام المركزي</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fb;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Mobile-first responsive containers */
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: 1.5rem 2rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .container-fluid {
+                padding: 2rem 3rem;
+            }
+        }
+        
+        /* Enhanced header for mobile */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 1.5rem;
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .page-header h2 {
+                font-size: 2rem;
+                margin-bottom: 0;
+            }
+        }
+        
+        /* Mobile-friendly action buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .action-buttons {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
+        
+        .action-buttons .btn {
+            white-space: nowrap;
+            padding: 0.75rem 1rem;
+        }
+        
+        /* Responsive flow status cards */
+        .flow-status-row {
+            gap: 0.75rem;
+        }
+        
+        .flow-status-col {
+            min-height: 100px;
+            margin-bottom: 0.75rem;
+        }
+        
+        @media (max-width: 767.98px) {
+            .flow-status-row .col-md-2 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            
+            .flow-status-col {
+                min-height: 80px;
+            }
+            
+            .flow-status-col .material-icons-outlined {
+                font-size: 1.5rem !important;
+            }
+            
+            .flow-status-col small {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Mobile-optimized search and filters */
+        .search-filters {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .search-filters .form-control,
+        .search-filters .form-select {
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            padding: 0.75rem;
+        }
+        
+        @media (max-width: 767.98px) {
+            .search-filters .row {
+                gap: 0.75rem;
+            }
+            
+            .search-filters .col-md-3,
+            .search-filters .col-md-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin-bottom: 0.75rem;
+            }
+        }
+        
+        /* Responsive table design */
+        .table-responsive {
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            background: #fff;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            border: none;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+        }
+        
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        /* Mobile table optimization */
+        @media (max-width: 767.98px) {
+            .table-responsive {
+                border: none;
+                box-shadow: none;
+            }
+            
+            .mobile-card {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                border: 1px solid #f1f3f4;
+            }
+            
+            .mobile-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.75rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            
+            .mobile-card-body {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .mobile-card-field {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .mobile-card-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            .mobile-card-value {
+                color: #333;
+            }
+            
+            .mobile-card-actions {
+                margin-top: 1rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid #f1f3f4;
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+            
+            .mobile-card-actions .btn {
+                flex: 1;
+                min-width: 120px;
+                font-size: 0.85rem;
+                padding: 0.5rem;
+            }
+            
+            /* Hide desktop table on mobile */
+            .desktop-table {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-orders {
+                display: none;
+            }
+        }
+        
+        /* Enhanced badges and status indicators */
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        /* Modal responsiveness */
+        @media (max-width: 767.98px) {
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            
+            .modal-content {
+                border-radius: 12px;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 1rem;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+            }
+            
+            .btn:active {
+                transform: scale(0.98);
+            }
+            
+            .mobile-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s;
+            }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus states */
+        .mobile-card:focus-within,
+        .search-filters:focus-within {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+        
+        /* Alert responsiveness */
+        .alert {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 575.98px) {
+            .alert {
+                font-size: 0.9rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Enhanced Orders Management System Loaded -->
@@ -14,15 +311,15 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <div class="container-fluid p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="container-fluid">
+        <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
             <h2>إدارة الطلبات المركزية</h2>
-            <div>
-                <button class="btn btn-outline-success me-2" onclick="exportOrders()">
+            <div class="action-buttons">
+                <button class="btn btn-outline-success" onclick="exportOrders()">
                     <span class="material-icons-outlined me-1">download</span>
                     تصدير البيانات
                 </button>
-                <button class="btn btn-outline-info me-2" onclick="showOrderAnalytics()">
+                <button class="btn btn-outline-info" onclick="showOrderAnalytics()">
                     <span class="material-icons-outlined me-1">analytics</span>
                     التقارير
                 </button>
@@ -37,40 +334,40 @@
                         <h5 class="mb-0">حالة تدفق الطلبات المباشرة</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-2">
+                        <div class="row text-center flow-status-row">
+                            <div class="col-6 col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-primary" style="font-size: 2rem;">receipt_long</span>
                                 </div>
-                                <small class="text-muted">طلبات جديدة</small><br>
-                                <strong class="text-primary">8</strong><br>
-                                <small class="text-success">🟢 في انتظار المعالجة</small>
+                                <small class="text-muted d-block">طلبات جديدة</small>
+                                <strong class="text-primary d-block">8</strong>
+                                <small class="text-success">🟢 معالجة</small>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-warning" style="font-size: 2rem;">store</span>
                                 </div>
-                                <small class="text-muted">عند التجار</small><br>
-                                <strong class="text-warning">12</strong><br>
-                                <small class="text-info">⏳ في انتظار التأكيد</small>
+                                <small class="text-muted d-block">عند التجار</small>
+                                <strong class="text-warning d-block">12</strong>
+                                <small class="text-info">⏳ انتظار</small>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-info" style="font-size: 2rem;">search</span>
                                 </div>
-                                <small class="text-muted">البحث عن سائق</small><br>
-                                <strong class="text-info">5</strong><br>
-                                <small class="text-secondary">🔍 خوارزمية نشطة</small>
+                                <small class="text-muted d-block">بحث سائق</small>
+                                <strong class="text-info d-block">5</strong>
+                                <small class="text-secondary">🔍 نشط</small>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-secondary" style="font-size: 2rem;">notifications</span>
                                 </div>
-                                <small class="text-muted">إشعارات مرسلة</small><br>
-                                <strong class="text-secondary">23</strong><br>
-                                <small class="text-warning">📱 في انتظار الرد</small>
+                                <small class="text-muted d-block">إشعارات</small>
+                                <strong class="text-secondary d-block">23</strong>
+                                <small class="text-warning">📱 رد</small>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-success" style="font-size: 2rem;">local_shipping</span>
                                 </div>
@@ -78,7 +375,7 @@
                                 <strong class="text-success">15</strong><br>
                                 <small class="text-success">🚚 قيد التوصيل</small>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-2 flow-status-col">
                                 <div class="mb-2">
                                     <span class="material-icons-outlined text-success" style="font-size: 2rem;">check_circle</span>
                                 </div>
@@ -98,7 +395,7 @@
                 <h5 class="mb-0">البحث والتصفية</h5>
             </div>
             <div class="card-body">
-                <div class="row g-3">
+                <div class="row g-3 search-filters">
                     <div class="col-md-3">
                         <label class="form-label">البحث</label>
                         <div class="input-group">

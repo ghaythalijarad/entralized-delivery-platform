@@ -2,18 +2,86 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>إدارة التجار - النظام المركزي</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <style>
+        body {
+            background: #f4f6fb;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Mobile-first responsive containers */
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: 1.5rem 2rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .container-fluid {
+                padding: 2rem 3rem;
+            }
+        }
+        
+        /* Enhanced merchant card design */
         .merchant-card {
             transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 1rem;
         }
+        
         .merchant-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+        
+        @media (max-width: 767.98px) {
+            .merchant-card {
+                margin-bottom: 1rem;
+            }
+            
+            .merchant-card .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        /* Mobile-responsive merchant grid */
+        .merchant-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 576px) {
+            .merchant-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .merchant-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .merchant-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        /* Status indicators */
         .status-indicator {
             width: 8px;
             height: 8px;
@@ -24,6 +92,8 @@
         .status-online { background-color: #28a745; }
         .status-offline { background-color: #dc3545; }
         .status-busy { background-color: #ffc107; }
+        
+        /* Avatar styling */
         .avatar-circle {
             width: 45px;
             height: 45px;
@@ -34,17 +104,253 @@
             font-weight: bold;
             font-size: 1.2rem;
         }
+        
+        @media (max-width: 767.98px) {
+            .avatar-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Responsive metric cards */
         .metric-card {
             border: none;
             border-radius: 15px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            margin-bottom: 1rem;
         }
+        
+        @media (max-width: 767.98px) {
+            .metric-card .card-body {
+                padding: 1rem;
+                text-align: center;
+            }
+            
+            .metric-card h3 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Mobile-friendly filter section */
         .filter-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        @media (min-width: 768px) {
+            .filter-section {
+                padding: 1.5rem;
+            }
+        }
+        
+        .filter-section .form-control,
+        .filter-section .form-select {
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .filter-section .form-control,
+            .filter-section .form-select {
+                margin-bottom: 0;
+            }
+        }
+        
+        /* Mobile-optimized buttons */
+        .btn {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 767.98px) {
+            .btn {
+                padding: 0.625rem 0.875rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn-group-mobile {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn-group-mobile .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .btn-group-mobile {
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+            }
+        }
+        
+        /* Responsive table alternatives */
+        @media (max-width: 767.98px) {
+            .table-responsive {
+                display: none;
+            }
+            
+            .mobile-merchant-card {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                border: 1px solid #f1f3f4;
+            }
+            
+            .mobile-merchant-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            
+            .mobile-merchant-info {
+                margin-right: 1rem;
+                flex: 1;
+            }
+            
+            .mobile-merchant-details {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .mobile-merchant-field {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .mobile-merchant-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            .mobile-merchant-value {
+                color: #333;
+            }
+            
+            .mobile-merchant-actions {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+            
+            .mobile-merchant-actions .btn {
+                flex: 1;
+                min-width: 100px;
+                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-merchants {
+                display: none;
+            }
+        }
+        
+        /* Modal responsiveness */
+        @media (max-width: 767.98px) {
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            
+            .modal-content {
+                border-radius: 12px;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 1rem;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .merchant-card:hover {
+                transform: none;
+            }
+            
+            .merchant-card:active,
+            .mobile-merchant-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s;
+            }
+            
+            .btn:hover {
+                transform: none;
+            }
+            
+            .btn:active {
+                transform: scale(0.98);
+            }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus states */
+        .merchant-card:focus-within,
+        .mobile-merchant-card:focus-within,
+        .filter-section:focus-within {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+        
+        /* Enhanced responsive typography */
+        h1, h2, h3, h4, h5, h6 {
+            line-height: 1.3;
+        }
+        
+        @media (max-width: 767.98px) {
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h5 {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Responsive spacing utilities */
+        @media (max-width: 767.98px) {
+            .mb-4 {
+                margin-bottom: 1.5rem !important;
+            }
+            
+            .p-4 {
+                padding: 1rem !important;
+            }
         }
     </style>
 </head>
@@ -1908,7 +2214,7 @@
                                     <p class="card-text small">${item.description}</p>
                                     <div class="d-flex justify-content-between">
                                         <span class="text-primary fw-bold">${item.price} ر.س</span>
-                                        <small class="text-muted">متوفر: ${item.stock}</small>
+                                        <span class="badge ${item.status === 'available' ? 'bg-success' : 'bg-warning'}">${item.status === 'available' ? 'متاح' : 'غير متاح'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1918,125 +2224,7 @@
                 
                 new bootstrap.Modal(document.getElementById('merchantDetailsModal')).show();
             }
-        }
-        
-        function editMerchant(merchantId) {
-            const merchant = merchantManager.merchants.find(m => m.id === merchantId);
-            if (merchant) {
-                // Fill form with merchant data
-                document.getElementById('merchantName').value = merchant.name;
-                document.getElementById('merchantOwner').value = merchant.owner;
-                document.getElementById('merchantPhone').value = merchant.phone;
-                document.getElementById('merchantEmail').value = merchant.email;
-                document.getElementById('merchantCategory').value = merchant.category;
-                document.getElementById('merchantAddress').value = merchant.address;
-                document.getElementById('merchantCommercialRegister').value = merchant.commercialRegister;
-                
-                // Change modal title and button text
-                document.getElementById('addMerchantModal').querySelector('.modal-title').textContent = 'تعديل بيانات التاجر';
-                document.getElementById('saveMerchantBtn').textContent = 'حفظ التعديلات';
-                document.getElementById('saveMerchantBtn').setAttribute('data-merchant-id', merchantId);
-                
-                new bootstrap.Modal(document.getElementById('addMerchantModal')).show();
-            }
-        }
-        
-        function deleteMerchant(merchantId) {
-            if (confirm('هل أنت متأكد من حذف هذا التاجر؟')) {
-                merchantManager.merchants = merchantManager.merchants.filter(m => m.id !== merchantId);
-                merchantManager.applyFilters();
-                alert('تم حذف التاجر بنجاح');
-            }
-        }
-        
-        function suspendMerchant(merchantId) {
-            const merchant = merchantManager.merchants.find(m => m.id === merchantId);
-            if (merchant) {
-                merchant.status = merchant.status === 'suspended' ? 'online' : 'suspended';
-                merchantManager.renderMerchants();
-                alert(`تم ${merchant.status === 'suspended' ? 'تعليق' : 'إلغاء تعليق'} التاجر بنجاح`);
-            }
-        }
-        
-        function saveMerchant() {
-            const merchantId = document.getElementById('saveMerchantBtn').getAttribute('data-merchant-id');
-            const formData = {
-                name: document.getElementById('merchantName').value,
-                owner: document.getElementById('merchantOwner').value,
-                phone: document.getElementById('merchantPhone').value,
-                email: document.getElementById('merchantEmail').value,
-                category: document.getElementById('merchantCategory').value,
-                address: document.getElementById('merchantAddress').value,
-                commercialRegister: document.getElementById('merchantCommercialRegister').value
-            };
-            
-            if (merchantId) {
-                // Edit existing merchant
-                const merchant = merchantManager.merchants.find(m => m.id === merchantId);
-                if (merchant) {
-                    Object.assign(merchant, formData);
-                    alert('تم تحديث بيانات التاجر بنجاح');
-                }
-            } else {
-                // Add new merchant
-                const newMerchant = {
-                    id: 'M' + String(Date.now()).slice(-3),
-                    ...formData,
-                    status: 'pending',
-                    rating: 0,
-                    orders: 0,
-                    revenue: 0,
-                    joinDate: new Date(),
-                    lastActive: new Date()
-                };
-                merchantManager.merchants.push(newMerchant);
-                alert('تم إضافة التاجر بنجاح');
-            }
-            
-            merchantManager.applyFilters();
-            bootstrap.Modal.getInstance(document.getElementById('addMerchantModal')).hide();
-            
-            // Reset form
-            document.getElementById('addMerchantForm').reset();
-            document.getElementById('saveMerchantBtn').removeAttribute('data-merchant-id');
-            document.getElementById('addMerchantModal').querySelector('.modal-title').textContent = 'إضافة تاجر جديد';
-            document.getElementById('saveMerchantBtn').textContent = 'إضافة التاجر';
-        }
-        
-        function applyFilters() {
-            merchantManager.applyFilters();
-        }
-        
-        function toggleView(view) {
-            if (view === 'card') {
-                document.getElementById('merchantsTableContainer').style.display = 'none';
-                document.getElementById('merchantsCardContainer').style.display = 'block';
-                merchantManager.renderCardView();
-            } else {
-                document.getElementById('merchantsTableContainer').style.display = 'block';
-                document.getElementById('merchantsCardContainer').style.display = 'none';
-                merchantManager.renderMerchants();
-            }
-        }
-        
-        // Initialize filters on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up event listeners
-            document.getElementById('searchInput').addEventListener('input', applyFilters);
-            document.getElementById('statusFilter').addEventListener('change', applyFilters);
-            document.getElementById('categoryFilter').addEventListener('change', applyFilters);
-            document.getElementById('ratingFilter').addEventListener('change', applyFilters);
-            document.getElementById('sortBy').addEventListener('change', applyFilters);
-            
-            // Set up view toggle listeners
-            document.getElementById('tableView').addEventListener('change', () => toggleView('table'));
-            document.getElementById('cardView').addEventListener('change', () => toggleView('card'));
-            
-            // Initial render
-            merchantManager.applyFilters();
-        });
-        
-    </script>
+        </script>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -2,10 +2,156 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>لوحة القيادة</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fb;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Mobile-first responsive design */
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: 2rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .container-fluid {
+                padding: 2.5rem 3rem;
+            }
+        }
+        
+        /* Responsive typography */
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1976d2;
+        }
+        
+        @media (min-width: 768px) {
+            h2 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Enhanced card design */
+        .stats-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 140px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stats-card .card-body {
+            padding: 1.5rem;
+        }
+        
+        @media (max-width: 767.98px) {
+            .stats-card {
+                min-height: 120px;
+                margin-bottom: 1rem;
+            }
+            .stats-card .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        /* Mobile-optimized statistics layout */
+        @media (max-width: 767.98px) {
+            .stats-row {
+                gap: 1rem !important;
+            }
+            .stats-card .material-icons-outlined {
+                font-size: 2.5rem !important;
+            }
+            .stats-card h3 {
+                font-size: 1.8rem;
+                margin: 0.5rem 0;
+            }
+            .stats-card p {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Activity section improvements */
+        .activity-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .activity-card .card-header {
+            background: #fff;
+            border-bottom: 2px solid #f1f3f4;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        /* Mobile-friendly alerts */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 767.98px) {
+            .alert {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .stats-card:hover {
+                transform: none;
+            }
+            .stats-card:active {
+                transform: scale(0.98);
+            }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus states */
+        .stats-card:focus-within {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+        
+        /* RTL optimizations */
+        @media (max-width: 575.98px) {
+            h2 {
+                text-align: center;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container-fluid p-4">
@@ -16,9 +162,9 @@
         </div>
         
         <!-- Statistics Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card bg-primary text-white">
+        <div class="row g-3 stats-row mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card stats-card bg-primary text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">shopping_cart</span>
                         <h3 class="mt-2">150</h3>
@@ -26,8 +172,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
+            <div class="col-6 col-lg-3">
+                <div class="card stats-card bg-success text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">store</span>
                         <h3 class="mt-2">23</h3>
@@ -35,8 +181,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white">
+            <div class="col-6 col-lg-3">
+                <div class="card stats-card bg-info text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">local_shipping</span>
                         <h3 class="mt-2">18</h3>
@@ -44,8 +190,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white">
+            <div class="col-6 col-lg-3">
+                <div class="card stats-card bg-warning text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">people</span>
                         <h3 class="mt-2">1,247</h3>
@@ -58,19 +204,22 @@
         <!-- Recent Activity -->
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card activity-card">
                     <div class="card-header">
                         <h5 class="mb-0">النشاط الأخير</h5>
                     </div>
                     <div class="card-body">
                         <div class="alert alert-success">
-                            ✅ تم تأكيد طلب جديد من مطعم الذواقة
+                            <strong>✅ تم تأكيد طلب جديد</strong><br>
+                            <small class="text-success">من مطعم الذواقة - منذ 5 دقائق</small>
                         </div>
                         <div class="alert alert-info">
-                            🚚 تم تعيين سائق للطلب #1234
+                            <strong>🚚 تم تعيين سائق</strong><br>
+                            <small class="text-info">للطلب #1234 - منذ 10 دقائق</small>
                         </div>
                         <div class="alert alert-warning">
-                            ⏰ طلب #1235 ينتظر تأكيد التاجر
+                            <strong>⏰ طلب في الانتظار</strong><br>
+                            <small class="text-warning">الطلب #1235 ينتظر تأكيد التاجر - منذ 15 دقيقة</small>
                         </div>
                     </div>
                 </div>

@@ -1,22 +1,225 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-    <title>Server Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#28a745">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>اختبار الخادم - النظام المركزي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        /* Mobile-first responsive styles */
+        .container {
+            padding: 1rem;
+            max-width: 100%;
+        }
+        
+        .status-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        
+        .page-links {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .page-link-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) and (pointer: coarse) {
+            .page-link-item:active {
+                transform: scale(0.98);
+            }
+        }
+        
+        @media (hover: hover) and (pointer: fine) {
+            .page-link-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                text-decoration: none;
+                color: #333;
+            }
+        }
+        
+        .page-link-icon {
+            margin-left: 1rem;
+            color: #667eea;
+        }
+        
+        .success-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        /* Mobile responsive breakpoints */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.75rem;
+            }
+            
+            .status-icon {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .page-links {
+                padding: 0.75rem;
+            }
+            
+            .page-link-item {
+                padding: 1rem 0.75rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .status-icon {
+                font-size: 2.5rem;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+            }
+            
+            .page-links {
+                padding: 0.5rem;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: white;
+            }
+            
+            .page-links {
+                background: #2d3436;
+            }
+            
+            .page-link-item {
+                background: #636e72;
+                color: white;
+            }
+        }
+        
+        /* Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            .page-link-item {
+                transition: none;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>✅ Server is working!</h1>
-    <p>If you can see this, the server is running correctly.</p>
-    <a href="admin.html">Go to Admin Panel</a>
-    <br><br>
-    <h3>Available Pages:</h3>
-    <ul>
-        <li><a href="dashboard.html">Dashboard</a></li>
-        <li><a href="merchants.html">Merchants</a></li>
-        <li><a href="orders.html">Orders</a></li>
-        <li><a href="customers.html">Customers</a></li>
-        <li><a href="drivers.html">Drivers</a></li>
-        <li><a href="rewards.html">Rewards</a></li>
-        <li><a href="settings.html">Settings</a></li>
-    </ul>
+    <div class="container">
+        <div class="text-center">
+            <div class="status-icon">
+                <span class="material-icons-outlined" style="font-size: inherit;">check_circle</span>
+            </div>
+            <div class="success-badge">
+                <strong>✅ الخادم يعمل بنجاح!</strong>
+            </div>
+            <h1 class="mb-3">النظام المركزي للتوصيل</h1>
+            <p class="text-muted mb-4">إذا كنت ترى هذه الصفحة، فإن الخادم يعمل بشكل صحيح.</p>
+        </div>
+
+        <div class="page-links">
+            <h3 class="mb-3 text-center">
+                <span class="material-icons-outlined me-2">apps</span>
+                الصفحات المتاحة
+            </h3>
+            
+            <a href="dashboard.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">dashboard</span>
+                <div>
+                    <strong>لوحة التحكم</strong>
+                    <br><small class="text-muted">إحصائيات ومعلومات عامة</small>
+                </div>
+            </a>
+            
+            <a href="merchants.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">store</span>
+                <div>
+                    <strong>إدارة التجار</strong>
+                    <br><small class="text-muted">عرض وإدارة بيانات التجار</small>
+                </div>
+            </a>
+            
+            <a href="orders.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">receipt_long</span>
+                <div>
+                    <strong>إدارة الطلبات</strong>
+                    <br><small class="text-muted">متابعة ومعالجة الطلبات</small>
+                </div>
+            </a>
+            
+            <a href="customers.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">people</span>
+                <div>
+                    <strong>إدارة العملاء</strong>
+                    <br><small class="text-muted">عرض وإدارة بيانات العملاء</small>
+                </div>
+            </a>
+            
+            <a href="drivers.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">delivery_dining</span>
+                <div>
+                    <strong>إدارة السائقين</strong>
+                    <br><small class="text-muted">متابعة وإدارة السائقين</small>
+                </div>
+            </a>
+            
+            <a href="rewards.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">card_giftcard</span>
+                <div>
+                    <strong>نظام المكافآت</strong>
+                    <br><small class="text-muted">إدارة المكافآت والعروض</small>
+                </div>
+            </a>
+            
+            <a href="settings.html" class="page-link-item">
+                <span class="material-icons-outlined page-link-icon">settings</span>
+                <div>
+                    <strong>إعدادات النظام</strong>
+                    <br><small class="text-muted">تكوين وإعدادات عامة</small>
+                </div>
+            </a>
+        </div>
+        
+        <div class="text-center mt-4">
+            <small class="text-muted">النظام المركزي لإدارة التوصيل - الإصدار 1.0</small>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
