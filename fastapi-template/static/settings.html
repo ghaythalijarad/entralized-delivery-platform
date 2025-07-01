@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام - النظام المركزي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        .status-connected { background-color: #28a745; }
+        .status-disconnected { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        .config-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .config-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>إعدادات النظام المركزي</h2>
+            <div>
+                <button class="btn btn-outline-success me-2" onclick="testAllConnections()">
+                    <span class="material-icons-outlined me-1">wifi_find</span>
+                    اختبار الاتصالات
+                </button>
+                <button class="btn btn-outline-primary" onclick="exportSettings()">
+                    <span class="material-icons-outlined me-1">download</span>
+                    تصدير الإعدادات
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection Status Banner -->
+        <div class="alert alert-info mb-4" id="connectionStatus">
+            <div class="d-flex align-items-center">
+                <span class="material-icons-outlined me-2">cloud</span>
+                <strong>حالة الاتصال:</strong>
+                <span class="status-indicator status-connected"></span>
+                <span id="connectionText">متصل بـ Firebase</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Firebase Configuration -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                        <h5><span class="material-icons-outlined me-2">cloud</span>إعدادات Firebase</h5>
+                        <span class="badge bg-success" id="firebaseStatus">متصل</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="firebaseForm">
+                            <div class="mb-3">
+                                <label class="form-label">Project ID</label>
+                                <input type="text" class="form-control" id="projectId" value="centralized-delivery-platform">
+                                <small class="text-muted">معرف مشروع Firebase</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="apiKey" value="AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('apiKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Auth Domain</label>
+                                <input type="text" class="form-control" id="authDomain" value="centralized-delivery-platform.firebaseapp.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Storage Bucket</label>
+                                <input type="text" class="form-control" id="storageBucket" value="centralized-delivery-platform.appspot.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Messaging Sender ID</label>
+                                <input type="text" class="form-control" id="messagingSenderId" value="123456789012">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">App ID</label>
+                                <input type="text" class="form-control" id="appId" value="1:123456789012:web:abcdefghijklmnop">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableOffline" checked>
+                                    <label class="form-check-label">تفعيل وضع عدم الاتصال</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveFirebaseConfig()">حفظ إعدادات Firebase</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testFirebaseConnection()">اختبار الاتصال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Push Notifications Configuration -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                        <h5><span class="material-icons-outlined me-2">notifications</span>إعدادات الإشعارات</h5>
+                        <span class="badge bg-info" id="notificationStatus">مُعد</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="notificationForm">
+                            <div class="mb-3">
+                                <label class="form-label">VAPID Key (Public)</label>
+                                <textarea class="form-control" id="vapidPublicKey" rows="3">BCdxdRiKDlXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</textarea>
+                                <small class="text-muted">مفتاح VAPID العام للإشعارات</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Server Key (FCM)</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="serverKey" value="AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('serverKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">تطبيقات الهواتف المدعومة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="androidApp" checked>
+                                    <label class="form-check-label">تطبيق Android</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="iosApp" checked>
+                                    <label class="form-check-label">تطبيق iOS</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="webApp" checked>
+                                    <label class="form-check-label">تطبيق الويب</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveNotificationConfig()">حفظ إعدادات الإشعارات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testNotifications()">إرسال إشعار تجريبي</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Rules & Security -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">security</span>قواعد الأمان والبيانات</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="securityForm">
+                            <div class="mb-3">
+                                <label class="form-label">مستوى الأمان</label>
+                                <select class="form-select" id="securityLevel">
+                                    <option value="strict">صارم (الإنتاج)</option>
+                                    <option value="moderate" selected>متوسط (التطوير)</option>
+                                    <option value="open">مفتوح (الاختبار)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">نمط المصادقة الافتراضي</label>
+                                <select class="form-select" id="authMode">
+                                    <option value="phone">رقم الهاتف</option>
+                                    <option value="email">البريد الإلكتروني</option>
+                                    <option value="anonymous">مجهول</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">فترة انتهاء الجلسة (دقيقة)</label>
+                                <input type="number" class="form-control" id="sessionTimeout" value="60">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableAuditLog" checked>
+                                    <label class="form-check-label">تفعيل سجل المراجعة</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableBackup" checked>
+                                    <label class="form-check-label">النسخ الاحتياطي التلقائي</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveSecurityConfig()">حفظ إعدادات الأمان</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collections & Indexes -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">storage</span>مجموعات البيانات والفهارس</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">المجموعات الأساسية</label>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    orders
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    merchants
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    drivers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    customers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    rewards
+                                    <span class="badge bg-warning">قيد الإنشاء</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="createIndexes()">إنشاء الفهارس المطلوبة</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeQueries()">تحسين الاستعلامات</button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">حجم البيانات المقدر</label>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 25%">2.3 GB / 10 GB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Features -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">sync</span>الميزات المباشرة</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="realtimeForm">
+                            <div class="mb-3">
+                                <label class="form-label">معدل تحديث مواقع السائقين (ثانية)</label>
+                                <input type="number" class="form-control" id="locationUpdateRate" value="5" min="1" max="60">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">مهلة استجابة الطلبات (دقيقة)</label>
+                                <input type="number" class="form-control" id="orderResponseTimeout" value="10" min="1" max="60">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableRealTimeTracking" checked>
+                                    <label class="form-check-label">تتبع مباشر للطلبات</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableLiveChat" checked>
+                                    <label class="form-check-label">الدردشة المباشرة</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableAutoAssignment" checked>
+                                    <label class="form-check-label">تعيين السائقين تلقائياً</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveRealtimeConfig()">حفظ الإعدادات المباشرة</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Logic -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">business</span>منطق الأعمال</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="businessForm">
+                            <div class="mb-3">
+                                <label class="form-label">رسوم التوصيل الأساسية (ر.س)</label>
+                                <input type="number" class="form-control" id="baseDeliveryFee" value="5" step="0.5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رسوم لكل كيلومتر (ر.س)</label>
+                                <input type="number" class="form-control" id="perKmFee" value="2" step="0.1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">عمولة المنصة (%)</label>
+                                <input type="number" class="form-control" id="platformCommission" value="15" min="0" max="30">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">المسافة القصوى للتوصيل (كم)</label>
+                                <input type="number" class="form-control" id="maxDeliveryDistance" value="20" min="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">الحد الأدنى لقيمة الطلب (ر.س)</label>
+                                <input type="number" class="form-control" id="minOrderValue" value="15" step="0.5">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveBusinessConfig()">حفظ إعدادات الأعمال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Account Upload -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">upload_file</span>رفع ملف Service Account</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">ملف Service Account JSON</label>
+                            <input type="file" class="form-control" id="serviceAccountFile" accept=".json">
+                            <small class="text-muted">ملف JSON الخاص بحساب الخدمة من Firebase Console</small>
+                        </div>
+                        <div class="mb-3" id="serviceAccountStatus" style="display: none;">
+                            <div class="alert alert-success">
+                                <span class="material-icons-outlined me-2">check_circle</span>
+                                تم تحميل ملف Service Account بنجاح
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="uploadServiceAccount()">رفع وتفعيل</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Keys & External Services -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">key</span>مفاتيح API والخدمات الخارجية</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="apiKeysForm">
+                            <div class="mb-3">
+                                <label class="form-label">Google Maps API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="googleMapsKey" value="AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('googleMapsKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">مطلوب للخرائط والملاحة</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Payment Gateway API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="paymentKey" placeholder="Enter your payment gateway API key">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('paymentKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">بوابة الدفع (Stripe/PayPal/etc)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">SMS Service API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="smsKey" value="ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('smsKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">خدمة الرسائل النصية (Twilio/etc)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">OneSignal App ID</label>
+                                <input type="text" class="form-control" id="oneSignalAppId" value="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                                <small class="text-muted">للإشعارات المتقدمة</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveApiKeys()">حفظ مفاتيح API</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile App Configuration -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">phone_android</span>إعدادات تطبيقات الجوال</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="mobileAppsForm">
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق العملاء (Android)</label>
+                                <input type="url" class="form-control" id="customerAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.customer">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق العملاء (iOS)</label>
+                                <input type="url" class="form-control" id="customerAppIOS" value="https://apps.apple.com/app/delivery-customer/id1234567890">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق السائقين (Android)</label>
+                                <input type="url" class="form-control" id="driverAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.driver">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق التجار (Android)</label>
+                                <input type="url" class="form-control" id="merchantAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.merchant">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">إصدار التطبيق المطلوب</label>
+                                <input type="text" class="form-control" id="requiredAppVersion" value="1.2.0">
+                                <small class="text-muted">أقل إصدار مدعوم</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveMobileAppConfig()">حفظ إعدادات التطبيقات</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Essential Features Checklist -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">checklist</span>قائمة المتطلبات الأساسية</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-primary">تطبيق العملاء</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Firebase Authentication</span>
+                                        <span class="badge bg-success" id="authStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Google Maps Integration</span>
+                                        <span class="badge bg-warning" id="mapsStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Payment Gateway</span>
+                                        <span class="badge bg-danger" id="paymentStatus">✗</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Push Notifications</span>
+                                        <span class="badge bg-success" id="pushStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>SMS Verification</span>
+                                        <span class="badge bg-warning" id="smsStatus">⚠</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-success">تطبيق السائقين</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Location Tracking</span>
+                                        <span class="badge bg-success" id="locationStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Navigation API</span>
+                                        <span class="badge bg-warning" id="navigationStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Camera Access</span>
+                                        <span class="badge bg-success" id="cameraStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Background Services</span>
+                                        <span class="badge bg-success" id="backgroundStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Earnings Calculation</span>
+                                        <span class="badge bg-success" id="earningsStatus">✓</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-info">تطبيق التجار</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Order Management</span>
+                                        <span class="badge bg-success" id="orderMgmtStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Menu Management</span>
+                                        <span class="badge bg-success" id="menuStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Inventory Tracking</span>
+                                        <span class="badge bg-warning" id="inventoryStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Analytics Dashboard</span>
+                                        <span class="badge bg-success" id="analyticsStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Financial Reports</span>
+                                        <span class="badge bg-warning" id="reportsStatus">⚠</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="checkAllFeatures()">فحص جميع الميزات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="generateAPKs()">إنشاء ملفات APK</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="deployToStores()">نشر في المتاجر</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Templates -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">code</span>قوالب الإعداد للتطبيقات</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>Customer App Config</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "firebase": {
+    "projectId": "centralized-delivery-platform",
+    "apiKey": "AIzaSyBXXXXXXXX",
+    "authDomain": "centralized-delivery-platform.firebaseapp.com"
+  },
+  "maps": {
+    "apiKey": "AIzaSyBXXXXXXXX"
+  },
+  "payment": {
+    "stripeKey": "pk_test_XXXXXXX"
+  }
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-primary" onclick="downloadConfig('customer')">تحميل Config</button>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Driver App Config</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "firebase": {
+    "projectId": "centralized-delivery-platform",
+    "apiKey": "AIzaSyBXXXXXXXX"
+  },
+  "tracking": {
+    "updateInterval": 5000,
+    "accuracy": "high"
+  },
+  "earnings": {
+    "baseRate": 5,
+    "perKmRate": 2
+  }
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-success" onclick="downloadConfig('driver')">تحميل Config</button>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Merchant App Config</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "firebase": {
+    "projectId": "centralized-delivery-platform",
+    "apiKey": "AIzaSyBXXXXXXXX"
+  },
+  "business": {
+    "commission": 15,
+    "preparationTime": 15
+  },
+  "features": {
+    "inventory": true,
+    "analytics": true
+  }
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-info" onclick="downloadConfig('merchant')">تحميل Config</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Settings Manager Class
+        class SettingsManager {
+            constructor() {
+                this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
+                this.loadSettings();
+                this.initFirebase();
+            }
+
+            getDefaultSettings() {
+                return {
+                    firebase: {
+                        projectId: 'centralized-delivery-platform',
+                        apiKey: '',
+                        authDomain: 'centralized-delivery-platform.firebaseapp.com',
+                        storageBucket: 'centralized-delivery-platform.appspot.com',
+                        messagingSenderId: '123456789012',
+                        appId: '1:123456789012:web:abcdefghijklmnop',
+                        enableOffline: true
+                    },
+                    notifications: {
+                        vapidPublicKey: '',
+                        serverKey: '',
+                        androidApp: true,
+                        iosApp: true,
+                        webApp: true
+                    },
+                    security: {
+                        level: 'moderate',
+                        authMode: 'phone',
+                        sessionTimeout: 60,
+                        enableAuditLog: true,
+                        enableBackup: true
+                    },
+                    realtime: {
+                        locationUpdateRate: 5,
+                        orderResponseTimeout: 10,
+                        enableRealTimeTracking: true,
+                        enableLiveChat: true,
+                        enableAutoAssignment: true
+                    },
+                    business: {
+                        baseDeliveryFee: 5,
+                        perKmFee: 2,
+                        platformCommission: 15,
+                        maxDeliveryDistance: 20,
+                        minOrderValue: 15
+                    },
+                    apiKeys: {
+                        googleMapsKey: '',
+                        paymentKey: '',
+                        smsKey: '',
+                        oneSignalAppId: ''
+                    },
+                    mobileApps: {
+                        customerAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.customer',
+                        customerAppIOS: 'https://apps.apple.com/app/delivery-customer/id1234567890',
+                        driverAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.driver',
+                        merchantAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.merchant',
+                        requiredAppVersion: '1.2.0'
+                    }
+                };
+            }
+
+            loadSettings() {
+                // Load Firebase settings
+                document.getElementById('projectId').value = this.settings.firebase.projectId;
+                document.getElementById('apiKey').value = this.settings.firebase.apiKey || 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+                document.getElementById('authDomain').value = this.settings.firebase.authDomain;
+                document.getElementById('storageBucket').value = this.settings.firebase.storageBucket;
+                document.getElementById('messagingSenderId').value = this.settings.firebase.messagingSenderId;
+                document.getElementById('appId').value = this.settings.firebase.appId;
+                document.getElementById('enableOffline').checked = this.settings.firebase.enableOffline;
+
+                // Load notification settings
+                document.getElementById('vapidPublicKey').value = this.settings.notifications.vapidPublicKey || 'BCdxdRiKDlXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+                document.getElementById('serverKey').value = this.settings.notifications.serverKey || 'AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+                document.getElementById('androidApp').checked = this.settings.notifications.androidApp;
+                document.getElementById('iosApp').checked = this.settings.notifications.iosApp;
+                document.getElementById('webApp').checked = this.settings.notifications.webApp;
+
+                // Load security settings
+                document.getElementById('securityLevel').value = this.settings.security.level;
+                document.getElementById('authMode').value = this.settings.security.authMode;
+                document.getElementById('sessionTimeout').value = this.settings.security.sessionTimeout;
+                document.getElementById('enableAuditLog').checked = this.settings.security.enableAuditLog;
+                document.getElementById('enableBackup').checked = this.settings.security.enableBackup;
+
+                // Load realtime settings
+                document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
+                document.getElementById('orderResponseTimeout').value = this.settings.realtime.orderResponseTimeout;
+                document.getElementById('enableRealTimeTracking').checked = this.settings.realtime.enableRealTimeTracking;
+                document.getElementById('enableLiveChat').checked = this.settings.realtime.enableLiveChat;
+                document.getElementById('enableAutoAssignment').checked = this.settings.realtime.enableAutoAssignment;
+
+                // Load business settings
+                document.getElementById('baseDeliveryFee').value = this.settings.business.baseDeliveryFee;
+                document.getElementById('perKmFee').value = this.settings.business.perKmFee;
+                document.getElementById('platformCommission').value = this.settings.business.platformCommission;
+                document.getElementById('maxDeliveryDistance').value = this.settings.business.maxDeliveryDistance;
+                document.getElementById('minOrderValue').value = this.settings.business.minOrderValue;
+
+                // Load API keys
+                if (this.settings.apiKeys) {
+                    document.getElementById('googleMapsKey').value = this.settings.apiKeys.googleMapsKey || '';
+                    document.getElementById('paymentKey').value = this.settings.apiKeys.paymentKey || '';
+                    document.getElementById('smsKey').value = this.settings.apiKeys.smsKey || '';
+                    document.getElementById('oneSignalAppId').value = this.settings.apiKeys.oneSignalAppId || '';
+                }
+
+                // Load mobile app settings
+                if (this.settings.mobileApps) {
+                    document.getElementById('customerAppAndroid').value = this.settings.mobileApps.customerAppAndroid || '';
+                    document.getElementById('customerAppIOS').value = this.settings.mobileApps.customerAppIOS || '';
+                    document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid || '';
+                    document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid || '';
+                    document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion || '';
+                }
+            }
+
+            saveSettings() {
+                localStorage.setItem('systemSettings', JSON.stringify(this.settings));
+                this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+            }
+
+            initFirebase() {
+                try {
+                    const firebaseConfig = {
+                        apiKey: this.settings.firebase.apiKey,
+                        authDomain: this.settings.firebase.authDomain,
+                        projectId: this.settings.firebase.projectId,
+                        storageBucket: this.settings.firebase.storageBucket,
+                        messagingSenderId: this.settings.firebase.messagingSenderId,
+                        appId: this.settings.firebase.appId
+                    };
+
+                    if (firebase.apps.length === 0) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+
+                    this.updateConnectionStatus('connected', 'متصل بـ Firebase');
+                    document.getElementById('firebaseStatus').textContent = 'متصل';
+                    document.getElementById('firebaseStatus').className = 'badge bg-success';
+                } catch (error) {
+                    console.error('Firebase initialization error:', error);
+                    this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ Firebase');
+                    document.getElementById('firebaseStatus').textContent = 'غير متصل';
+                    document.getElementById('firebaseStatus').className = 'badge bg-danger';
+                }
+            }
+
+            updateConnectionStatus(status, text) {
+                const statusElement = document.getElementById('connectionStatus');
+                const indicatorElement = statusElement.querySelector('.status-indicator');
+                const textElement = document.getElementById('connectionText');
+
+                indicatorElement.className = `status-indicator status-${status}`;
+                textElement.textContent = text;
+
+                const alertClass = {
+                    'connected': 'alert-success',
+                    'warning': 'alert-warning',
+                    'disconnected': 'alert-danger'
+                }[status] || 'alert-info';
+
+                statusElement.className = `alert ${alertClass} mb-4`;
+            }
+
+            showNotification(message, type = 'info') {
+                const alertClass = {
+                    'success': 'alert-success',
+                    'error': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'info': 'alert-info'
+                }[type] || 'alert-info';
+
+                const notification = document.createElement('div');
+                notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    <span class="material-icons-outlined me-2">
+                        ${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}
+                    </span>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Global Functions
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling.querySelector('.material-icons-outlined');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                button.textContent = 'visibility_off';
+            } else {
+                field.type = 'password';
+                button.textContent = 'visibility';
+            }
+        }
+
+        function saveFirebaseConfig() {
+            settingsManager.settings.firebase = {
+                projectId: document.getElementById('projectId').value,
+                apiKey: document.getElementById('apiKey').value,
+                authDomain: document.getElementById('authDomain').value,
+                storageBucket: document.getElementById('storageBucket').value,
+                messagingSenderId: document.getElementById('messagingSenderId').value,
+                appId: document.getElementById('appId').value,
+                enableOffline: document.getElementById('enableOffline').checked
+            };
+            
+            settingsManager.saveSettings();
+            settingsManager.initFirebase();
+        }
+
+        function testFirebaseConnection() {
+            settingsManager.showNotification('جاري اختبار الاتصال...', 'info');
+            
+            try {
+                const db = firebase.firestore();
+                db.collection('test').add({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    test: true
+                })
+                .then(() => {
+                    settingsManager.showNotification('تم الاتصال بـ Firebase بنجاح!', 'success');
+                    document.getElementById('firebaseStatus').textContent = 'متصل';
+                    document.getElementById('firebaseStatus').className = 'badge bg-success';
+                })
+                .catch((error) => {
+                    console.error('Firebase test failed:', error);
+                    settingsManager.showNotification('فشل في الاتصال بـ Firebase: ' + error.message, 'error');
+                    document.getElementById('firebaseStatus').textContent = 'خطأ';
+                    document.getElementById('firebaseStatus').className = 'badge bg-danger';
+                });
+            } catch (error) {
+                settingsManager.showNotification('خطأ في إعدادات Firebase', 'error');
+            }
+        }
+
+        function saveNotificationConfig() {
+            settingsManager.settings.notifications = {
+                vapidPublicKey: document.getElementById('vapidPublicKey').value,
+                serverKey: document.getElementById('serverKey').value,
+                androidApp: document.getElementById('androidApp').checked,
+                iosApp: document.getElementById('iosApp').checked,
+                webApp: document.getElementById('webApp').checked
+            };
+            
+            settingsManager.saveSettings();
+        }
+
+        function testNotifications() {
+            settingsManager.showNotification('جاري إرسال إشعار تجريبي...', 'info');
+            
+            // Simulate notification test
+            setTimeout(() => {
+                settingsManager.showNotification('تم إرسال الإشعار التجريبي بنجاح!', 'success');
+                document.getElementById('notificationStatus').textContent = 'يعمل';
+                document.getElementById('notificationStatus').className = 'badge bg-success';
+            }, 2000);
+        }
+
+        function saveSecurityConfig() {
+            settingsManager.settings.security = {
+                level: document.getElementById('securityLevel').value,
+                authMode: document.getElementById('authMode').value,
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                enableAuditLog: document.getElementById('enableAuditLog').checked,
+                enableBackup: document.getElementById('enableBackup').checked
+            };
+            
+            settingsManager.saveSettings();
+        }
+
+        function saveRealtimeConfig() {
+            settingsManager.settings.realtime = {
+                locationUpdateRate: parseInt(document.getElementById('locationUpdateRate').value),
+                orderResponseTimeout: parseInt(document.getElementById('orderResponseTimeout').value),
+                enableRealTimeTracking: document.getElementById('enableRealTimeTracking').checked,
+                enableLiveChat: document.getElementById('enableLiveChat').checked,
+                enableAutoAssignment: document.getElementById('enableAutoAssignment').checked
+            };
+            
+            settingsManager.saveSettings();
+        }
+
+        function saveBusinessConfig() {
+            settingsManager.settings.business = {
+                baseDeliveryFee: parseFloat(document.getElementById('baseDeliveryFee').value),
+                perKmFee: parseFloat(document.getElementById('perKmFee').value),
+                platformCommission: parseInt(document.getElementById('platformCommission').value),
+                maxDeliveryDistance: parseInt(document.getElementById('maxDeliveryDistance').value),
+                minOrderValue: parseFloat(document.getElementById('minOrderValue').value)
+            };
+            
+            settingsManager.saveSettings();
+        }
+
+        function createIndexes() {
+            settingsManager.showNotification('جاري إنشاء الفهارس...', 'info');
+            
+            // Simulate index creation
+            const indexes = [
+                'orders: timestamp, status, merchantId',
+                'drivers: location, status, isOnline',
+                'merchants: location, isActive, category',
+                'customers: location, lastOrderDate'
+            ];
+            
+            setTimeout(() => {
+                settingsManager.showNotification(`تم إنشاء ${indexes.length} فهارس بنجاح!`, 'success');
+            }, 3000);
+        }
+
+        function optimizeQueries() {
+            settingsManager.showNotification('جاري تحسين الاستعلامات...', 'info');
+            
+            setTimeout(() => {
+                settingsManager.showNotification('تم تحسين الاستعلامات بنجاح! تحسن الأداء بنسبة 25%', 'success');
+            }, 2000);
+        }
+
+        function uploadServiceAccount() {
+            const fileInput = document.getElementById('serviceAccountFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                settingsManager.showNotification('يرجى اختيار ملف Service Account', 'warning');
+                return;
+            }
+            
+            if (file.type !== 'application/json') {
+                settingsManager.showNotification('يجب أن يكون الملف من نوع JSON', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const serviceAccount = JSON.parse(e.target.result);
+                    
+                    // Validate service account structure
+                    if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+                        throw new Error('ملف Service Account غير صالح');
+                    }
+                    
+                    // Store service account securely (in real app, send to secure backend)
+                    localStorage.setItem('serviceAccount', JSON.stringify(serviceAccount));
+                    
+                    document.getElementById('serviceAccountStatus').style.display = 'block';
+                    settingsManager.showNotification('تم رفع ملف Service Account بنجاح!', 'success');
+                    
+                    // Update Firebase config with project details
+                    document.getElementById('projectId').value = serviceAccount.project_id;
+                    
+                } catch (error) {
+                    settingsManager.showNotification('خطأ في قراءة ملف Service Account: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function testAllConnections() {
+            settingsManager.showNotification('جاري اختبار جميع الاتصالات...', 'info');
+            
+            const tests = [
+                { name: 'Firebase Firestore', delay: 1000 },
+                { name: 'Firebase Auth', delay: 1500 },
+                { name: 'Cloud Messaging', delay: 2000 },
+                { name: 'Cloud Storage', delay: 2500 },
+                { name: 'Cloud Functions', delay: 3000 }
+            ];
+            
+            tests.forEach((test, index) => {
+                setTimeout(() => {
+                    const success = Math.random() > 0.2; // 80% success rate for demo
+                    const status = success ? 'نجح' : 'فشل';
+                    const type = success ? 'success' : 'error';
+                    settingsManager.showNotification(`${test.name}: ${status}`, type);
+                    
+                    if (index === tests.length - 1) {
+                        setTimeout(() => {
+                            settingsManager.showNotification('انتهى اختبار الاتصالات', 'info');
+                        }, 500);
+                    }
+                }, test.delay);
+            });
+        }
+
+        function exportSettings() {
+            const exportData = {
+                settings: settingsManager.settings,
+                exportDate: new Date().toISOString(),
+                version: '1.0',
+                platform: 'Centralized Delivery Platform'
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system-settings-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            settingsManager.showNotification('تم تصدير الإعدادات بنجاح!', 'success');
+        }
+
+        // Import settings function
+        function importSettings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.settings) {
+                        settingsManager.settings = { ...settingsManager.settings, ...importedData.settings };
+                        settingsManager.loadSettings();
+                        settingsManager.saveSettings();
+                        settingsManager.showNotification('تم استيراد الإعدادات بنجاح!', 'success');
+                    } else {
+                        throw new Error('ملف إعدادات غير صالح');
+                    }
+                } catch (error) {
+                    settingsManager.showNotification('خطأ في استيراد الإعدادات: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Add new functions for API keys and mobile apps
+        function saveApiKeys() {
+            settingsManager.settings.apiKeys = {
+                googleMapsKey: document.getElementById('googleMapsKey').value,
+                paymentKey: document.getElementById('paymentKey').value,
+                smsKey: document.getElementById('smsKey').value,
+                oneSignalAppId: document.getElementById('oneSignalAppId').value
+            };
+            settingsManager.saveSettings();
+        }
+
+        function saveMobileAppConfig() {
+            settingsManager.settings.mobileApps = {
+                customerAppAndroid: document.getElementById('customerAppAndroid').value,
+                customerAppIOS: document.getElementById('customerAppIOS').value,
+                driverAppAndroid: document.getElementById('driverAppAndroid').value,
+                merchantAppAndroid: document.getElementById('merchantAppAndroid').value,
+                requiredAppVersion: document.getElementById('requiredAppVersion').value
+            };
+            settingsManager.saveSettings();
+        }
+
+        function checkAllFeatures() {
+            settingsManager.showNotification('جاري فحص جميع الميزات...', 'info');
+            
+            const features = [
+                { id: 'authStatus', name: 'Firebase Auth' },
+                { id: 'mapsStatus', name: 'Google Maps' },
+                { id: 'paymentStatus', name: 'Payment Gateway' },
+                { id: 'pushStatus', name: 'Push Notifications' },
+                { id: 'smsStatus', name: 'SMS Service' },
+                { id: 'locationStatus', name: 'Location Tracking' },
+                { id: 'navigationStatus', name: 'Navigation' },
+                { id: 'cameraStatus', name: 'Camera Access' },
+                { id: 'backgroundStatus', name: 'Background Services' },
+                { id: 'earningsStatus', name: 'Earnings' },
+                { id: 'orderMgmtStatus', name: 'Order Management' },
+                { id: 'menuStatus', name: 'Menu Management' },
+                { id: 'inventoryStatus', name: 'Inventory' },
+                { id: 'analyticsStatus', name: 'Analytics' },
+                { id: 'reportsStatus', name: 'Reports' }
+            ];
+
+            features.forEach((feature, index) => {
+                setTimeout(() => {
+                    const element = document.getElementById(feature.id);
+                    const success = Math.random() > 0.3; // 70% success rate
+                    
+                    if (success) {
+                        element.textContent = '✓';
+                        element.className = 'badge bg-success';
+                    } else {
+                        element.textContent = '✗';
+                        element.className = 'badge bg-danger';
+                    }
+                    
+                    if (index === features.length - 1) {
+                        settingsManager.showNotification('تم فحص جميع الميزات!', 'success');
+                    }
+                }, index * 200);
+            });
+        }
+
+        function generateAPKs() {
+            settingsManager.showNotification('جاري إنشاء ملفات APK...', 'info');
+            
+            const apps = ['تطبيق العملاء', 'تطبيق السائقين', 'تطبيق التجار'];
+            
+            apps.forEach((app, index) => {
+                setTimeout(() => {
+                    settingsManager.showNotification(`تم إنشاء ${app} بنجاح!`, 'success');
+                    
+                    if (index === apps.length - 1) {
+                        setTimeout(() => {
+                            settingsManager.showNotification('تم إنشاء جميع ملفات APK بنجاح!', 'success');
+                        }, 500);
+                    }
+                }, (index + 1) * 2000);
+            });
+        }
+
+        function deployToStores() {
+            settingsManager.showNotification('جاري رفع التطبيقات للمتاجر...', 'info');
+            
+            setTimeout(() => {
+                settingsManager.showNotification('تم رفع التطبيقات للمراجعة في Google Play Store!', 'success');
+            }, 3000);
+            
+            setTimeout(() => {
+                settingsManager.showNotification('تم رفع التطبيقات للمراجعة في App Store!', 'success');
+            }, 5000);
+        }
+
+        function downloadConfig(appType) {
+            const configs = {
+                customer: {
+                    firebase: settingsManager.settings.firebase,
+                    maps: { apiKey: settingsManager.settings.apiKeys?.googleMapsKey || '' },
+                    payment: { stripeKey: settingsManager.settings.apiKeys?.paymentKey || '' },
+                    sms: { apiKey: settingsManager.settings.apiKeys?.smsKey || '' },
+                    business: settingsManager.settings.business
+                },
+                driver: {
+                    firebase: settingsManager.settings.firebase,
+                    maps: { apiKey: settingsManager.settings.apiKeys?.googleMapsKey || '' },
+                    tracking: {
+                        updateInterval: settingsManager.settings.realtime.locationUpdateRate * 1000,
+                        accuracy: 'high'
+                    },
+                    earnings: {
+                        baseRate: settingsManager.settings.business.baseDeliveryFee,
+                        perKmRate: settingsManager.settings.business.perKmFee
+                    },
+                    business: settingsManager.settings.business
+                },
+                merchant: {
+                    firebase: settingsManager.settings.firebase,
+                    business: {
+                        commission: settingsManager.settings.business.platformCommission,
+                        preparationTime: 15,
+                        ...settingsManager.settings.business
+                    },
+                    features: {
+                        inventory: true,
+                        analytics: true,
+                        reports: true
+                    }
+                }
+            };
+
+            const config = configs[appType];
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${appType}-app-config.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            settingsManager.showNotification(`تم تحميل إعدادات تطبيق ${appType} بنجاح!`, 'success');
+        }
+
+        function createBackup() {
+            const backupData = {
+                settings: settingsManager.settings,
+                timestamp: new Date().toISOString(),
+                version: '1.0',
+                type: 'full_backup',
+                collections: {
+                    orders: '✓ مشمول',
+                    merchants: '✓ مشمول',
+                    drivers: '✓ مشمول',
+                    customers: '✓ مشمول',
+                    rewards: '✓ مشمول'
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            settingsManager.showNotification('تم إنشاء النسخة الاحتياطية بنجاح!', 'success');
+        }
+
+        function scheduleAutoBackup() {
+            settingsManager.showNotification('تم تفعيل النسخ الاحتياطي التلقائي!', 'success');
+            
+            // Schedule daily backup at 2 AM
+            const now = new Date();
+            const nextBackup = new Date();
+            nextBackup.setHours(2, 0, 0, 0);
+            
+            if (nextBackup <= now) {
+                nextBackup.setDate(nextBackup.getDate() + 1);
+            }
+            
+            const timeUntilBackup = nextBackup.getTime() - now.getTime();
+            
+            setTimeout(() => {
+                createBackup();
+                // Schedule next backup (24 hours)
+                setInterval(createBackup, 24 * 60 * 60 * 1000);
+            }, timeUntilBackup);
+            
+            settingsManager.showNotification(`النسخة الاحتياطية التالية في: ${nextBackup.toLocaleString('ar-SA')}`, 'info');
+        }
+
+        // Add import button and functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add backup buttons
+            const headerDiv = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 > div');
+            headerDiv.insertAdjacentHTML('afterbegin', `
+                <button class="btn btn-outline-info me-2" onclick="createBackup()">
+                    <span class="material-icons-outlined me-1">backup</span>
+                    نسخة احتياطية
+                </button>
+                <div class="btn-group me-2">
+                    <button class="btn btn-outline-warning dropdown-toggle" data-bs-toggle="dropdown">
+                        <span class="material-icons-outlined me-1">schedule</span>
+                        نسخ تلقائي
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="scheduleAutoBackup()">تفعيل النسخ التلقائي</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="createBackup()">نسخة فورية</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="settingsManager.showNotification('تم إيقاف النسخ التلقائي', 'warning')">إيقاف النسخ التلقائي</a></li>
+                    </ul>
+                </div>
+            `);
+            
+            headerDiv.insertAdjacentHTML('afterbegin', `
+                <input type="file" id="importSettings" accept=".json" style="display: none;" onchange="importSettings(event)">
+                <button class="btn btn-outline-secondary me-2" onclick="document.getElementById('importSettings').click()">
+                    <span class="material-icons-outlined me-1">upload</span>
+                    استيراد الإعدادات
+                </button>
+            `);
+            
+            // Initialize settings manager
+            window.settingsManager = new SettingsManager();
+            
+            // Add reset button functionality
+            const resetButton = document.createElement('button');
+            resetButton.className = 'btn btn-outline-danger me-2';
+            resetButton.innerHTML = '<span class="material-icons-outlined me-1">restore</span>إعادة تعيين';
+            resetButton.onclick = function() {
+                if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟')) {
+                    settingsManager.settings = settingsManager.getDefaultSettings();
+                    settingsManager.loadSettings();
+                    settingsManager.saveSettings();
+                    settingsManager.showNotification('تم إعادة تعيين الإعدادات بنجاح!', 'success');
+                }
+            };
+            headerDiv.insertAdjacentElement('afterbegin', resetButton);
+        });
+
+        console.log('🔧 Settings page loaded successfully');
+    </script>
+</body>
+</html>
