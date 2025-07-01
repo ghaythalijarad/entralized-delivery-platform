@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>لوحة تحكم الإدارة</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <!-- Bootstrap CSS (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Material Icons -->
@@ -76,13 +79,245 @@
             border: none;
             border-radius: 8px;
         }
+        
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mobile-nav h5 {
+            color: #1976d2;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1976d2;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .mobile-menu-btn:hover {
+            background-color: #f0f4fa;
+        }
+        
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 999;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .mobile-nav-menu.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .mobile-nav-menu .nav-link {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f1f1;
+            color: #222;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .mobile-nav-menu .nav-link:last-child {
+            border-bottom: none;
+        }
+        
+        .mobile-nav-menu .nav-link:hover,
+        .mobile-nav-menu .nav-link.active {
+            background: #f0f4fa;
+            color: #1976d2;
+        }
+        
+        .mobile-nav-menu .material-icons-outlined {
+            color: #1976d2;
+            font-size: 1.3rem;
+        }
+        
+        /* Responsive adjustments */
         @media (max-width: 991px) {
-            .sidebar { display: none; }
-            .content-area { padding: 1rem; }
+            .sidebar { 
+                display: none !important; 
+            }
+            .content-area { 
+                padding: 0;
+                margin: 0;
+            }
+            .mobile-nav {
+                display: flex;
+            }
+            #contentFrame {
+                height: calc(100vh - 80px) !important;
+                border-radius: 0;
+            }
+            .main-container {
+                padding: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-nav {
+                padding: 0.75rem 1rem;
+            }
+            .mobile-nav h5 {
+                font-size: 1.1rem;
+            }
+            #contentFrame {
+                height: calc(100vh - 70px) !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .mobile-nav {
+                padding: 0.5rem 1rem;
+            }
+            .mobile-nav h5 {
+                font-size: 1rem;
+            }
+            .mobile-nav-menu .nav-link {
+                padding: 0.875rem 1rem;
+                font-size: 0.95rem;
+            }
+            #contentFrame {
+                height: calc(100vh - 65px) !important;
+            }
+        }
+        
+        /* Enhanced iframe responsiveness */
+        #contentFrame {
+            width: 100%;
+            border: none;
+            background: #f4f6fb;
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .nav-link:hover,
+            .mobile-nav-menu .nav-link:hover {
+                background: inherit;
+            }
+            
+            .nav-link:active,
+            .mobile-nav-menu .nav-link:active {
+                background: #f0f4fa;
+                transform: scale(0.98);
+            }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus states for keyboard navigation */
+        .nav-link:focus,
+        .mobile-menu-btn:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+        
+        /* Loading state for iframe */
+        #contentFrame {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        
+        #contentFrame.loading {
+            opacity: 0.7;
+        }
+        
+        /* Scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Prevent horizontal scroll */
+        body {
+            overflow-x: hidden;
         }
     </style>
 </head>
 <body>
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <h5 class="mb-0">لوحة التحكم</h5>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <span class="material-icons-outlined">menu</span>
+        </button>
+        <div class="mobile-nav-menu" id="mobileNavMenu">
+            <a class="nav-link active" href="#" onclick="loadSection('dashboard.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">dashboard</span>
+                الرئيسية
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('orders.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">receipt_long</span>
+                الطلبات
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('merchants.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">store</span>
+                التجار
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('customers.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">people</span>
+                العملاء
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('drivers.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">local_shipping</span>
+                السائقون
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('rewards.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">redeem</span>
+                المكافآت
+            </a>
+            <a class="nav-link" href="#" onclick="loadSection('settings.html'); closeMobileMenu();">
+                <span class="material-icons-outlined">settings</span>
+                الإعدادات
+            </a>
+        </div>
+    </div>
+
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -146,14 +381,19 @@
         function loadSection(sectionFile) {
             console.log(`Loading section: ${sectionFile}`);
             const iframe = document.getElementById('contentFrame');
+            
+            // Add loading state
+            iframe.classList.add('loading');
 
             // Add error handling for iframe loading
             iframe.onload = function() {
                 console.log(`✅ Successfully loaded: ${sectionFile}`);
+                iframe.classList.remove('loading');
             };
 
             iframe.onerror = function() {
                 console.log(`❌ Failed to load: ${sectionFile}`);
+                iframe.classList.remove('loading');
                 // Fallback content
                 iframe.src = `data:text/html,<div style="padding:20px;text-align:center;color:#666;">
                     <h3>الصفحة غير متوفرة</h3>
@@ -165,7 +405,7 @@
             // Set the source
             iframe.src = sectionFile;
 
-            // Update active nav link
+            // Update active nav link for both desktop and mobile
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
@@ -175,6 +415,84 @@
                                 document.querySelector(`[onclick*="${sectionFile}"]`);
             if (clickedLink) {
                 clickedLink.classList.add('active');
+            }
+
+            // Also update mobile nav links
+            document.querySelectorAll('.mobile-nav-menu .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const mobileClickedLink = document.querySelector(`.mobile-nav-menu [onclick*="${sectionFile}"]`);
+            if (mobileClickedLink) {
+                mobileClickedLink.classList.add('active');
+            }
+        }
+
+        // Mobile menu toggle functions
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileNavMenu');
+            const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
+            
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                btn.textContent = 'menu';
+            } else {
+                menu.classList.add('show');
+                btn.textContent = 'close';
+            }
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileNavMenu');
+            const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
+            menu.classList.remove('show');
+            btn.textContent = 'menu';
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileNavMenu');
+            const btn = document.querySelector('.mobile-menu-btn');
+            
+            if (menu && menu.classList.contains('show') && 
+                !menu.contains(event.target) && 
+                !btn.contains(event.target)) {
+                closeMobileMenu();
+            }
+        });
+
+        // Handle window resize for responsive behavior
+        function handleResize() {
+            const menu = document.getElementById('mobileNavMenu');
+            if (window.innerWidth > 991 && menu && menu.classList.contains('show')) {
+                closeMobileMenu();
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        // Handle orientation change for mobile devices
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                handleResize();
+                // Adjust iframe height after orientation change
+                const iframe = document.getElementById('contentFrame');
+                if (iframe) {
+                    const isMobile = window.innerWidth <= 991;
+                    if (isMobile) {
+                        const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 70;
+                        iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
+                    }
+                }
+            }, 100);
+        });
+
+        // Initialize responsive iframe height
+        function setResponsiveHeight() {
+            const iframe = document.getElementById('contentFrame');
+            if (iframe && window.innerWidth <= 991) {
+                const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 70;
+                iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
             }
         }
 
@@ -264,13 +582,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Admin panel DOM loaded');
             testServerConnectivity();
+            setResponsiveHeight();
         });
 
         // If DOMContentLoaded already fired, run immediately
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', testServerConnectivity);
+            document.addEventListener('DOMContentLoaded', function() {
+                testServerConnectivity();
+                setResponsiveHeight();
+            });
         } else {
             testServerConnectivity();
+            setResponsiveHeight();
         }
     </script>
 
