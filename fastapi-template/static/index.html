@@ -92,23 +92,30 @@
             z-index: 1000;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
         }
         
         .mobile-nav h5 {
             color: #1976d2;
             font-weight: 600;
             margin: 0;
+            font-size: 1.2rem;
         }
         
         .mobile-menu-btn {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: #1976d2;
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 8px;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            min-height: 48px;
         }
         
         .mobile-menu-btn:hover {
@@ -123,6 +130,14 @@
             right: 0;
             background: #fff;
             border-top: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 999;
+            max-height: 70vh;
+            overflow-y: auto;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             z-index: 999;
             max-height: 70vh;
@@ -131,7 +146,7 @@
         
         .mobile-nav-menu.show {
             display: block;
-            animation: slideDown 0.2s ease-out;
+            animation: slideDown 0.3s ease-out;
         }
         
         @keyframes slideDown {
@@ -146,15 +161,17 @@
         }
         
         .mobile-nav-menu .nav-link {
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid #f1f1f1;
             color: #222;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
             transition: all 0.2s;
             font-weight: 500;
+            font-size: 1rem;
+            min-height: 60px;
         }
         
         .mobile-nav-menu .nav-link:last-child {
@@ -165,15 +182,17 @@
         .mobile-nav-menu .nav-link.active {
             background: #f0f4fa;
             color: #1976d2;
+            padding-right: 2rem;
         }
         
         .mobile-nav-menu .material-icons-outlined {
             color: #1976d2;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            min-width: 24px;
         }
         
         /* Responsive adjustments */
-        @media (max-width: 991px) {
+        @media (max-width: 991.98px) {
             .sidebar { 
                 display: none !important; 
             }
@@ -182,7 +201,7 @@
                 margin: 0;
             }
             .mobile-nav {
-                display: flex;
+                display: flex !important;
             }
             #contentFrame {
                 height: calc(100vh - 80px) !important;
@@ -191,33 +210,44 @@
             .main-container {
                 padding: 0;
             }
+            body {
+                padding-top: 0;
+            }
         }
         
         @media (max-width: 768px) {
             .mobile-nav {
-                padding: 0.75rem 1rem;
+                padding: 1rem;
             }
             .mobile-nav h5 {
                 font-size: 1.1rem;
             }
+            .mobile-menu-btn {
+                font-size: 1.6rem;
+            }
             #contentFrame {
-                height: calc(100vh - 70px) !important;
+                height: calc(100vh - 75px) !important;
             }
         }
         
         @media (max-width: 576px) {
             .mobile-nav {
-                padding: 0.5rem 1rem;
+                padding: 0.75rem 1rem;
             }
             .mobile-nav h5 {
                 font-size: 1rem;
             }
             .mobile-nav-menu .nav-link {
-                padding: 0.875rem 1rem;
+                padding: 1rem;
                 font-size: 0.95rem;
             }
+            .mobile-menu-btn {
+                font-size: 1.5rem;
+                min-width: 44px;
+                min-height: 44px;
+            }
             #contentFrame {
-                height: calc(100vh - 65px) !important;
+                height: calc(100vh - 70px) !important;
             }
         }
         
@@ -226,6 +256,59 @@
             width: 100%;
             border: none;
             background: #f4f6fb;
+        }
+        
+        /* Desktop sidebar visibility */
+        @media (min-width: 992px) {
+            .mobile-nav {
+                display: none !important;
+            }
+            .sidebar {
+                display: block !important;
+            }
+        }
+        
+        /* Debug: Ensure mobile nav is visible */
+        @media (max-width: 991.98px) {
+            .mobile-nav {
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                background: #fff !important;
+                border-bottom: 2px solid #1976d2;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            }
+            
+            .container-fluid {
+                padding-top: 80px; /* Account for fixed mobile nav */
+            }
+            
+            #contentFrame {
+                height: calc(100vh - 80px) !important;
+            }
+            
+            /* Force visibility */
+            .mobile-nav * {
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        /* Touch targets for mobile */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                min-width: 48px;
+                min-height: 48px;
+                font-size: 1.8rem;
+            }
+            
+            .mobile-nav-menu .nav-link {
+                min-height: 56px;
+                font-size: 1.1rem;
+            }
         }
         
         /* Touch-friendly interactions */
@@ -281,9 +364,9 @@
 </head>
 <body>
     <!-- Mobile Navigation -->
-    <div class="mobile-nav">
-        <h5 class="mb-0">لوحة التحكم</h5>
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <div class="mobile-nav" id="mobileNavBar">
+        <h5 class="mb-0">🏠 لوحة التحكم</h5>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="قائمة التنقل">
             <span class="material-icons-outlined">menu</span>
         </button>
         <div class="mobile-nav-menu" id="mobileNavMenu">
@@ -433,20 +516,31 @@
             const menu = document.getElementById('mobileNavMenu');
             const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
             
+            if (!menu || !btn) {
+                console.error('Mobile menu elements not found');
+                return;
+            }
+            
             if (menu.classList.contains('show')) {
                 menu.classList.remove('show');
                 btn.textContent = 'menu';
+                document.body.style.overflow = 'auto';
             } else {
                 menu.classList.add('show');
                 btn.textContent = 'close';
+                document.body.style.overflow = 'hidden';
             }
         }
 
         function closeMobileMenu() {
             const menu = document.getElementById('mobileNavMenu');
             const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
-            menu.classList.remove('show');
-            btn.textContent = 'menu';
+            
+            if (menu && btn) {
+                menu.classList.remove('show');
+                btn.textContent = 'menu';
+                document.body.style.overflow = 'auto';
+            }
         }
 
         // Close mobile menu when clicking outside
@@ -583,6 +677,21 @@
             console.log('🚀 Admin panel DOM loaded');
             testServerConnectivity();
             setResponsiveHeight();
+            
+            // Debug mobile navigation
+            const mobileNav = document.getElementById('mobileNavBar');
+            const screenWidth = window.innerWidth;
+            console.log(`📱 Screen width: ${screenWidth}px`);
+            console.log(`📱 Mobile nav element:`, mobileNav);
+            console.log(`📱 Mobile nav computed style:`, window.getComputedStyle(mobileNav).display);
+            
+            if (screenWidth <= 991) {
+                console.log('📱 Mobile mode detected - mobile nav should be visible');
+                if (mobileNav) {
+                    mobileNav.style.display = 'flex';
+                    console.log('📱 Forced mobile nav display to flex');
+                }
+            }
         });
 
         // If DOMContentLoaded already fired, run immediately
