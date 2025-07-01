@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام - النظام المركزي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        .status-connected { background-color: #28a745; }
+        .status-disconnected { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        .config-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .config-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>إعدادات النظام المركزي</h2>
+            <div>
+                <button class="btn btn-outline-success me-2" onclick="testAllConnections()">
+                    <span class="material-icons-outlined me-1">wifi_find</span>
+                    اختبار الاتصالات
+                </button>
+                <button class="btn btn-outline-primary" onclick="exportSettings()">
+                    <span class="material-icons-outlined me-1">download</span>
+                    تصدير الإعدادات
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection Status Banner -->
+        <div class="alert alert-info mb-4" id="connectionStatus">
+            <div class="d-flex align-items-center">
+                <span class="material-icons-outlined me-2">cloud</span>
+                <strong>حالة الاتصال:</strong>
+                <span class="status-indicator status-connected"></span>
+                <span id="connectionText">متصل بـ AWS</span>
+            </div>
+        </div>
+
+        <!-- Settings Accordion -->
+        <div class="accordion mb-4" id="settingsAccordion">
+            <!-- AWS Configuration as accordion-item -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingAws">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAws" aria-expanded="true" aria-controls="collapseAws">
+                        <span class="material-icons-outlined me-2">cloud</span>إعدادات AWS
+                    </button>
+                </h2>
+                <div id="collapseAws" class="accordion-collapse collapse show" aria-labelledby="headingAws" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="awsForm">
+                            <div class="mb-3">
+                                <label class="form-label">AWS Region</label>
+                                <select class="form-select" id="awsRegion">
+                                    <option value="us-east-1">US East (N. Virginia)</option>
+                                    <option value="us-west-2">US West (Oregon)</option>
+                                    <option value="eu-west-1">Europe (Ireland)</option>
+                                    <option value="me-south-1" selected>Middle East (Bahrain)</option>
+                                    <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                                </select>
+                                <small class="text-muted">منطقة AWS المطلوبة</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Access Key ID</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="accessKeyId" value="AKIAXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('accessKeyId')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Secret Access Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="secretAccessKey" value="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('secretAccessKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">S3 Bucket Name</label>
+                                <input type="text" class="form-control" id="s3Bucket" value="centralized-delivery-platform-storage">
+                                <small class="text-muted">اسم bucket لتخزين الملفات</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">RDS Database URL</label>
+                                <input type="text" class="form-control" id="rdsUrl" value="postgresql://username:password@delivery-db.xxx.rds.amazonaws.com:5432/delivery_platform">
+                                <small class="text-muted">رابط قاعدة البيانات</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableCloudWatch" checked>
+                                    <label class="form-check-label">تفعيل CloudWatch للمراقبة</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveAWSConfig()">حفظ إعدادات AWS</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testAWSConnection()">اختبار الاتصال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Push Notifications Configuration -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingNotifications">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotifications" aria-expanded="false" aria-controls="collapseNotifications">
+                        <span class="material-icons-outlined me-2">notifications</span>إعدادات الإشعارات
+                    </button>
+                </h2>
+                <div id="collapseNotifications" class="accordion-collapse collapse" aria-labelledby="headingNotifications" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="notificationForm">
+                            <div class="mb-3">
+                                <label class="form-label">AWS SNS Topic ARN</label>
+                                <input type="text" class="form-control" id="snsTopicArn" value="arn:aws:sns:me-south-1:123456789012:delivery-notifications">
+                                <small class="text-muted">ARN الخاص بموضوع SNS للإشعارات</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Platform Application ARN (Android)</label>
+                                <input type="text" class="form-control" id="androidPlatformArn" value="arn:aws:sns:me-south-1:123456789012:app/GCM/DeliveryAppAndroid">
+                                <small class="text-muted">تطبيق Android على SNS</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Platform Application ARN (iOS)</label>
+                                <input type="text" class="form-control" id="iosPlatformArn" value="arn:aws:sns:me-south-1:123456789012:app/APNS/DeliveryAppIOS">
+                                <small class="text-muted">تطبيق iOS على SNS</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">تطبيقات الهواتف المدعومة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="androidApp" checked>
+                                    <label class="form-check-label">تطبيق Android</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="iosApp" checked>
+                                    <label class="form-check-label">تطبيق iOS</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="webApp" checked>
+                                    <label class="form-check-label">تطبيق الويب</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveNotificationConfig()">حفظ إعدادات الإشعارات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testNotifications()">إرسال إشعار تجريبي</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Rules & Security -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingSecurity">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity" aria-expanded="false" aria-controls="collapseSecurity">
+                        <span class="material-icons-outlined me-2">security</span>قواعد الأمان والبيانات
+                    </button>
+                </h2>
+                <div id="collapseSecurity" class="accordion-collapse collapse" aria-labelledby="headingSecurity" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="securityForm">
+                            <div class="mb-3">
+                                <label class="form-label">مستوى الأمان</label>
+                                <select class="form-select" id="securityLevel">
+                                    <option value="strict">صارم (الإنتاج)</option>
+                                    <option value="moderate" selected>متوسط (التطوير)</option>
+                                    <option value="open">مفتوح (الاختبار)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">نمط المصادقة الافتراضي</label>
+                                <select class="form-select" id="authMode">
+                                    <option value="phone">رقم الهاتف</option>
+                                    <option value="email">البريد الإلكتروني</option>
+                                    <option value="anonymous">مجهول</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">فترة انتهاء الجلسة (دقيقة)</label>
+                                <input type="number" class="form-control" id="sessionTimeout" value="60">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableAuditLog" checked>
+                                    <label class="form-check-label">تفعيل سجل المراجعة</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableBackup" checked>
+                                    <label class="form-check-label">النسخ الاحتياطي التلقائي</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveSecurityConfig()">حفظ إعدادات الأمان</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collections & Indexes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDatabase">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatabase" aria-expanded="false" aria-controls="collapseDatabase">
+                        <span class="material-icons-outlined me-2">storage</span>قاعدة البيانات والجداول
+                    </button>
+                </h2>
+                <div id="collapseDatabase" class="accordion-collapse collapse" aria-labelledby="headingDatabase" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <label class="form-label">الجداول الأساسية</label>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    orders
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    merchants
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    drivers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    customers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    rewards
+                                    <span class="badge bg-warning">قيد الإنشاء</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="createIndexes()">إنشاء الفهارس المطلوبة</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeQueries()">تحسين الاستعلامات</button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">حجم قاعدة البيانات</label>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 25%">2.3 GB / 20 GB</div>
+                            </div>
+                            <small class="text-muted">AWS RDS PostgreSQL</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">نوع Instance</label>
+                            <select class="form-select" id="rdsInstanceType">
+                                <option value="db.t3.micro">db.t3.micro (1 vCPU, 1 GB RAM)</option>
+                                <option value="db.t3.small" selected>db.t3.small (2 vCPU, 2 GB RAM)</option>
+                                <option value="db.t3.medium">db.t3.medium (2 vCPU, 4 GB RAM)</option>
+                                <option value="db.m5.large">db.m5.large (2 vCPU, 8 GB RAM)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Features -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingRealtime">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRealtime" aria-expanded="false" aria-controls="collapseRealtime">
+                        <span class="material-icons-outlined me-2">sync</span>الميزات المباشرة
+                    </button>
+                </h2>
+                <div id="collapseRealtime" class="accordion-collapse collapse" aria-labelledby="headingRealtime" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="realtimeForm">
+                            <div class="mb-3">
+                                <label class="form-label">معدل تحديث مواقع السائقين (ثانية)</label>
+                                <input type="number" class="form-control" id="locationUpdateRate" value="5" min="1" max="60">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">مهلة استجابة الطلبات (دقيقة)</label>
+                                <input type="number" class="form-control" id="orderResponseTimeout" value="10" min="1" max="60">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableRealTimeTracking" checked>
+                                    <label class="form-check-label">تتبع مباشر للطلبات</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableLiveChat" checked>
+                                    <label class="form-check-label">الدردشة المباشرة</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableAutoAssignment" checked>
+                                    <label class="form-check-label">تعيين السائقين تلقائياً</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveRealtimeConfig()">حفظ الإعدادات المباشرة</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Logic -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingBusiness">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusiness" aria-expanded="false" aria-controls="collapseBusiness">
+                        <span class="material-icons-outlined me-2">business</span>منطق الأعمال
+                    </button>
+                </h2>
+                <div id="collapseBusiness" class="accordion-collapse collapse" aria-labelledby="headingBusiness" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="businessForm">
+                            <div class="mb-3">
+                                <label class="form-label">رسوم التوصيل الأساسية (IQD)</label>
+                                <input type="number" class="form-control" id="baseDeliveryFee" value="5" step="0.5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رسوم لكل كيلومتر (IQD)</label>
+                                <input type="number" class="form-control" id="perKmFee" value="2" step="0.1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">عمولة المنصة (%)</label>
+                                <input type="number" class="form-control" id="platformCommission" value="15" min="0" max="30">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">المسافة القصوى للتوصيل (كم)</label>
+                                <input type="number" class="form-control" id="maxDeliveryDistance" value="20" min="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">الحد الأدنى لقيمة الطلب (IQD)</label>
+                                <input type="number" class="form-control" id="minOrderValue" value="15" step="0.5">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveBusinessConfig()">حفظ إعدادات الأعمال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Keys & External Services -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingApiKeys">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApiKeys" aria-expanded="false" aria-controls="collapseApiKeys">
+                        مفاتيح API والخدمات الخارجية
+                    </button>
+                </h2>
+                <div id="collapseApiKeys" class="accordion-collapse collapse" aria-labelledby="headingApiKeys" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="apiKeysForm">
+                            <div class="mb-3">
+                                <label class="form-label">مفتاح API لخدمة SMS</label>
+                                <input type="text" class="form-control" id="smsKey" placeholder="ادخل مفتاح Twilio/SNS">
+                                <small class="text-muted">يستخدم لإرسال رسائل التحقق والتنبيهات</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">OneSignal App ID</label>
+                                <input type="text" class="form-control" id="oneSignalAppId" placeholder="ادخل معرف تطبيق OneSignal">
+                                <small class="text-muted">لإرسال إشعارات Push Notifications</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveApiKeys()">حفظ مفاتيح API</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile App Configuration -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingMobileApps">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileApps" aria-expanded="false" aria-controls="collapseMobileApps">
+                        إعدادات تطبيقات الجوال
+                    </button>
+                </h2>
+                <div id="collapseMobileApps" class="accordion-collapse collapse" aria-labelledby="headingMobileApps" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="mobileAppsForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رابط تطبيق العميل (Android)</label>
+                                    <input type="text" class="form-control" id="customerAppAndroid" placeholder="رابط Google Play">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رابط تطبيق العميل (iOS)</label>
+                                    <input type="text" class="form-control" id="customerAppIOS" placeholder="رابط App Store">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رابط تطبيق السائق (Android)</label>
+                                    <input type="text" class="form-control" id="driverAppAndroid" placeholder="رابط Google Play">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رابط تطبيق التاجر (Android)</label>
+                                    <input type="text" class="form-control" id="merchantAppAndroid" placeholder="رابط Google Play">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">الإصدار الأدنى المطلوب للتطبيقات</label>
+                                <input type="text" class="form-control" id="requiredAppVersion" placeholder="e.g., 1.2.0">
+                                <small class="text-muted">لإجبار المستخدمين على التحديث</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveMobileAppsConfig()">حفظ إعدادات التطبيقات</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deployment & Checklist -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingChecklist">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChecklist" aria-expanded="false" aria-controls="collapseChecklist">
+                        قائمة الجاهزية والنشر
+                    </button>
+                </h2>
+                <div id="collapseChecklist" class="accordion-collapse collapse" aria-labelledby="headingChecklist" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <h6>قائمة التحقق من الخدمات الأساسية</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Cognito User Pool
+                                <span class="badge bg-success">مكتمل</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                S3 Bucket للتخزين
+                                <span class="badge bg-success">مكتمل</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                DynamoDB Tables
+                                <span class="badge bg-warning">يتطلب إنشاء</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                IAM Roles & Policies
+                                <span class="badge bg-success">مكتمل</span>
+                            </li>
+                             <li class="list-group-item d-flex justify-content-between align-items-center">
+                                SNS Topics للإشعارات
+                                <span class="badge bg-danger">غير مُعد</span>
+                            </li>
+                        </ul>
+                        <div class="mt-4">
+                            <h6>أدوات النشر السريع</h6>
+                            <p>استخدم هذه الأوامر لإعداد البنية التحتية بسرعة عبر AWS CLI.</p>
+                            <div class="bg-dark text-light p-3 rounded">
+                                <code style="font-family: monospace; color: #00ff00;">
+                                    # Create DynamoDB Tables (example for orders)<br>
+                                    aws dynamodb create-table --cli-input-json file://orders-table.json --region me-south-1<br><br>
+                                    # Setup Cognito User Pool<br>
+                                    aws cognito-idp create-user-pool --pool-name DeliveryPlatformUsers --region me-south-1<br><br>
+                                    # Create S3 Bucket<br>
+                                    aws s3 mb s3://centralized-delivery-platform-storage --region me-south-1
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- end of settingsAccordion -->
+
+        <!-- AWS SDKs -->
+        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1182.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <script>
+            // Renamed to AWSSettingsManager
+            class AWSSettingsManager {
+                constructor() {
+                    this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
+                    this.loadSettings();
+                    this.initAWS();
+                }
+
+                getDefaultSettings() {
+                    return {
+                        aws: {
+                            region: 'me-south-1',
+                            accessKeyId: '',
+                            secretAccessKey: '',
+                            s3Bucket: 'centralized-delivery-platform-storage',
+                            rdsUrl: '',
+                            enableCloudWatch: true
+                        },
+                        database: {
+                            type: 'dynamodb',
+                            tablePrefix: 'delivery-platform',
+                            readCapacity: 5,
+                            writeCapacity: 5,
+                            enableAutoScaling: true,
+                            enableBackup: true
+                        },
+                        security: {
+                            level: 'moderate',
+                            authMode: 'phone',
+                            sessionTimeout: 60,
+                            enableAuditLog: true,
+                            enableBackup: true
+                        },
+                        realtime: {
+                            locationUpdateRate: 5,
+                            orderResponseTimeout: 10,
+                            enableRealTimeTracking: true,
+                            enableLiveChat: true,
+                            enableAutoAssignment: true
+                        },
+                        business: {
+                            baseDeliveryFee: 5,
+                            perKmFee: 2,
+                            platformCommission: 15,
+                            maxDeliveryDistance: 20,
+                            minOrderValue: 15
+                        },
+                        apiKeys: {
+                            smsKey: '',
+                            oneSignalAppId: ''
+                        },
+                        mobileApps: {
+                            customerAppAndroid: '',
+                            customerAppIOS: '',
+                            driverAppAndroid: '',
+                            merchantAppAndroid: '',
+                            requiredAppVersion: ''
+                        }
+                    };
+                }
+
+                loadSettings() {
+                    // Load AWS settings
+                    document.getElementById('awsRegion').value = this.settings.aws.region;
+                    document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId;
+                    document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey;
+                    document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
+                    document.getElementById('rdsUrl').value = this.settings.aws.rdsUrl;
+                    document.getElementById('enableCloudWatch').checked = this.settings.aws.enableCloudWatch;
+
+                    // Load notification settings
+                    document.getElementById('snsTopicArn').value = this.settings.notifications?.snsTopicArn || '';
+                    document.getElementById('androidPlatformArn').value = this.settings.notifications?.androidPlatformArn || '';
+                    document.getElementById('iosPlatformArn').value = this.settings.notifications?.iosPlatformArn || '';
+                    document.getElementById('androidApp').checked = this.settings.notifications?.androidApp;
+                    document.getElementById('iosApp').checked = this.settings.notifications?.iosApp;
+                    document.getElementById('webApp').checked = this.settings.notifications?.webApp;
+
+                    // Load security settings
+                    document.getElementById('securityLevel').value = this.settings.security.level;
+
+                    // Load realtime settings
+                    document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
+
+                    // Load business settings
+                    document.getElementById('baseDeliveryFee').value = this.settings.business.baseDeliveryFee;
+
+                    // Load API keys
+                    document.getElementById('smsKey').value = this.settings.apiKeys.smsKey;
+                    document.getElementById('oneSignalAppId').value = this.settings.apiKeys.oneSignalAppId;
+
+                    // Load mobile app settings
+                    document.getElementById('customerAppAndroid').value = this.settings.mobileApps.customerAppAndroid;
+                    document.getElementById('customerAppIOS').value = this.settings.mobileApps.customerAppIOS;
+                    document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid;
+                    document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid;
+                    document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion;
+                }
+
+                saveSettings() {
+                    localStorage.setItem('systemSettings', JSON.stringify(this.settings));
+                    this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+                }
+
+                initAWS() {
+                    try {
+                        // Initialize AWS SDK
+                        AWS.config.update({
+                            region: this.settings.aws.region,
+                            accessKeyId: this.settings.aws.accessKeyId,
+                            secretAccessKey: this.settings.aws.secretAccessKey
+                        });
+
+                        // Test AWS connection
+                        const s3 = new AWS.S3();
+                        s3.listBuckets((err, data) => {
+                            if (err) {
+                                console.error('AWS connection error:', err);
+                                this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+                            } else {
+                                console.log('AWS connection successful:', data);
+                                this.updateConnectionStatus('connected', 'متصل بـ AWS');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('AWS SDK initialization error:', error);
+                        this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+                    }
+                }
+
+                updateConnectionStatus(status, text) {
+                    const statusElement = document.getElementById('connectionStatus');
+                    const indicatorElement = statusElement.querySelector('.status-indicator');
+                    const textElement = document.getElementById('connectionText');
+
+                    indicatorElement.className = `status-indicator status-${status}`;
+                    textElement.textContent = text;
+
+                    const alertClass = {
+                        'connected': 'alert-success',
+                        'warning': 'alert-warning',
+                        'disconnected': 'alert-danger'
+                    }[status] || 'alert-info';
+
+                    statusElement.className = `alert ${alertClass} mb-4`;
+                }
+
+                showNotification(message, type = 'info') {
+                    const alertClass = {
+                        'success': 'alert-success',
+                        'error': 'alert-danger',
+                        'warning': 'alert-warning',
+                        'info': 'alert-info'
+                    }[type] || 'alert-info';
+
+                    const notification = document.createElement('div');
+                    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    notification.innerHTML = `
+                        <span class="material-icons-outlined me-2">
+                            ${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}
+                        </span>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                }
+            }
+
+            // Global Functions
+            function togglePasswordVisibility(fieldId) {
+                const field = document.getElementById(fieldId);
+                const button = field.nextElementSibling.querySelector('.material-icons-outlined');
+                
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    button.textContent = 'visibility_off';
+                } else {
+                    field.type = 'password';
+                    button.textContent = 'visibility';
+                }
+            }
+
+            function saveAWSConfig() {
+                settingsManager.settings.aws = {
+                    region: document.getElementById('awsRegion').value,
+                    accessKeyId: document.getElementById('accessKeyId').value,
+                    secretAccessKey: document.getElementById('secretAccessKey').value,
+                    s3Bucket: document.getElementById('s3Bucket').value,
+                    rdsUrl: document.getElementById('rdsUrl').value,
+                    enableCloudWatch: document.getElementById('enableCloudWatch').checked
+                };
+                
+                settingsManager.saveSettings();
+                settingsManager.showNotification('تم حفظ إعدادات AWS بنجاح!', 'success');
+            }
+
+            function testAWSConnection() {
+                settingsManager.showNotification('جاري اختبار الاتصال بـ AWS...', 'info');
+                
+                // Simulate AWS connection test
+                setTimeout(() => {
+                    const isConnected = Math.random() > 0.2; // 80% success rate for demo
+                    
+                    if (isConnected) {
+                        settingsManager.showNotification('تم الاتصال بـ AWS بنجاح!', 'success');
+                        document.getElementById('awsStatus').textContent = 'متصل';
+                        document.getElementById('awsStatus').className = 'badge bg-success';
+                        
+                        // Update connection status
+                        document.getElementById('connectionText').textContent = 'متصل بـ AWS';
+                    } else {
+                        settingsManager.showNotification('فشل في الاتصال بـ AWS. تحقق من المفاتيح.', 'error');
+                        document.getElementById('awsStatus').textContent = 'خطأ';
+                        document.getElementById('awsStatus').className = 'badge bg-danger';
+                    }
+                }, 2000);
+            }
+
+            function saveNotificationConfig() {
+                settingsManager.settings.notifications = {
+                    snsTopicArn: document.getElementById('snsTopicArn').value,
+                    androidPlatformArn: document.getElementById('androidPlatformArn').value,
+                    iosPlatformArn: document.getElementById('iosPlatformArn').value,
+                    androidApp: document.getElementById('androidApp').checked,
+                    iosApp: document.getElementById('iosApp').checked,
+                    webApp: document.getElementById('webApp').checked
+                };
+                
+                settingsManager.saveSettings();
+                settingsManager.showNotification('تم حفظ إعدادات الإشعارات بنجاح!', 'success');
+            }
+
+            function testNotifications() {
+                settingsManager.showNotification('جاري إرسال إشعار تجريبي عبر AWS SNS...', 'info');
+                
+                // Simulate AWS SNS notification test
+                setTimeout(() => {
+                    settingsManager.showNotification('تم إرسال الإشعار التجريبي بنجاح عبر AWS SNS!', 'success');
+                    document.getElementById('notificationStatus').textContent = 'يعمل';
+                    document.getElementById('notificationStatus').className = 'badge bg-success';
+                }, 2000);
+            }
+
+            function saveSecurityConfig() {
+                settingsManager.settings.security = {
+                    level: document.getElementById('securityLevel').value,
+                    authMode: document.getElementById('authMode').value,
+                    sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                    enableAuditLog: document.getElementById('enableAuditLog').checked,
+                    enableBackup: document.getElementById('enableBackup').checked
+                };
+                
+                settingsManager.saveSettings();
+            }
+
+            function saveRealtimeConfig() {
+                settingsManager.settings.realtime = {
+                    locationUpdateRate: parseInt(document.getElementById('locationUpdateRate').value),
+                    orderResponseTimeout: parseInt(document.getElementById('orderResponseTimeout').value),
+                    enableRealTimeTracking: document.getElementById('enableRealTimeTracking').checked,
+                    enableLiveChat: document.getElementById('enableLiveChat').checked,
+                    enableAutoAssignment: document.getElementById('enableAutoAssignment').checked
+                };
+                
+                settingsManager.saveSettings();
+            }
+
+            function saveBusinessConfig() {
+                settingsManager.settings.business = {
+                    baseDeliveryFee: parseFloat(document.getElementById('baseDeliveryFee').value),
+                    perKmFee: parseFloat(document.getElementById('perKmFee').value),
+                    platformCommission: parseInt(document.getElementById('platformCommission').value),
+                    maxDeliveryDistance: parseInt(document.getElementById('maxDeliveryDistance').value),
+                    minOrderValue: parseFloat(document.getElementById('minOrderValue').value)
+                };
+                
+                settingsManager.saveSettings();
+            }
+
+            function createIndexes() {
+                settingsManager.showNotification('جاري إنشاء الفهارس...', 'info');
+                
+                // Simulate index creation
+                const indexes = [
+                    'orders: timestamp, status, merchantId',
+                    'drivers: location, status, isOnline',
+                    'merchants: location, isActive, category',
+                    'customers: location, lastOrderDate'
+                ];
+                
+                setTimeout(() => {
+                    settingsManager.showNotification(`تم إنشاء ${indexes.length} فهارس بنجاح!`, 'success');
+                }, 3000);
+            }
+
+            function optimizeQueries() {
+                settingsManager.showNotification('جاري تحسين الاستعلامات...', 'info');
+                
+                setTimeout(() => {
+                    settingsManager.showNotification('تم تحسين الاستعلامات بنجاح! تحسن الأداء بنسبة 25%', 'success');
+                }, 2000);
+            }
+
+            function testAllConnections() {
+                settingsManager.showNotification('جاري اختبار جميع الاتصالات...', 'info');
+                
+                const tests = [
+                    { name: 'AWS RDS Database', delay: 1000 },
+                    { name: 'AWS S3 Storage', delay: 1500 },
+                    { name: 'AWS SNS Notifications', delay: 2000 },
+                    { name: 'AWS CloudWatch', delay: 2500 },
+                    { name: 'API Gateway', delay: 3000 }
+                ];
+                
+                tests.forEach((test, index) => {
+                    setTimeout(() => {
+                        const success = Math.random() > 0.2; // 80% success rate for demo
+                        const status = success ? 'نجح' : 'فشل';
+                        const type = success ? 'success' : 'error';
+                        settingsManager.showNotification(`${test.name}: ${status}`, type);
+                        
+                        if (index === tests.length - 1) {
+                            setTimeout(() => {
+                                settingsManager.showNotification('انتهى اختبار الاتصالات AWS', 'info');
+                           
