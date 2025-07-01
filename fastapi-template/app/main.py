@@ -136,6 +136,34 @@ async def get_customers_count():
     except Exception as e:
         raise HTTPException(500, f"Error fetching customers count: {str(e)}")
 
+@app.get("/api/dashboard/recent-activity")
+async def get_recent_activity():
+    """Get recent system activity for dashboard"""
+    try:
+        # Get recent orders
+        recent_orders = list(db.collection("orders").stream())[-5:]  # Last 5 orders
+        
+        activities = []
+        for order in recent_orders:
+            order_data = to_dict(order)
+            activities.append({
+                "type": "order",
+                "message": f"طلب جديد #{order.id[:8]} - {order_data.get('status', 'pending')}",
+                "time": "منذ دقائق",
+                "status": "success" if order_data.get('status') == 'confirmed' else "info",
+                "timestamp": order_data.get('created_at', datetime.now()).isoformat() if hasattr(order_data.get('created_at'), 'isoformat') else datetime.now().isoformat()
+            })
+        
+        # Sort by timestamp (most recent first)
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return {
+            "activities": activities[:10],  # Return last 10 activities
+            "count": len(activities)
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Error fetching recent activity: {str(e)}")
+
 # -- Sample Data Generation (for testing) --
 @app.post("/api/seed-data")
 async def seed_sample_data():

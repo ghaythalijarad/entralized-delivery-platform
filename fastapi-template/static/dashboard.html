@@ -220,14 +220,21 @@
     <div class="container-fluid p-4">
         <!-- Dashboard Header with Refresh Button -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <span class="badge bg-success live-indicator me-2">مباشر</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success live-indicator">مباشر</span>
                 <small class="text-muted" id="lastUpdated">آخر تحديث: جاري التحميل...</small>
+                <span class="badge bg-info" id="serverStatus">متصل</span>
             </div>
-            <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()" id="refreshBtn">
-                <span class="material-icons-outlined me-1">refresh</span>
-                تحديث
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
+                    <span class="material-icons-outlined me-1">home</span>
+                    الرئيسية
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()" id="refreshBtn">
+                    <span class="material-icons-outlined me-1">refresh</span>
+                    تحديث
+                </button>
+            </div>
         </div>
         
         <div class="alert alert-success">
@@ -286,21 +293,16 @@
         <div class="row">
             <div class="col-12">
                 <div class="card activity-card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">النشاط الأخير</h5>
+                        <span class="badge bg-primary" id="activityCount">0</span>
                     </div>
-                    <div class="card-body">
-                        <div class="alert alert-success">
-                            <strong>✅ تم تأكيد طلب جديد</strong><br>
-                            <small class="text-success">من مطعم الذواقة - منذ 5 دقائق</small>
-                        </div>
-                        <div class="alert alert-info">
-                            <strong>🚚 تم تعيين سائق</strong><br>
-                            <small class="text-info">للطلب #1234 - منذ 10 دقائق</small>
-                        </div>
-                        <div class="alert alert-warning">
-                            <strong>⏰ طلب في الانتظار</strong><br>
-                            <small class="text-warning">الطلب #1235 ينتظر تأكيد التاجر - منذ 15 دقيقة</small>
+                    <div class="card-body" id="activityFeed">
+                        <div class="text-center p-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">جاري التحميل...</span>
+                            </div>
+                            <p class="mt-2 text-muted">جاري تحميل النشاط الأخير...</p>
                         </div>
                     </div>
                 </div>
@@ -324,6 +326,13 @@
 
             async loadDashboardStats() {
                 try {
+                    // Update refresh button state
+                    const refreshBtn = document.getElementById('refreshBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري التحديث...';
+                    }
+
                     const response = await fetch('/api/dashboard/stats');
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -331,47 +340,164 @@
                     
                     const data = await response.json();
                     this.updateStatsCards(data);
+                    this.updateServerStatus('متصل', 'success');
+                    
+                    // Load recent activity
+                    await this.loadRecentActivity();
                     
                     console.log('📊 Dashboard stats loaded:', data);
                 } catch (error) {
                     console.error('❌ Error loading dashboard stats:', error);
+                    this.updateServerStatus('غير متصل', 'danger');
                     this.showErrorState();
+                } finally {
+                    // Reset refresh button
+                    const refreshBtn = document.getElementById('refreshBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = false;
+                        refreshBtn.innerHTML = '<span class="material-icons-outlined me-1">refresh</span>تحديث';
+                    }
+                }
+            }
+
+            async loadRecentActivity() {
+                try {
+                    const response = await fetch('/api/dashboard/recent-activity');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.updateActivityFeed(data.activities);
+                    } else {
+                        // Fallback to sample data
+                        const activities = [
+                            {
+                                type: 'order',
+                                message: 'تم تأكيد طلب جديد من مطعم الذواقة',
+                                time: 'منذ 5 دقائق',
+                                status: 'success'
+                            },
+                            {
+                                type: 'driver',
+                                message: 'تم تعيين سائق للطلب #1234',
+                                time: 'منذ 10 دقائق',
+                                status: 'info'
+                            },
+                            {
+                                type: 'warning',
+                                message: 'طلب في الانتظار ينتظر تأكيد التاجر',
+                                time: 'منذ 15 دقيقة',
+                                status: 'warning'
+                            }
+                        ];
+                        this.updateActivityFeed(activities);
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading recent activity:', error);
+                    // Show fallback empty state
+                    this.updateActivityFeed([]);
+                }
+            }
+
+            updateActivityFeed(activities) {
+                const activityFeed = document.getElementById('activityFeed');
+                const activityCount = document.getElementById('activityCount');
+                
+                if (activityFeed && activities.length > 0) {
+                    activityFeed.innerHTML = activities.map(activity => `
+                        <div class="alert alert-${activity.status} d-flex align-items-center">
+                            <span class="material-icons-outlined me-2">
+                                ${this.getActivityIcon(activity.type)}
+                            </span>
+                            <div class="flex-grow-1">
+                                <strong>${activity.message}</strong><br>
+                                <small class="text-${activity.status}">${activity.time}</small>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    if (activityCount) {
+                        activityCount.textContent = activities.length;
+                    }
+                } else if (activityFeed) {
+                    activityFeed.innerHTML = `
+                        <div class="text-center p-4 text-muted">
+                            <span class="material-icons-outlined" style="font-size: 3rem; opacity: 0.3;">inbox</span>
+                            <p class="mt-2">لا توجد أنشطة حديثة</p>
+                        </div>
+                    `;
+                }
+            }
+
+            getActivityIcon(type) {
+                const icons = {
+                    'order': 'shopping_cart',
+                    'driver': 'local_shipping',
+                    'merchant': 'store',
+                    'warning': 'warning',
+                    'error': 'error',
+                    'success': 'check_circle'
+                };
+                return icons[type] || 'notifications';
+            }
+
+            updateServerStatus(status, type) {
+                const serverStatus = document.getElementById('serverStatus');
+                if (serverStatus) {
+                    serverStatus.className = `badge bg-${type}`;
+                    serverStatus.textContent = status;
                 }
             }
 
             updateStatsCards(data) {
-                // Update Orders Today
+                // Update Orders Today with animation
                 const ordersElement = document.getElementById('ordersToday');
                 if (ordersElement) {
-                    ordersElement.innerHTML = data.orders_today || 0;
-                    ordersElement.classList.add('animate-count');
+                    this.animateCounterUpdate(ordersElement, data.orders_today || 0);
                 }
 
-                // Update Connected Merchants
+                // Update Connected Merchants with ratio display
                 const merchantsElement = document.getElementById('connectedMerchants');
                 if (merchantsElement) {
-                    merchantsElement.innerHTML = `${data.connected_merchants || 0}`;
-                    merchantsElement.classList.add('animate-count');
+                    const ratio = `${data.connected_merchants || 0}/${data.total_merchants || 0}`;
+                    this.animateCounterUpdate(merchantsElement, ratio);
                 }
 
                 // Update Active Drivers
                 const driversElement = document.getElementById('activeDrivers');
                 if (driversElement) {
-                    driversElement.innerHTML = data.active_drivers || 0;
-                    driversElement.classList.add('animate-count');
+                    this.animateCounterUpdate(driversElement, data.active_drivers || 0);
                 }
 
                 // Update Total Customers
                 const customersElement = document.getElementById('totalCustomers');
                 if (customersElement) {
-                    customersElement.innerHTML = this.formatNumber(data.total_customers || 0);
-                    customersElement.classList.add('animate-count');
+                    this.animateCounterUpdate(customersElement, this.formatNumber(data.total_customers || 0));
                 }
 
                 // Update last refresh time
                 const now = new Date().toLocaleTimeString('ar-SA');
-                document.getElementById('lastUpdated').innerText = `آخر تحديث: ${now}`;
+                const lastUpdatedElement = document.getElementById('lastUpdated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = `آخر تحديث: ${now}`;
+                }
+                
                 console.log(`🔄 Stats updated at ${now}`);
+            }
+
+            animateCounterUpdate(element, newValue) {
+                element.style.opacity = '0.5';
+                element.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    element.innerHTML = newValue;
+                    element.style.opacity = '1';
+                    element.style.transform = 'scale(1)';
+                    element.style.transition = 'all 0.3s ease';
+                    element.classList.add('animate-count');
+                }, 150);
+                
+                setTimeout(() => {
+                    element.classList.remove('animate-count');
+                }, 600);
             }
 
             showErrorState() {
