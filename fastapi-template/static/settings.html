@@ -31,6 +31,46 @@
         .config-card:hover {
             transform: translateY(-2px);
         }
+
+        /* Accent color definition */
+        :root {
+            --accent-color: #00C1E8;
+        }
+
+        /* Primary buttons and outlines */
+        .btn-primary {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+        }
+        .btn-primary:hover {
+            background-color: #00A7CC !important;
+            border-color: #00A7CC !important;
+        }
+        .btn-outline-success,
+        .btn-outline-info,
+        .btn-outline-primary {
+            color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+        }
+        .btn-outline-success:hover,
+        .btn-outline-info:hover,
+        .btn-outline-primary:hover {
+            background-color: var(--accent-color) !important;
+            color: #fff !important;
+        }
+
+        /* Card headers and highlights */
+        .card-header {
+            border-bottom: 2px solid var(--accent-color) !important;
+        }
+        .card-header h5 {
+            color: var(--accent-color) !important;
+        }
+
+        /* Status indicator uses accent */
+        .status-indicator.status-connected {
+            background-color: var(--accent-color) !important;
+        }
     </style>
 </head>
 <body>
@@ -39,9 +79,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>إعدادات النظام المركزي</h2>
             <div>
-                <button class="btn btn-outline-success me-2" onclick="testAllConnections()">
+                <button class="btn btn-outline-success me-2" onclick="checkAllServices()">
                     <span class="material-icons-outlined me-1">wifi_find</span>
-                    اختبار الاتصالات
+                    فحص الخدمات
                 </button>
                 <button class="btn btn-outline-primary" onclick="exportSettings()">
                     <span class="material-icons-outlined me-1">download</span>
@@ -56,49 +96,64 @@
                 <span class="material-icons-outlined me-2">cloud</span>
                 <strong>حالة الاتصال:</strong>
                 <span class="status-indicator status-connected"></span>
-                <span id="connectionText">متصل بـ Firebase</span>
+                <span id="connectionText">متصل بـ AWS Cloud</span>
             </div>
         </div>
 
         <div class="row">
-            <!-- Firebase Configuration -->
+            <!-- AWS Core Services Configuration -->
             <div class="col-md-6">
                 <div class="card config-card mb-4">
                     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5><span class="material-icons-outlined me-2">cloud</span>إعدادات Firebase</h5>
-                        <span class="badge bg-success" id="firebaseStatus">متصل</span>
+                        <h5><span class="material-icons-outlined me-2">cloud</span>إعدادات AWS الأساسية</h5>
+                        <span class="badge bg-success" id="awsStatus">متصل</span>
                     </div>
                     <div class="card-body">
-                        <form id="firebaseForm">
+                        <form id="awsForm">
                             <div class="mb-3">
-                                <label class="form-label">Project ID</label>
-                                <input type="text" class="form-control" id="projectId" value="centralized-delivery-platform">
-                                <small class="text-muted">معرف مشروع Firebase</small>
+                                <label class="form-label">AWS Region</label>
+                                <select class="form-select" id="awsRegion">
+                                    <option value="me-south-1" selected>Middle East (Bahrain) - me-south-1</option>
+                                    <option value="eu-west-1">Europe (Ireland) - eu-west-1</option>
+                                    <option value="us-east-1">US East (N. Virginia) - us-east-1</option>
+                                    <option value="ap-southeast-1">Asia Pacific (Singapore) - ap-southeast-1</option>
+                                </select>
+                                <small class="text-muted">المنطقة الجغرافية لخدمات AWS</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">API Key</label>
+                                <label class="form-label">Access Key ID</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="apiKey" value="AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('apiKey')">
+                                    <input type="password" class="form-control" id="accessKeyId" placeholder="AKIAIOSFODNN7EXAMPLE">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('accessKeyId')">
                                         <span class="material-icons-outlined">visibility</span>
                                     </button>
                                 </div>
+                                <small class="text-muted">مفتاح الوصول لـ AWS IAM</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Auth Domain</label>
-                                <input type="text" class="form-control" id="authDomain" value="centralized-delivery-platform.firebaseapp.com">
+                                <label class="form-label">Secret Access Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="secretAccessKey" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('secretAccessKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">المفتاح السري لـ AWS</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Storage Bucket</label>
-                                <input type="text" class="form-control" id="storageBucket" value="centralized-delivery-platform.appspot.com">
+                                <label class="form-label">Amplify App ID</label>
+                                <input type="text" class="form-control" id="amplifyAppId" value="d26nn5u6blbq6z" readonly>
+                                <small class="text-muted">معرف تطبيق AWS Amplify</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Messaging Sender ID</label>
-                                <input type="text" class="form-control" id="messagingSenderId" value="123456789012">
+                                <label class="form-label">CloudFront Distribution</label>
+                                <input type="text" class="form-control" id="cloudFrontId" placeholder="E1234567890123">
+                                <small class="text-muted">معرف توزيع CloudFront للتسريع</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">App ID</label>
-                                <input type="text" class="form-control" id="appId" value="1:123456789012:web:abcdefghijklmnop">
+                                <label class="form-label">S3 Bucket Name</label>
+                                <input type="text" class="form-control" id="s3Bucket" value="centralized-delivery-platform-storage">
+                                <small class="text-muted">اسم حاوية S3 لتخزين الملفات</small>
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
@@ -106,90 +161,51 @@
                                     <label class="form-check-label">تفعيل وضع عدم الاتصال</label>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-primary" onclick="saveFirebaseConfig()">حفظ إعدادات Firebase</button>
-                            <button type="button" class="btn btn-outline-success ms-2" onclick="testFirebaseConnection()">اختبار الاتصال</button>
+                            <button type="button" class="btn btn-primary" onclick="saveAwsConfig()">حفظ إعدادات AWS</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testAwsConnection()">اختبار الاتصال</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Push Notifications Configuration -->
+            <!-- AWS Database Services -->
             <div class="col-md-6">
                 <div class="card config-card mb-4">
                     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5><span class="material-icons-outlined me-2">notifications</span>إعدادات الإشعارات</h5>
-                        <span class="badge bg-info" id="notificationStatus">مُعد</span>
+                        <h5><span class="material-icons-outlined me-2">storage</span>خدمات قواعد البيانات AWS</h5>
+                        <span class="badge bg-info" id="databaseStatus">مُعد</span>
                     </div>
                     <div class="card-body">
-                        <form id="notificationForm">
+                        <form id="databaseForm">
                             <div class="mb-3">
-                                <label class="form-label">VAPID Key (Public)</label>
-                                <textarea class="form-control" id="vapidPublicKey" rows="3">BCdxdRiKDlXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</textarea>
-                                <small class="text-muted">مفتاح VAPID العام للإشعارات</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Server Key (FCM)</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="serverKey" value="AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('serverKey')">
-                                        <span class="material-icons-outlined">visibility</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">تطبيقات الهواتف المدعومة</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="androidApp" checked>
-                                    <label class="form-check-label">تطبيق Android</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="iosApp" checked>
-                                    <label class="form-check-label">تطبيق iOS</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="webApp" checked>
-                                    <label class="form-check-label">تطبيق الويب</label>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-primary" onclick="saveNotificationConfig()">حفظ إعدادات الإشعارات</button>
-                            <button type="button" class="btn btn-outline-success ms-2" onclick="testNotifications()">إرسال إشعار تجريبي</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Database Rules & Security -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">security</span>قواعد الأمان والبيانات</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="securityForm">
-                            <div class="mb-3">
-                                <label class="form-label">مستوى الأمان</label>
-                                <select class="form-select" id="securityLevel">
-                                    <option value="strict">صارم (الإنتاج)</option>
-                                    <option value="moderate" selected>متوسط (التطوير)</option>
-                                    <option value="open">مفتوح (الاختبار)</option>
+                                <label class="form-label">نوع قاعدة البيانات</label>
+                                <select class="form-select" id="databaseType">
+                                    <option value="dynamodb" selected>Amazon DynamoDB</option>
+                                    <option value="rds">Amazon RDS (PostgreSQL)</option>
+                                    <option value="documentdb">Amazon DocumentDB</option>
+                                    <option value="aurora">Amazon Aurora Serverless</option>
                                 </select>
+                                <small class="text-muted">نوع قاعدة البيانات المستخدمة</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">نمط المصادقة الافتراضي</label>
-                                <select class="form-select" id="authMode">
-                                    <option value="phone">رقم الهاتف</option>
-                                    <option value="email">البريد الإلكتروني</option>
-                                    <option value="anonymous">مجهول</option>
-                                </select>
+                                <label class="form-label">DynamoDB Table Prefix</label>
+                                <input type="text" class="form-control" id="tablePrefix" value="delivery-platform">
+                                <small class="text-muted">بادئة أسماء الجداول في DynamoDB</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">فترة انتهاء الجلسة (دقيقة)</label>
-                                <input type="number" class="form-control" id="sessionTimeout" value="60">
+                                <label class="form-label">Read Capacity Units</label>
+                                <input type="number" class="form-control" id="readCapacity" value="5" min="1">
+                                <small class="text-muted">وحدات سعة القراءة لـ DynamoDB</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Write Capacity Units</label>
+                                <input type="number" class="form-control" id="writeCapacity" value="5" min="1">
+                                <small class="text-muted">وحدات سعة الكتابة لـ DynamoDB</small>
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="enableAuditLog" checked>
-                                    <label class="form-check-label">تفعيل سجل المراجعة</label>
+                                    <input class="form-check-input" type="checkbox" id="enableAutoScaling" checked>
+                                    <label class="form-check-label">تفعيل التوسع التلقائي</label>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -198,53 +214,104 @@
                                     <label class="form-check-label">النسخ الاحتياطي التلقائي</label>
                                 </div>
                             </div>
+                            <button type="button" class="btn btn-primary" onclick="saveDatabaseConfig()">حفظ إعدادات قاعدة البيانات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testDatabaseConnection()">اختبار الاتصال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AWS Security & IAM -->
+            <div class="col-md-6">
+                <div class="card config-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5><span class="material-icons-outlined me-2">security</span>الأمان وإدارة الهوية AWS</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="securityForm">
+                            <div class="mb-3">
+                                <label class="form-label">IAM Role للتطبيق</label>
+                                <input type="text" class="form-control" id="iamRole" value="arn:aws:iam::123456789012:role/DeliveryAppRole">
+                                <small class="text-muted">دور IAM للوصول لخدمات AWS</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cognito User Pool ID</label>
+                                <input type="text" class="form-control" id="cognitoPoolId" value="me-south-1_XXXXXXXXX">
+                                <small class="text-muted">معرف مجمع المستخدمين في Cognito</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cognito App Client ID</label>
+                                <input type="text" class="form-control" id="cognitoClientId" value="XXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                <small class="text-muted">معرف عميل التطبيق في Cognito</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">فترة انتهاء Token (ساعة)</label>
+                                <input type="number" class="form-control" id="tokenTimeout" value="24" min="1" max="168">
+                                <small class="text-muted">مدة صلاحية رمز المصادقة</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableMFA" checked>
+                                    <label class="form-check-label">تفعيل المصادقة الثنائية</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableCloudTrail" checked>
+                                    <label class="form-check-label">تفعيل CloudTrail للمراجعة</label>
+                                </div>
+                            </div>
                             <button type="button" class="btn btn-primary" onclick="saveSecurityConfig()">حفظ إعدادات الأمان</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Collections & Indexes -->
+            <!-- AWS Tables & Resources -->
             <div class="col-md-6">
                 <div class="card config-card mb-4">
                     <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">storage</span>مجموعات البيانات والفهارس</h5>
+                        <h5><span class="material-icons-outlined me-2">table_chart</span>جداول DynamoDB والموارد</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">المجموعات الأساسية</label>
+                            <label class="form-label">الجداول الأساسية</label>
                             <div class="list-group">
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    orders
+                                    delivery-platform-orders
                                     <span class="badge bg-success">نشط</span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    merchants
+                                    delivery-platform-merchants
                                     <span class="badge bg-success">نشط</span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    drivers
+                                    delivery-platform-drivers
                                     <span class="badge bg-success">نشط</span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    customers
+                                    delivery-platform-customers
                                     <span class="badge bg-success">نشط</span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    rewards
+                                    delivery-platform-rewards
                                     <span class="badge bg-warning">قيد الإنشاء</span>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <button type="button" class="btn btn-outline-primary" onclick="createIndexes()">إنشاء الفهارس المطلوبة</button>
-                            <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeQueries()">تحسين الاستعلامات</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="createTables()">إنشاء الجداول المطلوبة</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeIndices()">تحسين الفهارس</button>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">حجم البيانات المقدر</label>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 25%">2.3 GB / 10 GB</div>
+                            <label class="form-label">استهلاك السعة الحالي</label>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: 30%">Read: 30%</div>
                             </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: 25%">Write: 25%</div>
+                            </div>
+                            <small class="text-muted">استخدام Read/Write Capacity Units</small>
                         </div>
                     </div>
                 </div>
@@ -320,31 +387,6 @@
                             </div>
                             <button type="button" class="btn btn-primary" onclick="saveBusinessConfig()">حفظ إعدادات الأعمال</button>
                         </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Service Account Upload -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">upload_file</span>رفع ملف Service Account</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">ملف Service Account JSON</label>
-                            <input type="file" class="form-control" id="serviceAccountFile" accept=".json">
-                            <small class="text-muted">ملف JSON الخاص بحساب الخدمة من Firebase Console</small>
-                        </div>
-                        <div class="mb-3" id="serviceAccountStatus" style="display: none;">
-                            <div class="alert alert-success">
-                                <span class="material-icons-outlined me-2">check_circle</span>
-                                تم تحميل ملف Service Account بنجاح
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-primary" onclick="uploadServiceAccount()">رفع وتفعيل</button>
                     </div>
                 </div>
             </div>
@@ -436,168 +478,193 @@
             </div>
         </div>
 
-        <!-- Essential Features Checklist -->
+        <!-- Essential AWS Services Checklist -->
         <div class="row">
             <div class="col-12">
                 <div class="card config-card mb-4">
                     <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">checklist</span>قائمة المتطلبات الأساسية</h5>
+                        <h5><span class="material-icons-outlined me-2">checklist</span>قائمة خدمات AWS المطلوبة</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <h6 class="text-primary">تطبيق العملاء</h6>
+                                <h6 class="text-primary">الخدمات الأساسية</h6>
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Firebase Authentication</span>
-                                        <span class="badge bg-success" id="authStatus">✓</span>
+                                        <span>AWS Amplify</span>
+                                        <span class="badge bg-success" id="amplifyStatus">✓</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Google Maps Integration</span>
-                                        <span class="badge bg-warning" id="mapsStatus">⚠</span>
+                                        <span>Amazon Cognito</span>
+                                        <span class="badge bg-warning" id="cognitoStatus">⚠</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Payment Gateway</span>
-                                        <span class="badge bg-danger" id="paymentStatus">✗</span>
+                                        <span>Amazon DynamoDB</span>
+                                        <span class="badge bg-success" id="dynamodbStatus">✓</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Push Notifications</span>
-                                        <span class="badge bg-success" id="pushStatus">✓</span>
+                                        <span>Amazon S3</span>
+                                        <span class="badge bg-success" id="s3Status">✓</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>SMS Verification</span>
-                                        <span class="badge bg-warning" id="smsStatus">⚠</span>
+                                        <span>Amazon CloudFront</span>
+                                        <span class="badge bg-warning" id="cloudfrontStatus">⚠</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <h6 class="text-success">تطبيق السائقين</h6>
+                                <h6 class="text-success">الميزات المتقدمة</h6>
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Location Tracking</span>
-                                        <span class="badge bg-success" id="locationStatus">✓</span>
+                                        <span>AWS Lambda Functions</span>
+                                        <span class="badge bg-warning" id="lambdaStatus">⚠</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Navigation API</span>
-                                        <span class="badge bg-warning" id="navigationStatus">⚠</span>
+                                        <span>Amazon API Gateway</span>
+                                        <span class="badge bg-warning" id="apigatewayStatus">⚠</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Camera Access</span>
-                                        <span class="badge bg-success" id="cameraStatus">✓</span>
+                                        <span>Amazon SNS (Push Notifications)</span>
+                                        <span class="badge bg-danger" id="snsStatus">✗</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Background Services</span>
-                                        <span class="badge bg-success" id="backgroundStatus">✓</span>
+                                        <span>Amazon SES (Email Service)</span>
+                                        <span class="badge bg-danger" id="sesStatus">✗</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Earnings Calculation</span>
-                                        <span class="badge bg-success" id="earningsStatus">✓</span>
+                                        <span>AWS IoT Core (Real-time)</span>
+                                        <span class="badge bg-warning" id="iotStatus">⚠</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <h6 class="text-info">تطبيق التجار</h6>
+                                <h6 class="text-info">المراقبة والتحليل</h6>
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Order Management</span>
-                                        <span class="badge bg-success" id="orderMgmtStatus">✓</span>
+                                        <span>Amazon CloudWatch</span>
+                                        <span class="badge bg-success" id="cloudwatchStatus">✓</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Menu Management</span>
-                                        <span class="badge bg-success" id="menuStatus">✓</span>
+                                        <span>AWS X-Ray (Tracing)</span>
+                                        <span class="badge bg-warning" id="xrayStatus">⚠</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Inventory Tracking</span>
-                                        <span class="badge bg-warning" id="inventoryStatus">⚠</span>
+                                        <span>AWS CloudTrail</span>
+                                        <span class="badge bg-success" id="cloudtrailStatus">✓</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Analytics Dashboard</span>
-                                        <span class="badge bg-success" id="analyticsStatus">✓</span>
+                                        <span>Amazon Pinpoint (Analytics)</span>
+                                        <span class="badge bg-warning" id="pinpointStatus">⚠</span>
                                     </div>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Financial Reports</span>
-                                        <span class="badge bg-warning" id="reportsStatus">⚠</span>
+                                        <span>AWS Config</span>
+                                        <span class="badge bg-warning" id="configStatus">⚠</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <button type="button" class="btn btn-outline-primary" onclick="checkAllFeatures()">فحص جميع الميزات</button>
-                            <button type="button" class="btn btn-outline-success ms-2" onclick="generateAPKs()">إنشاء ملفات APK</button>
-                            <button type="button" class="btn btn-outline-info ms-2" onclick="deployToStores()">نشر في المتاجر</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="checkAllServices()">فحص جميع الخدمات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="deployBackend()">نشر Backend على Lambda</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="setupPipeline()">إعداد CI/CD Pipeline</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Configuration Templates -->
+        <!-- AWS Configuration Templates -->
         <div class="row">
             <div class="col-12">
                 <div class="card config-card mb-4">
                     <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">code</span>قوالب الإعداد للتطبيقات</h5>
+                        <h5><span class="material-icons-outlined me-2">code</span>قوالب الإعداد للبنية التحتية AWS</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <h6>Customer App Config</h6>
+                                <h6>AWS Amplify Config</h6>
                                 <pre class="bg-light p-3 rounded" style="font-size: 12px;">
 {
-  "firebase": {
-    "projectId": "centralized-delivery-platform",
-    "apiKey": "AIzaSyBXXXXXXXX",
-    "authDomain": "centralized-delivery-platform.firebaseapp.com"
+  "aws": {
+    "region": "me-south-1",
+    "amplifyAppId": "d26nn5u6blbq6z",
+    "cognito": {
+      "userPoolId": "me-south-1_XXXXXXXXX",
+      "clientId": "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "s3": {
+      "bucket": "centralized-delivery-platform-storage"
+    }
   },
   "maps": {
     "apiKey": "AIzaSyBXXXXXXXX"
-  },
-  "payment": {
-    "stripeKey": "pk_test_XXXXXXX"
   }
 }
                                 </pre>
-                                <button class="btn btn-sm btn-outline-primary" onclick="downloadConfig('customer')">تحميل Config</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="downloadConfig('amplify')">تحميل Config</button>
                             </div>
                             <div class="col-md-4">
-                                <h6>Driver App Config</h6>
+                                <h6>DynamoDB Tables Schema</h6>
                                 <pre class="bg-light p-3 rounded" style="font-size: 12px;">
 {
-  "firebase": {
-    "projectId": "centralized-delivery-platform",
-    "apiKey": "AIzaSyBXXXXXXXX"
-  },
-  "tracking": {
-    "updateInterval": 5000,
-    "accuracy": "high"
-  },
-  "earnings": {
-    "baseRate": 5,
-    "perKmRate": 2
-  }
+  "tables": [
+    {
+      "tableName": "delivery-platform-orders",
+      "partitionKey": "orderId",
+      "sortKey": "timestamp"
+    },
+    {
+      "tableName": "delivery-platform-drivers",
+      "partitionKey": "driverId",
+      "gsi": ["location", "status"]
+    },
+    {
+      "tableName": "delivery-platform-merchants",
+      "partitionKey": "merchantId"
+    }
+  ]
 }
                                 </pre>
-                                <button class="btn btn-sm btn-outline-success" onclick="downloadConfig('driver')">تحميل Config</button>
+                                <button class="btn btn-sm btn-outline-success" onclick="downloadConfig('dynamodb')">تحميل Schema</button>
                             </div>
                             <div class="col-md-4">
-                                <h6>Merchant App Config</h6>
+                                <h6>Lambda Functions Config</h6>
                                 <pre class="bg-light p-3 rounded" style="font-size: 12px;">
 {
-  "firebase": {
-    "projectId": "centralized-delivery-platform",
-    "apiKey": "AIzaSyBXXXXXXXX"
-  },
-  "business": {
-    "commission": 15,
-    "preparationTime": 15
-  },
-  "features": {
-    "inventory": true,
-    "analytics": true
+  "functions": {
+    "orderProcessor": {
+      "runtime": "python3.9",
+      "timeout": 30,
+      "memory": 512
+    },
+    "notificationSender": {
+      "runtime": "nodejs18.x",
+      "timeout": 10,
+      "memory": 256
+    },
+    "paymentProcessor": {
+      "runtime": "python3.9",
+      "timeout": 60,
+      "memory": 1024
+    }
   }
 }
                                 </pre>
-                                <button class="btn btn-sm btn-outline-info" onclick="downloadConfig('merchant')">تحميل Config</button>
+                                <button class="btn btn-sm btn-outline-info" onclick="downloadConfig('lambda')">تحميل Config</button>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h6>AWS CLI Commands للإعداد السريع</h6>
+                            <div class="bg-dark text-light p-3 rounded">
+                                <code style="color: #00ff00;">
+# إنشاء DynamoDB Tables<br>
+aws dynamodb create-table --table-name delivery-platform-orders --region me-south-1<br><br>
+# إعداد Cognito User Pool<br>
+aws cognito-idp create-user-pool --pool-name DeliveryPlatformUsers --region me-south-1<br><br>
+# إنشاء S3 Bucket<br>
+aws s3 mb s3://centralized-delivery-platform-storage --region me-south-1
+                                </code>
                             </div>
                         </div>
                     </div>
@@ -606,46 +673,44 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    
+    <!-- AWS Amplify SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Settings Manager Class
-        class SettingsManager {
+        class AWSSettingsManager {
             constructor() {
                 this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
                 this.loadSettings();
-                this.initFirebase();
+                this.initAWS();
             }
 
             getDefaultSettings() {
                 return {
-                    firebase: {
-                        projectId: 'centralized-delivery-platform',
-                        apiKey: '',
-                        authDomain: 'centralized-delivery-platform.firebaseapp.com',
-                        storageBucket: 'centralized-delivery-platform.appspot.com',
-                        messagingSenderId: '123456789012',
-                        appId: '1:123456789012:web:abcdefghijklmnop',
+                    aws: {
+                        region: 'me-south-1',
+                        accessKeyId: '',
+                        secretAccessKey: '',
+                        amplifyAppId: 'd26nn5u6blbq6z',
+                        cloudFrontId: '',
+                        s3Bucket: 'centralized-delivery-platform-storage',
                         enableOffline: true
                     },
-                    notifications: {
-                        vapidPublicKey: '',
-                        serverKey: '',
-                        androidApp: true,
-                        iosApp: true,
-                        webApp: true
+                    database: {
+                        type: 'dynamodb',
+                        tablePrefix: 'delivery-platform',
+                        readCapacity: 5,
+                        writeCapacity: 5,
+                        enableAutoScaling: true,
+                        enableBackup: true
                     },
                     security: {
-                        level: 'moderate',
-                        authMode: 'phone',
-                        sessionTimeout: 60,
-                        enableAuditLog: true,
-                        enableBackup: true
+                        iamRole: 'arn:aws:iam::123456789012:role/DeliveryAppRole',
+                        cognitoPoolId: 'me-south-1_XXXXXXXXX',
+                        cognitoClientId: 'abcdefghijklmnopqrstuvwxyz',
+                        tokenTimeout: 60,
+                        enableMFA: false,
+                        enableCloudTrail: true
                     },
                     realtime: {
                         locationUpdateRate: 5,
@@ -663,9 +728,9 @@
                     },
                     apiKeys: {
                         googleMapsKey: '',
-                        paymentKey: '',
+                        stripeKey: '',
                         smsKey: '',
-                        oneSignalAppId: ''
+                        sesKey: ''
                     },
                     mobileApps: {
                         customerAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.customer',
@@ -678,28 +743,30 @@
             }
 
             loadSettings() {
-                // Load Firebase settings
-                document.getElementById('projectId').value = this.settings.firebase.projectId;
-                document.getElementById('apiKey').value = this.settings.firebase.apiKey || 'AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
-                document.getElementById('authDomain').value = this.settings.firebase.authDomain;
-                document.getElementById('storageBucket').value = this.settings.firebase.storageBucket;
-                document.getElementById('messagingSenderId').value = this.settings.firebase.messagingSenderId;
-                document.getElementById('appId').value = this.settings.firebase.appId;
-                document.getElementById('enableOffline').checked = this.settings.firebase.enableOffline;
+                // Load AWS settings
+                document.getElementById('awsRegion').value = this.settings.aws.region;
+                document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId || '';
+                document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey || '';
+                document.getElementById('amplifyAppId').value = this.settings.aws.amplifyAppId;
+                document.getElementById('cloudFrontId').value = this.settings.aws.cloudFrontId || '';
+                document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
+                document.getElementById('enableOffline').checked = this.settings.aws.enableOffline;
 
-                // Load notification settings
-                document.getElementById('vapidPublicKey').value = this.settings.notifications.vapidPublicKey || 'BCdxdRiKDlXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
-                document.getElementById('serverKey').value = this.settings.notifications.serverKey || 'AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-                document.getElementById('androidApp').checked = this.settings.notifications.androidApp;
-                document.getElementById('iosApp').checked = this.settings.notifications.iosApp;
-                document.getElementById('webApp').checked = this.settings.notifications.webApp;
+                // Load database settings
+                document.getElementById('databaseType').value = this.settings.database.type;
+                document.getElementById('tablePrefix').value = this.settings.database.tablePrefix;
+                document.getElementById('readCapacity').value = this.settings.database.readCapacity;
+                document.getElementById('writeCapacity').value = this.settings.database.writeCapacity;
+                document.getElementById('enableAutoScaling').checked = this.settings.database.enableAutoScaling;
+                document.getElementById('enableBackup').checked = this.settings.database.enableBackup;
 
                 // Load security settings
-                document.getElementById('securityLevel').value = this.settings.security.level;
-                document.getElementById('authMode').value = this.settings.security.authMode;
-                document.getElementById('sessionTimeout').value = this.settings.security.sessionTimeout;
-                document.getElementById('enableAuditLog').checked = this.settings.security.enableAuditLog;
-                document.getElementById('enableBackup').checked = this.settings.security.enableBackup;
+                document.getElementById('iamRole').value = this.settings.security.iamRole;
+                document.getElementById('cognitoPoolId').value = this.settings.security.cognitoPoolId;
+                document.getElementById('cognitoClientId').value = this.settings.security.cognitoClientId;
+                document.getElementById('tokenTimeout').value = this.settings.security.tokenTimeout;
+                document.getElementById('enableMFA').checked = this.settings.security.enableMFA;
+                document.getElementById('enableCloudTrail').checked = this.settings.security.enableCloudTrail;
 
                 // Load realtime settings
                 document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
@@ -738,29 +805,30 @@
                 this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
             }
 
-            initFirebase() {
+            // Initialize AWS Amplify configuration
+            initAWS() {
                 try {
-                    const firebaseConfig = {
-                        apiKey: this.settings.firebase.apiKey,
-                        authDomain: this.settings.firebase.authDomain,
-                        projectId: this.settings.firebase.projectId,
-                        storageBucket: this.settings.firebase.storageBucket,
-                        messagingSenderId: this.settings.firebase.messagingSenderId,
-                        appId: this.settings.firebase.appId
-                    };
-
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(firebaseConfig);
-                    }
-
-                    this.updateConnectionStatus('connected', 'متصل بـ Firebase');
-                    document.getElementById('firebaseStatus').textContent = 'متصل';
-                    document.getElementById('firebaseStatus').className = 'badge bg-success';
+                    Amplify.configure({
+                        Auth: {
+                            region: this.settings.aws.region,
+                            userPoolId: this.settings.security.cognitoPoolId,
+                            userPoolWebClientId: this.settings.security.cognitoClientId
+                        },
+                        Storage: {
+                            AWSS3: {
+                                bucket: this.settings.aws.s3Bucket,
+                                region: this.settings.aws.region
+                            }
+                        }
+                    });
+                    this.updateConnectionStatus('connected', 'متصل بـ AWS Cloud');
+                    document.getElementById('awsStatus').textContent = 'متصل';
+                    document.getElementById('awsStatus').className = 'badge bg-success';
                 } catch (error) {
-                    console.error('Firebase initialization error:', error);
-                    this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ Firebase');
-                    document.getElementById('firebaseStatus').textContent = 'غير متصل';
-                    document.getElementById('firebaseStatus').className = 'badge bg-danger';
+                    console.error('AWS initialization error:', error);
+                    this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+                    document.getElementById('awsStatus').textContent = 'غير متصل';
+                    document.getElementById('awsStatus').className = 'badge bg-danger';
                 }
             }
 
@@ -810,7 +878,7 @@
             }
         }
 
-        // Global Functions
+        // Global Functions for AWS
         function togglePasswordVisibility(fieldId) {
             const field = document.getElementById(fieldId);
             const button = field.nextElementSibling.querySelector('.material-icons-outlined');
@@ -824,439 +892,44 @@
             }
         }
 
-        function saveFirebaseConfig() {
-            settingsManager.settings.firebase = {
-                projectId: document.getElementById('projectId').value,
-                apiKey: document.getElementById('apiKey').value,
-                authDomain: document.getElementById('authDomain').value,
-                storageBucket: document.getElementById('storageBucket').value,
-                messagingSenderId: document.getElementById('messagingSenderId').value,
-                appId: document.getElementById('appId').value,
+        // Save AWS configuration to localStorage and reinitialize
+        function saveAwsConfig() {
+            settingsManager.settings.aws = {
+                region: document.getElementById('awsRegion').value,
+                accessKeyId: document.getElementById('accessKeyId').value,
+                secretAccessKey: document.getElementById('secretAccessKey').value,
+                amplifyAppId: settingsManager.settings.aws.amplifyAppId,
+                cloudFrontId: document.getElementById('cloudFrontId').value,
+                s3Bucket: document.getElementById('s3Bucket').value,
                 enableOffline: document.getElementById('enableOffline').checked
             };
-            
             settingsManager.saveSettings();
-            settingsManager.initFirebase();
+            settingsManager.initAWS();
         }
 
-        function testFirebaseConnection() {
-            settingsManager.showNotification('جاري اختبار الاتصال...', 'info');
-            
+        // Test AWS connectivity by listing S3 buckets
+        async function testAwsConnection() {
+            settingsManager.showNotification('جاري اختبار الاتصال بـ AWS...', 'info');
             try {
-                const db = firebase.firestore();
-                db.collection('test').add({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    test: true
-                })
-                .then(() => {
-                    settingsManager.showNotification('تم الاتصال بـ Firebase بنجاح!', 'success');
-                    document.getElementById('firebaseStatus').textContent = 'متصل';
-                    document.getElementById('firebaseStatus').className = 'badge bg-success';
-                })
-                .catch((error) => {
-                    console.error('Firebase test failed:', error);
-                    settingsManager.showNotification('فشل في الاتصال بـ Firebase: ' + error.message, 'error');
-                    document.getElementById('firebaseStatus').textContent = 'خطأ';
-                    document.getElementById('firebaseStatus').className = 'badge bg-danger';
+                const s3 = new AWS.S3({
+                    region: settingsManager.settings.aws.region,
+                    credentials: {
+                        accessKeyId: settingsManager.settings.aws.accessKeyId,
+                        secretAccessKey: settingsManager.settings.aws.secretAccessKey
+                    }
                 });
+                await s3.listBuckets().promise();
+                settingsManager.showNotification('تم الاتصال بـ AWS بنجاح!', 'success');
+                document.getElementById('awsStatus').textContent = 'متصل';
+                document.getElementById('awsStatus').className = 'badge bg-success';
             } catch (error) {
-                settingsManager.showNotification('خطأ في إعدادات Firebase', 'error');
+                console.error('AWS test failed:', error);
+                settingsManager.showNotification('فشل في الاتصال بـ AWS: ' + error.message, 'error');
+                document.getElementById('awsStatus').textContent = 'خطأ';
+                document.getElementById('awsStatus').className = 'badge bg-danger';
             }
         }
 
-        function saveNotificationConfig() {
-            settingsManager.settings.notifications = {
-                vapidPublicKey: document.getElementById('vapidPublicKey').value,
-                serverKey: document.getElementById('serverKey').value,
-                androidApp: document.getElementById('androidApp').checked,
-                iosApp: document.getElementById('iosApp').checked,
-                webApp: document.getElementById('webApp').checked
-            };
-            
-            settingsManager.saveSettings();
-        }
-
-        function testNotifications() {
-            settingsManager.showNotification('جاري إرسال إشعار تجريبي...', 'info');
-            
-            // Simulate notification test
-            setTimeout(() => {
-                settingsManager.showNotification('تم إرسال الإشعار التجريبي بنجاح!', 'success');
-                document.getElementById('notificationStatus').textContent = 'يعمل';
-                document.getElementById('notificationStatus').className = 'badge bg-success';
-            }, 2000);
-        }
-
-        function saveSecurityConfig() {
-            settingsManager.settings.security = {
-                level: document.getElementById('securityLevel').value,
-                authMode: document.getElementById('authMode').value,
-                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
-                enableAuditLog: document.getElementById('enableAuditLog').checked,
-                enableBackup: document.getElementById('enableBackup').checked
-            };
-            
-            settingsManager.saveSettings();
-        }
-
-        function saveRealtimeConfig() {
-            settingsManager.settings.realtime = {
-                locationUpdateRate: parseInt(document.getElementById('locationUpdateRate').value),
-                orderResponseTimeout: parseInt(document.getElementById('orderResponseTimeout').value),
-                enableRealTimeTracking: document.getElementById('enableRealTimeTracking').checked,
-                enableLiveChat: document.getElementById('enableLiveChat').checked,
-                enableAutoAssignment: document.getElementById('enableAutoAssignment').checked
-            };
-            
-            settingsManager.saveSettings();
-        }
-
-        function saveBusinessConfig() {
-            settingsManager.settings.business = {
-                baseDeliveryFee: parseFloat(document.getElementById('baseDeliveryFee').value),
-                perKmFee: parseFloat(document.getElementById('perKmFee').value),
-                platformCommission: parseInt(document.getElementById('platformCommission').value),
-                maxDeliveryDistance: parseInt(document.getElementById('maxDeliveryDistance').value),
-                minOrderValue: parseFloat(document.getElementById('minOrderValue').value)
-            };
-            
-            settingsManager.saveSettings();
-        }
-
-        function createIndexes() {
-            settingsManager.showNotification('جاري إنشاء الفهارس...', 'info');
-            
-            // Simulate index creation
-            const indexes = [
-                'orders: timestamp, status, merchantId',
-                'drivers: location, status, isOnline',
-                'merchants: location, isActive, category',
-                'customers: location, lastOrderDate'
-            ];
-            
-            setTimeout(() => {
-                settingsManager.showNotification(`تم إنشاء ${indexes.length} فهارس بنجاح!`, 'success');
-            }, 3000);
-        }
-
-        function optimizeQueries() {
-            settingsManager.showNotification('جاري تحسين الاستعلامات...', 'info');
-            
-            setTimeout(() => {
-                settingsManager.showNotification('تم تحسين الاستعلامات بنجاح! تحسن الأداء بنسبة 25%', 'success');
-            }, 2000);
-        }
-
-        function uploadServiceAccount() {
-            const fileInput = document.getElementById('serviceAccountFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                settingsManager.showNotification('يرجى اختيار ملف Service Account', 'warning');
-                return;
-            }
-            
-            if (file.type !== 'application/json') {
-                settingsManager.showNotification('يجب أن يكون الملف من نوع JSON', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const serviceAccount = JSON.parse(e.target.result);
-                    
-                    // Validate service account structure
-                    if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
-                        throw new Error('ملف Service Account غير صالح');
-                    }
-                    
-                    // Store service account securely (in real app, send to secure backend)
-                    localStorage.setItem('serviceAccount', JSON.stringify(serviceAccount));
-                    
-                    document.getElementById('serviceAccountStatus').style.display = 'block';
-                    settingsManager.showNotification('تم رفع ملف Service Account بنجاح!', 'success');
-                    
-                    // Update Firebase config with project details
-                    document.getElementById('projectId').value = serviceAccount.project_id;
-                    
-                } catch (error) {
-                    settingsManager.showNotification('خطأ في قراءة ملف Service Account: ' + error.message, 'error');
-                }
-            };
-            
-            reader.readAsText(file);
-        }
-
-        function testAllConnections() {
-            settingsManager.showNotification('جاري اختبار جميع الاتصالات...', 'info');
-            
-            const tests = [
-                { name: 'Firebase Firestore', delay: 1000 },
-                { name: 'Firebase Auth', delay: 1500 },
-                { name: 'Cloud Messaging', delay: 2000 },
-                { name: 'Cloud Storage', delay: 2500 },
-                { name: 'Cloud Functions', delay: 3000 }
-            ];
-            
-            tests.forEach((test, index) => {
-                setTimeout(() => {
-                    const success = Math.random() > 0.2; // 80% success rate for demo
-                    const status = success ? 'نجح' : 'فشل';
-                    const type = success ? 'success' : 'error';
-                    settingsManager.showNotification(`${test.name}: ${status}`, type);
-                    
-                    if (index === tests.length - 1) {
-                        setTimeout(() => {
-                            settingsManager.showNotification('انتهى اختبار الاتصالات', 'info');
-                        }, 500);
-                    }
-                }, test.delay);
-            });
-        }
-
-        function exportSettings() {
-            const exportData = {
-                settings: settingsManager.settings,
-                exportDate: new Date().toISOString(),
-                version: '1.0',
-                platform: 'Centralized Delivery Platform'
-            };
-            
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `system-settings-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            settingsManager.showNotification('تم تصدير الإعدادات بنجاح!', 'success');
-        }
-
-        // Import settings function
-        function importSettings(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (importedData.settings) {
-                        settingsManager.settings = { ...settingsManager.settings, ...importedData.settings };
-                        settingsManager.loadSettings();
-                        settingsManager.saveSettings();
-                        settingsManager.showNotification('تم استيراد الإعدادات بنجاح!', 'success');
-                    } else {
-                        throw new Error('ملف إعدادات غير صالح');
-                    }
-                } catch (error) {
-                    settingsManager.showNotification('خطأ في استيراد الإعدادات: ' + error.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Add new functions for API keys and mobile apps
-        function saveApiKeys() {
-            settingsManager.settings.apiKeys = {
-                googleMapsKey: document.getElementById('googleMapsKey').value,
-                paymentKey: document.getElementById('paymentKey').value,
-                smsKey: document.getElementById('smsKey').value,
-                oneSignalAppId: document.getElementById('oneSignalAppId').value
-            };
-            settingsManager.saveSettings();
-        }
-
-        function saveMobileAppConfig() {
-            settingsManager.settings.mobileApps = {
-                customerAppAndroid: document.getElementById('customerAppAndroid').value,
-                customerAppIOS: document.getElementById('customerAppIOS').value,
-                driverAppAndroid: document.getElementById('driverAppAndroid').value,
-                merchantAppAndroid: document.getElementById('merchantAppAndroid').value,
-                requiredAppVersion: document.getElementById('requiredAppVersion').value
-            };
-            settingsManager.saveSettings();
-        }
-
-        function checkAllFeatures() {
-            settingsManager.showNotification('جاري فحص جميع الميزات...', 'info');
-            
-            const features = [
-                { id: 'authStatus', name: 'Firebase Auth' },
-                { id: 'mapsStatus', name: 'Google Maps' },
-                { id: 'paymentStatus', name: 'Payment Gateway' },
-                { id: 'pushStatus', name: 'Push Notifications' },
-                { id: 'smsStatus', name: 'SMS Service' },
-                { id: 'locationStatus', name: 'Location Tracking' },
-                { id: 'navigationStatus', name: 'Navigation' },
-                { id: 'cameraStatus', name: 'Camera Access' },
-                { id: 'backgroundStatus', name: 'Background Services' },
-                { id: 'earningsStatus', name: 'Earnings' },
-                { id: 'orderMgmtStatus', name: 'Order Management' },
-                { id: 'menuStatus', name: 'Menu Management' },
-                { id: 'inventoryStatus', name: 'Inventory' },
-                { id: 'analyticsStatus', name: 'Analytics' },
-                { id: 'reportsStatus', name: 'Reports' }
-            ];
-
-            features.forEach((feature, index) => {
-                setTimeout(() => {
-                    const element = document.getElementById(feature.id);
-                    const success = Math.random() > 0.3; // 70% success rate
-                    
-                    if (success) {
-                        element.textContent = '✓';
-                        element.className = 'badge bg-success';
-                    } else {
-                        element.textContent = '✗';
-                        element.className = 'badge bg-danger';
-                    }
-                    
-                    if (index === features.length - 1) {
-                        settingsManager.showNotification('تم فحص جميع الميزات!', 'success');
-                    }
-                }, index * 200);
-            });
-        }
-
-        function generateAPKs() {
-            settingsManager.showNotification('جاري إنشاء ملفات APK...', 'info');
-            
-            const apps = ['تطبيق العملاء', 'تطبيق السائقين', 'تطبيق التجار'];
-            
-            apps.forEach((app, index) => {
-                setTimeout(() => {
-                    settingsManager.showNotification(`تم إنشاء ${app} بنجاح!`, 'success');
-                    
-                    if (index === apps.length - 1) {
-                        setTimeout(() => {
-                            settingsManager.showNotification('تم إنشاء جميع ملفات APK بنجاح!', 'success');
-                        }, 500);
-                    }
-                }, (index + 1) * 2000);
-            });
-        }
-
-        function deployToStores() {
-            settingsManager.showNotification('جاري رفع التطبيقات للمتاجر...', 'info');
-            
-            setTimeout(() => {
-                settingsManager.showNotification('تم رفع التطبيقات للمراجعة في Google Play Store!', 'success');
-            }, 3000);
-            
-            setTimeout(() => {
-                settingsManager.showNotification('تم رفع التطبيقات للمراجعة في App Store!', 'success');
-            }, 5000);
-        }
-
-        function downloadConfig(appType) {
-            const configs = {
-                customer: {
-                    firebase: settingsManager.settings.firebase,
-                    maps: { apiKey: settingsManager.settings.apiKeys?.googleMapsKey || '' },
-                    payment: { stripeKey: settingsManager.settings.apiKeys?.paymentKey || '' },
-                    sms: { apiKey: settingsManager.settings.apiKeys?.smsKey || '' },
-                    business: settingsManager.settings.business
-                },
-                driver: {
-                    firebase: settingsManager.settings.firebase,
-                    maps: { apiKey: settingsManager.settings.apiKeys?.googleMapsKey || '' },
-                    tracking: {
-                        updateInterval: settingsManager.settings.realtime.locationUpdateRate * 1000,
-                        accuracy: 'high'
-                    },
-                    earnings: {
-                        baseRate: settingsManager.settings.business.baseDeliveryFee,
-                        perKmRate: settingsManager.settings.business.perKmFee
-                    },
-                    business: settingsManager.settings.business
-                },
-                merchant: {
-                    firebase: settingsManager.settings.firebase,
-                    business: {
-                        commission: settingsManager.settings.business.platformCommission,
-                        preparationTime: 15,
-                        ...settingsManager.settings.business
-                    },
-                    features: {
-                        inventory: true,
-                        analytics: true,
-                        reports: true
-                    }
-                }
-            };
-
-            const config = configs[appType];
-            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${appType}-app-config.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            settingsManager.showNotification(`تم تحميل إعدادات تطبيق ${appType} بنجاح!`, 'success');
-        }
-
-        function createBackup() {
-            const backupData = {
-                settings: settingsManager.settings,
-                timestamp: new Date().toISOString(),
-                version: '1.0',
-                type: 'full_backup',
-                collections: {
-                    orders: '✓ مشمول',
-                    merchants: '✓ مشمول',
-                    drivers: '✓ مشمول',
-                    customers: '✓ مشمول',
-                    rewards: '✓ مشمول'
-                }
-            };
-
-            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `system-backup-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            settingsManager.showNotification('تم إنشاء النسخة الاحتياطية بنجاح!', 'success');
-        }
-
-        function scheduleAutoBackup() {
-            settingsManager.showNotification('تم تفعيل النسخ الاحتياطي التلقائي!', 'success');
-            
-            // Schedule daily backup at 2 AM
-            const now = new Date();
-            const nextBackup = new Date();
-            nextBackup.setHours(2, 0, 0, 0);
-            
-            if (nextBackup <= now) {
-                nextBackup.setDate(nextBackup.getDate() + 1);
-            }
-            
-            const timeUntilBackup = nextBackup.getTime() - now.getTime();
-            
-            setTimeout(() => {
-                createBackup();
-                // Schedule next backup (24 hours)
-                setInterval(createBackup, 24 * 60 * 60 * 1000);
-            }, timeUntilBackup);
-            
-            settingsManager.showNotification(`النسخة الاحتياطية التالية في: ${nextBackup.toLocaleString('ar-SA')}`, 'info');
-        }
-
-        // Add import button and functionality
         document.addEventListener('DOMContentLoaded', function() {
             // Add backup buttons
             const headerDiv = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 > div');
@@ -1287,8 +960,8 @@
                 </button>
             `);
             
-            // Initialize settings manager
-            window.settingsManager = new SettingsManager();
+            // Initialize AWS settings manager
+            window.settingsManager = new AWSSettingsManager();
             
             // Add reset button functionality
             const resetButton = document.createElement('button');
