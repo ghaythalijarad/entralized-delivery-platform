@@ -100,15 +100,19 @@
             </div>
         </div>
 
-        <div class="row">
+        <!-- Settings Accordion -->
+        <div class="accordion mb-4" id="settingsAccordion">
+
             <!-- AWS Core Services Configuration -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5><span class="material-icons-outlined me-2">cloud</span>إعدادات AWS الأساسية</h5>
-                        <span class="badge bg-success" id="awsStatus">متصل</span>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingCore">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCore" aria-expanded="true" aria-controls="collapseCore">
+                        إعدادات AWS الأساسية
+                    </button>
+                </h2>
+                <div id="collapseCore" class="accordion-collapse collapse show" aria-labelledby="headingCore" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <!-- Core Services Form -->
                         <form id="awsForm">
                             <div class="mb-3">
                                 <label class="form-label">AWS Region</label>
@@ -169,13 +173,15 @@
             </div>
 
             <!-- AWS Database Services -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                        <h5><span class="material-icons-outlined me-2">storage</span>خدمات قواعد البيانات AWS</h5>
-                        <span class="badge bg-info" id="databaseStatus">مُعد</span>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDatabase">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatabase" aria-expanded="false" aria-controls="collapseDatabase">
+                        خدمات قواعد البيانات AWS
+                    </button>
+                </h2>
+                <div id="collapseDatabase" class="accordion-collapse collapse" aria-labelledby="headingDatabase" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <!-- Database Services Form -->
                         <form id="databaseForm">
                             <div class="mb-3">
                                 <label class="form-label">نوع قاعدة البيانات</label>
@@ -222,12 +228,14 @@
             </div>
 
             <!-- AWS Security & IAM -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">security</span>الأمان وإدارة الهوية AWS</h5>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingSecurity">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity" aria-expanded="false" aria-controls="collapseSecurity">
+                        الأمان وإدارة الهوية AWS
+                    </button>
+                </h2>
+                <div id="collapseSecurity" class="accordion-collapse collapse" aria-labelledby="headingSecurity" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <form id="securityForm">
                             <div class="mb-3">
                                 <label class="form-label">IAM Role للتطبيق</label>
@@ -268,12 +276,14 @@
             </div>
 
             <!-- AWS Tables & Resources -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">table_chart</span>جداول DynamoDB والموارد</h5>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTables">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTables" aria-expanded="false" aria-controls="collapseTables">
+                        جداول DynamoDB والموارد
+                    </button>
+                </h2>
+                <div id="collapseTables" class="accordion-collapse collapse" aria-labelledby="headingTables" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <div class="mb-3">
                             <label class="form-label">الجداول الأساسية</label>
                             <div class="list-group">
@@ -318,12 +328,14 @@
             </div>
 
             <!-- Real-time Features -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">sync</span>الميزات المباشرة</h5>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingRealtime">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRealtime" aria-expanded="false" aria-controls="collapseRealtime">
+                        الميزات المباشرة
+                    </button>
+                </h2>
+                <div id="collapseRealtime" class="accordion-collapse collapse" aria-labelledby="headingRealtime" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <form id="realtimeForm">
                             <div class="mb-3">
                                 <label class="form-label">معدل تحديث مواقع السائقين (ثانية)</label>
@@ -358,12 +370,14 @@
             </div>
 
             <!-- Business Logic -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">business</span>منطق الأعمال</h5>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingBusiness">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusiness" aria-expanded="false" aria-controls="collapseBusiness">
+                        منطق الأعمال
+                    </button>
+                </h2>
+                <div id="collapseBusiness" class="accordion-collapse collapse" aria-labelledby="headingBusiness" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <form id="businessForm">
                             <div class="mb-3">
                                 <label class="form-label">رسوم التوصيل الأساسية (ر.س)</label>
@@ -390,16 +404,16 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- API Keys & External Services -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">key</span>مفاتيح API والخدمات الخارجية</h5>
-                    </div>
-                    <div class="card-body">
+            <!-- API Keys & External Services -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingApiKeys">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApiKeys" aria-expanded="false" aria-controls="collapseApiKeys">
+                        مفاتيح API والخدمات الخارجية
+                    </button>
+                </h2>
+                <div id="collapseApiKeys" class="accordion-collapse collapse" aria-labelledby="headingApiKeys" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <form id="apiKeysForm">
                             <div class="mb-3">
                                 <label class="form-label">Google Maps API Key</label>
@@ -443,12 +457,14 @@
             </div>
 
             <!-- Mobile App Configuration -->
-            <div class="col-md-6">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">phone_android</span>إعدادات تطبيقات الجوال</h5>
-                    </div>
-                    <div class="card-body">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingMobileApps">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMobileApps" aria-expanded="false" aria-controls="collapseMobileApps">
+                        إعدادات تطبيقات الجوال
+                    </button>
+                </h2>
+                <div id="collapseMobileApps" class="accordion-collapse collapse" aria-labelledby="headingMobileApps" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <form id="mobileAppsForm">
                             <div class="mb-3">
                                 <label class="form-label">رابط تطبيق العملاء (Android)</label>
@@ -476,16 +492,16 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Essential AWS Services Checklist -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">checklist</span>قائمة خدمات AWS المطلوبة</h5>
-                    </div>
-                    <div class="card-body">
+            <!-- Essential AWS Services Checklist -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingChecklist">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChecklist" aria-expanded="false" aria-controls="collapseChecklist">
+                        قائمة خدمات AWS المطلوبة
+                    </button>
+                </h2>
+                <div id="collapseChecklist" class="accordion-collapse collapse" aria-labelledby="headingChecklist" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <h6 class="text-primary">الخدمات الأساسية</h6>
@@ -571,16 +587,16 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- AWS Configuration Templates -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card config-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5><span class="material-icons-outlined me-2">code</span>قوالب الإعداد للبنية التحتية AWS</h5>
-                    </div>
-                    <div class="card-body">
+            <!-- AWS Configuration Templates -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTemplates">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTemplates" aria-expanded="false" aria-controls="collapseTemplates">
+                        قوالب الإعداد للبنية التحتية AWS
+                    </button>
+                </h2>
+                <div id="collapseTemplates" class="accordion-collapse collapse" aria-labelledby="headingTemplates" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <h6>AWS Amplify Config</h6>
@@ -670,315 +686,315 @@ aws s3 mb s3://centralized-delivery-platform-storage --region me-south-1
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- AWS Amplify SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Settings Manager Class
-        class AWSSettingsManager {
-            constructor() {
-                this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
-                this.loadSettings();
-                this.initAWS();
-            }
+        </div> <!-- end of settingsAccordion -->
 
-            getDefaultSettings() {
-                return {
-                    aws: {
-                        region: 'me-south-1',
-                        accessKeyId: '',
-                        secretAccessKey: '',
-                        amplifyAppId: 'd26nn5u6blbq6z',
-                        cloudFrontId: '',
-                        s3Bucket: 'centralized-delivery-platform-storage',
-                        enableOffline: true
-                    },
-                    database: {
-                        type: 'dynamodb',
-                        tablePrefix: 'delivery-platform',
-                        readCapacity: 5,
-                        writeCapacity: 5,
-                        enableAutoScaling: true,
-                        enableBackup: true
-                    },
-                    security: {
-                        iamRole: 'arn:aws:iam::123456789012:role/DeliveryAppRole',
-                        cognitoPoolId: 'me-south-1_XXXXXXXXX',
-                        cognitoClientId: 'abcdefghijklmnopqrstuvwxyz',
-                        tokenTimeout: 60,
-                        enableMFA: false,
-                        enableCloudTrail: true
-                    },
-                    realtime: {
-                        locationUpdateRate: 5,
-                        orderResponseTimeout: 10,
-                        enableRealTimeTracking: true,
-                        enableLiveChat: true,
-                        enableAutoAssignment: true
-                    },
-                    business: {
-                        baseDeliveryFee: 5,
-                        perKmFee: 2,
-                        platformCommission: 15,
-                        maxDeliveryDistance: 20,
-                        minOrderValue: 15
-                    },
-                    apiKeys: {
-                        googleMapsKey: '',
-                        stripeKey: '',
-                        smsKey: '',
-                        sesKey: ''
-                    },
-                    mobileApps: {
-                        customerAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.customer',
-                        customerAppIOS: 'https://apps.apple.com/app/delivery-customer/id1234567890',
-                        driverAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.driver',
-                        merchantAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.merchant',
-                        requiredAppVersion: '1.2.0'
-                    }
-                };
-            }
-
-            loadSettings() {
-                // Load AWS settings
-                document.getElementById('awsRegion').value = this.settings.aws.region;
-                document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId || '';
-                document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey || '';
-                document.getElementById('amplifyAppId').value = this.settings.aws.amplifyAppId;
-                document.getElementById('cloudFrontId').value = this.settings.aws.cloudFrontId || '';
-                document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
-                document.getElementById('enableOffline').checked = this.settings.aws.enableOffline;
-
-                // Load database settings
-                document.getElementById('databaseType').value = this.settings.database.type;
-                document.getElementById('tablePrefix').value = this.settings.database.tablePrefix;
-                document.getElementById('readCapacity').value = this.settings.database.readCapacity;
-                document.getElementById('writeCapacity').value = this.settings.database.writeCapacity;
-                document.getElementById('enableAutoScaling').checked = this.settings.database.enableAutoScaling;
-                document.getElementById('enableBackup').checked = this.settings.database.enableBackup;
-
-                // Load security settings
-                document.getElementById('iamRole').value = this.settings.security.iamRole;
-                document.getElementById('cognitoPoolId').value = this.settings.security.cognitoPoolId;
-                document.getElementById('cognitoClientId').value = this.settings.security.cognitoClientId;
-                document.getElementById('tokenTimeout').value = this.settings.security.tokenTimeout;
-                document.getElementById('enableMFA').checked = this.settings.security.enableMFA;
-                document.getElementById('enableCloudTrail').checked = this.settings.security.enableCloudTrail;
-
-                // Load realtime settings
-                document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
-                document.getElementById('orderResponseTimeout').value = this.settings.realtime.orderResponseTimeout;
-                document.getElementById('enableRealTimeTracking').checked = this.settings.realtime.enableRealTimeTracking;
-                document.getElementById('enableLiveChat').checked = this.settings.realtime.enableLiveChat;
-                document.getElementById('enableAutoAssignment').checked = this.settings.realtime.enableAutoAssignment;
-
-                // Load business settings
-                document.getElementById('baseDeliveryFee').value = this.settings.business.baseDeliveryFee;
-                document.getElementById('perKmFee').value = this.settings.business.perKmFee;
-                document.getElementById('platformCommission').value = this.settings.business.platformCommission;
-                document.getElementById('maxDeliveryDistance').value = this.settings.business.maxDeliveryDistance;
-                document.getElementById('minOrderValue').value = this.settings.business.minOrderValue;
-
-                // Load API keys
-                if (this.settings.apiKeys) {
-                    document.getElementById('googleMapsKey').value = this.settings.apiKeys.googleMapsKey || '';
-                    document.getElementById('paymentKey').value = this.settings.apiKeys.paymentKey || '';
-                    document.getElementById('smsKey').value = this.settings.apiKeys.smsKey || '';
-                    document.getElementById('oneSignalAppId').value = this.settings.apiKeys.oneSignalAppId || '';
+        <!-- AWS Amplify SDK -->
+        <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Settings Manager Class
+            class AWSSettingsManager {
+                constructor() {
+                    this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
+                    this.loadSettings();
+                    this.initAWS();
                 }
 
-                // Load mobile app settings
-                if (this.settings.mobileApps) {
-                    document.getElementById('customerAppAndroid').value = this.settings.mobileApps.customerAppAndroid || '';
-                    document.getElementById('customerAppIOS').value = this.settings.mobileApps.customerAppIOS || '';
-                    document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid || '';
-                    document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid || '';
-                    document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion || '';
-                }
-            }
-
-            saveSettings() {
-                localStorage.setItem('systemSettings', JSON.stringify(this.settings));
-                this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
-            }
-
-            // Initialize AWS Amplify configuration
-            initAWS() {
-                try {
-                    Amplify.configure({
-                        Auth: {
-                            region: this.settings.aws.region,
-                            userPoolId: this.settings.security.cognitoPoolId,
-                            userPoolWebClientId: this.settings.security.cognitoClientId
+                getDefaultSettings() {
+                    return {
+                        aws: {
+                            region: 'me-south-1',
+                            accessKeyId: '',
+                            secretAccessKey: '',
+                            amplifyAppId: 'd26nn5u6blbq6z',
+                            cloudFrontId: '',
+                            s3Bucket: 'centralized-delivery-platform-storage',
+                            enableOffline: true
                         },
-                        Storage: {
-                            AWSS3: {
-                                bucket: this.settings.aws.s3Bucket,
-                                region: this.settings.aws.region
+                        database: {
+                            type: 'dynamodb',
+                            tablePrefix: 'delivery-platform',
+                            readCapacity: 5,
+                            writeCapacity: 5,
+                            enableAutoScaling: true,
+                            enableBackup: true
+                        },
+                        security: {
+                            iamRole: 'arn:aws:iam::123456789012:role/DeliveryAppRole',
+                            cognitoPoolId: 'me-south-1_XXXXXXXXX',
+                            cognitoClientId: 'abcdefghijklmnopqrstuvwxyz',
+                            tokenTimeout: 60,
+                            enableMFA: false,
+                            enableCloudTrail: true
+                        },
+                        realtime: {
+                            locationUpdateRate: 5,
+                            orderResponseTimeout: 10,
+                            enableRealTimeTracking: true,
+                            enableLiveChat: true,
+                            enableAutoAssignment: true
+                        },
+                        business: {
+                            baseDeliveryFee: 5,
+                            perKmFee: 2,
+                            platformCommission: 15,
+                            maxDeliveryDistance: 20,
+                            minOrderValue: 15
+                        },
+                        apiKeys: {
+                            googleMapsKey: '',
+                            stripeKey: '',
+                            smsKey: '',
+                            sesKey: ''
+                        },
+                        mobileApps: {
+                            customerAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.customer',
+                            customerAppIOS: 'https://apps.apple.com/app/delivery-customer/id1234567890',
+                            driverAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.driver',
+                            merchantAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.merchant',
+                            requiredAppVersion: '1.2.0'
+                        }
+                    };
+                }
+
+                loadSettings() {
+                    // Load AWS settings
+                    document.getElementById('awsRegion').value = this.settings.aws.region;
+                    document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId || '';
+                    document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey || '';
+                    document.getElementById('amplifyAppId').value = this.settings.aws.amplifyAppId;
+                    document.getElementById('cloudFrontId').value = this.settings.aws.cloudFrontId || '';
+                    document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
+                    document.getElementById('enableOffline').checked = this.settings.aws.enableOffline;
+
+                    // Load database settings
+                    document.getElementById('databaseType').value = this.settings.database.type;
+                    document.getElementById('tablePrefix').value = this.settings.database.tablePrefix;
+                    document.getElementById('readCapacity').value = this.settings.database.readCapacity;
+                    document.getElementById('writeCapacity').value = this.settings.database.writeCapacity;
+                    document.getElementById('enableAutoScaling').checked = this.settings.database.enableAutoScaling;
+                    document.getElementById('enableBackup').checked = this.settings.database.enableBackup;
+
+                    // Load security settings
+                    document.getElementById('iamRole').value = this.settings.security.iamRole;
+                    document.getElementById('cognitoPoolId').value = this.settings.security.cognitoPoolId;
+                    document.getElementById('cognitoClientId').value = this.settings.security.cognitoClientId;
+                    document.getElementById('tokenTimeout').value = this.settings.security.tokenTimeout;
+                    document.getElementById('enableMFA').checked = this.settings.security.enableMFA;
+                    document.getElementById('enableCloudTrail').checked = this.settings.security.enableCloudTrail;
+
+                    // Load realtime settings
+                    document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
+                    document.getElementById('orderResponseTimeout').value = this.settings.realtime.orderResponseTimeout;
+                    document.getElementById('enableRealTimeTracking').checked = this.settings.realtime.enableRealTimeTracking;
+                    document.getElementById('enableLiveChat').checked = this.settings.realtime.enableLiveChat;
+                    document.getElementById('enableAutoAssignment').checked = this.settings.realtime.enableAutoAssignment;
+
+                    // Load business settings
+                    document.getElementById('baseDeliveryFee').value = this.settings.business.baseDeliveryFee;
+                    document.getElementById('perKmFee').value = this.settings.business.perKmFee;
+                    document.getElementById('platformCommission').value = this.settings.business.platformCommission;
+                    document.getElementById('maxDeliveryDistance').value = this.settings.business.maxDeliveryDistance;
+                    document.getElementById('minOrderValue').value = this.settings.business.minOrderValue;
+
+                    // Load API keys
+                    if (this.settings.apiKeys) {
+                        document.getElementById('googleMapsKey').value = this.settings.apiKeys.googleMapsKey || '';
+                        document.getElementById('paymentKey').value = this.settings.apiKeys.paymentKey || '';
+                        document.getElementById('smsKey').value = this.settings.apiKeys.smsKey || '';
+                        document.getElementById('oneSignalAppId').value = this.settings.apiKeys.oneSignalAppId || '';
+                    }
+
+                    // Load mobile app settings
+                    if (this.settings.mobileApps) {
+                        document.getElementById('customerAppAndroid').value = this.settings.mobileApps.customerAppAndroid || '';
+                        document.getElementById('customerAppIOS').value = this.settings.mobileApps.customerAppIOS || '';
+                        document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid || '';
+                        document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid || '';
+                        document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion || '';
+                    }
+                }
+
+                saveSettings() {
+                    localStorage.setItem('systemSettings', JSON.stringify(this.settings));
+                    this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+                }
+
+                // Initialize AWS Amplify configuration
+                initAWS() {
+                    try {
+                        Amplify.configure({
+                            Auth: {
+                                region: this.settings.aws.region,
+                                userPoolId: this.settings.security.cognitoPoolId,
+                                userPoolWebClientId: this.settings.security.cognitoClientId
+                            },
+                            Storage: {
+                                AWSS3: {
+                                    bucket: this.settings.aws.s3Bucket,
+                                    region: this.settings.aws.region
                             }
+                        });
+                        this.updateConnectionStatus('connected', 'متصل بـ AWS Cloud');
+                        document.getElementById('awsStatus').textContent = 'متصل';
+                        document.getElementById('awsStatus').className = 'badge bg-success';
+                    } catch (error) {
+                        console.error('AWS initialization error:', error);
+                        this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+                        document.getElementById('awsStatus').textContent = 'غير متصل';
+                        document.getElementById('awsStatus').className = 'badge bg-danger';
+                    }
+                }
+
+                updateConnectionStatus(status, text) {
+                    const statusElement = document.getElementById('connectionStatus');
+                    const indicatorElement = statusElement.querySelector('.status-indicator');
+                    const textElement = document.getElementById('connectionText');
+
+                    indicatorElement.className = `status-indicator status-${status}`;
+                    textElement.textContent = text;
+
+                    const alertClass = {
+                        'connected': 'alert-success',
+                        'warning': 'alert-warning',
+                        'disconnected': 'alert-danger'
+                    }[status] || 'alert-info';
+
+                    statusElement.className = `alert ${alertClass} mb-4`;
+                }
+
+                showNotification(message, type = 'info') {
+                    const alertClass = {
+                        'success': 'alert-success',
+                        'error': 'alert-danger',
+                        'warning': 'alert-warning',
+                        'info': 'alert-info'
+                    }[type] || 'alert-info';
+
+                    const notification = document.createElement('div');
+                    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    notification.innerHTML = `
+                        <span class="material-icons-outlined me-2">
+                            ${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}
+                        </span>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                }
+            }
+
+            // Global Functions for AWS
+            function togglePasswordVisibility(fieldId) {
+                const field = document.getElementById(fieldId);
+                const button = field.nextElementSibling.querySelector('.material-icons-outlined');
+                
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    button.textContent = 'visibility_off';
+                } else {
+                    field.type = 'password';
+                    button.textContent = 'visibility';
+                }
+            }
+
+            // Save AWS configuration to localStorage and reinitialize
+            function saveAwsConfig() {
+                settingsManager.settings.aws = {
+                    region: document.getElementById('awsRegion').value,
+                    accessKeyId: document.getElementById('accessKeyId').value,
+                    secretAccessKey: document.getElementById('secretAccessKey').value,
+                    amplifyAppId: settingsManager.settings.aws.amplifyAppId,
+                    cloudFrontId: document.getElementById('cloudFrontId').value,
+                    s3Bucket: document.getElementById('s3Bucket').value,
+                    enableOffline: document.getElementById('enableOffline').checked
+                };
+                settingsManager.saveSettings();
+                settingsManager.initAWS();
+            }
+
+            // Test AWS connectivity by listing S3 buckets
+            async function testAwsConnection() {
+                settingsManager.showNotification('جاري اختبار الاتصال بـ AWS...', 'info');
+                try {
+                    const s3 = new AWS.S3({
+                        region: settingsManager.settings.aws.region,
+                        credentials: {
+                            accessKeyId: settingsManager.settings.aws.accessKeyId,
+                            secretAccessKey: settingsManager.settings.aws.secretAccessKey
                         }
                     });
-                    this.updateConnectionStatus('connected', 'متصل بـ AWS Cloud');
+                    await s3.listBuckets().promise();
+                    settingsManager.showNotification('تم الاتصال بـ AWS بنجاح!', 'success');
                     document.getElementById('awsStatus').textContent = 'متصل';
                     document.getElementById('awsStatus').className = 'badge bg-success';
                 } catch (error) {
-                    console.error('AWS initialization error:', error);
-                    this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
-                    document.getElementById('awsStatus').textContent = 'غير متصل';
+                    console.error('AWS test failed:', error);
+                    settingsManager.showNotification('فشل في الاتصال بـ AWS: ' + error.message, 'error');
+                    document.getElementById('awsStatus').textContent = 'خطأ';
                     document.getElementById('awsStatus').className = 'badge bg-danger';
                 }
             }
 
-            updateConnectionStatus(status, text) {
-                const statusElement = document.getElementById('connectionStatus');
-                const indicatorElement = statusElement.querySelector('.status-indicator');
-                const textElement = document.getElementById('connectionText');
-
-                indicatorElement.className = `status-indicator status-${status}`;
-                textElement.textContent = text;
-
-                const alertClass = {
-                    'connected': 'alert-success',
-                    'warning': 'alert-warning',
-                    'disconnected': 'alert-danger'
-                }[status] || 'alert-info';
-
-                statusElement.className = `alert ${alertClass} mb-4`;
-            }
-
-            showNotification(message, type = 'info') {
-                const alertClass = {
-                    'success': 'alert-success',
-                    'error': 'alert-danger',
-                    'warning': 'alert-warning',
-                    'info': 'alert-info'
-                }[type] || 'alert-info';
-
-                const notification = document.createElement('div');
-                notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
-                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                notification.innerHTML = `
-                    <span class="material-icons-outlined me-2">
-                        ${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}
-                    </span>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-
-                document.body.appendChild(notification);
-
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
-                    }
-                }, 5000);
-            }
-        }
-
-        // Global Functions for AWS
-        function togglePasswordVisibility(fieldId) {
-            const field = document.getElementById(fieldId);
-            const button = field.nextElementSibling.querySelector('.material-icons-outlined');
-            
-            if (field.type === 'password') {
-                field.type = 'text';
-                button.textContent = 'visibility_off';
-            } else {
-                field.type = 'password';
-                button.textContent = 'visibility';
-            }
-        }
-
-        // Save AWS configuration to localStorage and reinitialize
-        function saveAwsConfig() {
-            settingsManager.settings.aws = {
-                region: document.getElementById('awsRegion').value,
-                accessKeyId: document.getElementById('accessKeyId').value,
-                secretAccessKey: document.getElementById('secretAccessKey').value,
-                amplifyAppId: settingsManager.settings.aws.amplifyAppId,
-                cloudFrontId: document.getElementById('cloudFrontId').value,
-                s3Bucket: document.getElementById('s3Bucket').value,
-                enableOffline: document.getElementById('enableOffline').checked
-            };
-            settingsManager.saveSettings();
-            settingsManager.initAWS();
-        }
-
-        // Test AWS connectivity by listing S3 buckets
-        async function testAwsConnection() {
-            settingsManager.showNotification('جاري اختبار الاتصال بـ AWS...', 'info');
-            try {
-                const s3 = new AWS.S3({
-                    region: settingsManager.settings.aws.region,
-                    credentials: {
-                        accessKeyId: settingsManager.settings.aws.accessKeyId,
-                        secretAccessKey: settingsManager.settings.aws.secretAccessKey
-                    }
-                });
-                await s3.listBuckets().promise();
-                settingsManager.showNotification('تم الاتصال بـ AWS بنجاح!', 'success');
-                document.getElementById('awsStatus').textContent = 'متصل';
-                document.getElementById('awsStatus').className = 'badge bg-success';
-            } catch (error) {
-                console.error('AWS test failed:', error);
-                settingsManager.showNotification('فشل في الاتصال بـ AWS: ' + error.message, 'error');
-                document.getElementById('awsStatus').textContent = 'خطأ';
-                document.getElementById('awsStatus').className = 'badge bg-danger';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add backup buttons
-            const headerDiv = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 > div');
-            headerDiv.insertAdjacentHTML('afterbegin', `
-                <button class="btn btn-outline-info me-2" onclick="createBackup()">
-                    <span class="material-icons-outlined me-1">backup</span>
-                    نسخة احتياطية
-                </button>
-                <div class="btn-group me-2">
-                    <button class="btn btn-outline-warning dropdown-toggle" data-bs-toggle="dropdown">
-                        <span class="material-icons-outlined me-1">schedule</span>
-                        نسخ تلقائي
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add backup buttons
+                const headerDiv = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 > div');
+                headerDiv.insertAdjacentHTML('afterbegin', `
+                    <button class="btn btn-outline-info me-2" onclick="createBackup()">
+                        <span class="material-icons-outlined me-1">backup</span>
+                        نسخة احتياطية
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="scheduleAutoBackup()">تفعيل النسخ التلقائي</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="createBackup()">نسخة فورية</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" onclick="settingsManager.showNotification('تم إيقاف النسخ التلقائي', 'warning')">إيقاف النسخ التلقائي</a></li>
-                    </ul>
-                </div>
-            `);
-            
-            headerDiv.insertAdjacentHTML('afterbegin', `
-                <input type="file" id="importSettings" accept=".json" style="display: none;" onchange="importSettings(event)">
-                <button class="btn btn-outline-secondary me-2" onclick="document.getElementById('importSettings').click()">
-                    <span class="material-icons-outlined me-1">upload</span>
-                    استيراد الإعدادات
-                </button>
-            `);
-            
-            // Initialize AWS settings manager
-            window.settingsManager = new AWSSettingsManager();
-            
-            // Add reset button functionality
-            const resetButton = document.createElement('button');
-            resetButton.className = 'btn btn-outline-danger me-2';
-            resetButton.innerHTML = '<span class="material-icons-outlined me-1">restore</span>إعادة تعيين';
-            resetButton.onclick = function() {
-                if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟')) {
-                    settingsManager.settings = settingsManager.getDefaultSettings();
-                    settingsManager.loadSettings();
-                    settingsManager.saveSettings();
-                    settingsManager.showNotification('تم إعادة تعيين الإعدادات بنجاح!', 'success');
-                }
-            };
-            headerDiv.insertAdjacentElement('afterbegin', resetButton);
-        });
+                    <div class="btn-group me-2">
+                        <button class="btn btn-outline-warning dropdown-toggle" data-bs-toggle="dropdown">
+                            <span class="material-icons-outlined me-1">schedule</span>
+                            نسخ تلقائي
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="scheduleAutoBackup()">تفعيل النسخ التلقائي</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="createBackup()">نسخة فورية</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="settingsManager.showNotification('تم إيقاف النسخ التلقائي', 'warning')">إيقاف النسخ التلقائي</a></li>
+                        </ul>
+                    </div>
+                `);
+                
+                headerDiv.insertAdjacentHTML('afterbegin', `
+                    <input type="file" id="importSettings" accept=".json" style="display: none;" onchange="importSettings(event)">
+                    <button class="btn btn-outline-secondary me-2" onclick="document.getElementById('importSettings').click()">
+                        <span class="material-icons-outlined me-1">upload</span>
+                        استيراد الإعدادات
+                    </button>
+                `);
+                
+                // Initialize AWS settings manager
+                window.settingsManager = new AWSSettingsManager();
+                
+                // Add reset button functionality
+                const resetButton = document.createElement('button');
+                resetButton.className = 'btn btn-outline-danger me-2';
+                resetButton.innerHTML = '<span class="material-icons-outlined me-1">restore</span>إعادة تعيين';
+                resetButton.onclick = function() {
+                    if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟')) {
+                        settingsManager.settings = settingsManager.getDefaultSettings();
+                        settingsManager.loadSettings();
+                        settingsManager.saveSettings();
+                        settingsManager.showNotification('تم إعادة تعيين الإعدادات بنجاح!', 'success');
+                    }
+                };
+                headerDiv.insertAdjacentElement('afterbegin', resetButton);
+            });
 
-        console.log('🔧 Settings page loaded successfully');
-    </script>
+            console.log('🔧 Settings page loaded successfully');
+        </script>
+    </div>
 </body>
 </html>
