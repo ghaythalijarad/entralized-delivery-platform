@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام المكافآت والعروض - النظام المركزي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .reward-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .reward-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .campaign-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            border: none;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-active { background-color: #28a745; }
+        .status-expired { background-color: #dc3545; }
+        .status-scheduled { background-color: #17a2b8; }
+        .status-draft { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>نظام المكافآت والعروض</h2>
+            <div>
+                <button class="btn btn-outline-success me-2" onclick="exportRewardsData()">
+                    <span class="material-icons-outlined me-1">download</span>
+                    تصدير البيانات
+                </button>
+                <div class="btn-group">
+                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <span class="material-icons-outlined me-1">add</span>
+                        إضافة جديد
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="showCreateCampaignModal()">حملة جديدة</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showCreateCouponModal()">كوبون جديد</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showCreatePromotionModal()">عرض جديد</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card text-center">
+                    <div class="card-body">
+                        <span class="material-icons-outlined" style="font-size: 3rem;">campaign</span>
+                        <h3 class="mt-2" id="activeCampaignsCount">12</h3>
+                        <p class="mb-0">الحملات النشطة</p>
+                        <small>من إجمالي 23 حملة</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card text-center">
+                    <div class="card-body">
+                        <span class="material-icons-outlined" style="font-size: 3rem;">local_offer</span>
+                        <h3 class="mt-2" id="activeCouponsCount">145</h3>
+                        <p class="mb-0">الكوبونات المستخدمة</p>
+                        <small>هذا الشهر</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card text-center">
+                    <div class="card-body">
+                        <span class="material-icons-outlined" style="font-size: 3rem;">monetization_on</span>
+                        <h3 class="mt-2" id="totalSavings">15,230</h3>
+                        <p class="mb-0">إجمالي التوفير (ر.س)</p>
+                        <small>من خلال العروض</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card text-center">
+                    <div class="card-body">
+                        <span class="material-icons-outlined" style="font-size: 3rem;">people</span>
+                        <h3 class="mt-2" id="participatingUsers">2,847</h3>
+                        <p class="mb-0">المستفيدون</p>
+                        <small>من المكافآت</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="rewardsTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#campaigns-tab">
+                    <span class="material-icons-outlined me-2">campaign</span>
+                    الحملات
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#coupons-tab">
+                    <span class="material-icons-outlined me-2">local_offer</span>
+                    الكوبونات
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#promotions-tab">
+                    <span class="material-icons-outlined me-2">percent</span>
+                    العروض والخصومات
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics-tab">
+                    <span class="material-icons-outlined me-2">analytics</span>
+                    التقارير والتحليلات
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Campaigns Tab -->
+            <div class="tab-pane fade show active" id="campaigns-tab">
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="campaignSearch" placeholder="البحث في الحملات...">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="campaignStatusFilter">
+                                <option value="">جميع الحالات</option>
+                                <option value="active">نشطة</option>
+                                <option value="scheduled">مجدولة</option>
+                                <option value="expired">منتهية</option>
+                                <option value="draft">مسودة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="campaignTypeFilter">
+                                <option value="">جميع الأنواع</option>
+                                <option value="loyalty">نقاط الولاء</option>
+                                <option value="referral">إحالة الأصدقاء</option>
+                                <option value="seasonal">موسمية</option>
+                                <option value="welcome">ترحيب</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="campaignDateFrom" placeholder="من تاريخ">
+                                </div>
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="campaignDateTo" placeholder="إلى تاريخ">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="filterCampaigns()">تصفية</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" id="campaignsContainer">
+                    <!-- Dynamic campaign cards -->
+                </div>
+            </div>
+
+            <!-- Coupons Tab -->
+            <div class="tab-pane fade" id="coupons-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">إدارة الكوبونات</h5>
+                        <button class="btn btn-primary" onclick="showCreateCouponModal()">
+                            <span class="material-icons-outlined me-1">add</span>
+                            كوبون جديد
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رمز الكوبون</th>
+                                        <th>النوع</th>
+                                        <th>القيمة</th>
+                                        <th>مرات الاستخدام</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="couponsTableBody">
+                                    <!-- Dynamic coupon rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotions Tab -->
+            <div class="tab-pane fade" id="promotions-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">العروض والخصومات</h5>
+                        <button class="btn btn-primary" onclick="showCreatePromotionModal()">
+                            <span class="material-icons-outlined me-1">add</span>
+                            عرض جديد
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="promotionsContainer">
+                            <!-- Dynamic promotion cards -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics-tab">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>أداء الحملات</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="campaignPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>استخدام الكوبونات</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="couponUsageChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Campaign Modal -->
+        <div class="modal fade" id="createCampaignModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">إنشاء حملة جديدة</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <form id="campaignForm">
+                                    <!-- Basic Campaign Information -->
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات أساسية</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">اسم الحملة <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="campaignName" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">نوع الحملة <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="campaignType" required>
+                                                        <option value="">اختر النوع</option>
+                                                        <option value="loyalty">نقاط الولاء</option>
+                                                        <option value="referral">إحالة الأصدقاء</option>
+                                                        <option value="seasonal">موسمية</option>
+                                                        <option value="welcome">ترحيب</option>
+                                                        <option value="retention">استبقاء العملاء</option>
+                                                        <option value="reactivation">إعادة تنشيط</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">وصف الحملة</label>
+                                                <textarea class="form-control" id="campaignDescription" rows="3" placeholder="اكتب وصفاً مفصلاً للحملة..."></textarea>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">تاريخ البداية <span class="text-danger">*</span></label>
+                                                    <input type="datetime-local" class="form-control" id="campaignStartDate" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">تاريخ الانتهاء <span class="text-danger">*</span></label>
+                                                    <input type="datetime-local" class="form-control" id="campaignEndDate" required>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">الميزانية المخصصة (ر.س)</label>
+                                                    <input type="number" class="form-control" id="campaignBudget" step="0.01" min="0" placeholder="0.00">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">أولوية الحملة</label>
+                                                    <select class="form-select" id="campaignPriority">
+                                                        <option value="low">منخفضة</option>
+                                                        <option value="medium" selected>متوسطة</option>
+                                                        <option value="high">عالية</option>
+                                                        <option value="urgent">عاجلة</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Customer Targeting Section -->
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>استهداف العملاء</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Gender Targeting -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">الجنس</label>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="genderAll" checked onchange="toggleGenderSelection(this)">
+                                                            <label class="form-check-label" for="genderAll">جميع الأجناس</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input gender-option" type="checkbox" id="genderMale" value="male">
+                                                            <label class="form-check-label" for="genderMale">ذكر</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input gender-option" type="checkbox" id="genderFemale" value="female">
+                                                            <label class="form-check-label" for="genderFemale">أنثى</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Age Targeting -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">الفئة العمرية</label>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">من عمر</label>
+                                                        <input type="number" class="form-control" id="ageMin" min="13" max="100" placeholder="18">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">إلى عمر</label>
+                                                        <input type="number" class="form-control" id="ageMax" min="13" max="100" placeholder="65">
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <small class="text-muted">اتركها فارغة لعدم تحديد قيود عمرية</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Customer Value Targeting -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">قيمة العميل (إجمالي الإنفاق)</label>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">الحد الأدنى (ر.س)</label>
+                                                        <input type="number" class="form-control" id="customerValueMin" step="0.01" min="0" placeholder="100.00">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">الحد الأقصى (ر.س)</label>
+                                                        <input type="number" class="form-control" id="customerValueMax" step="0.01" min="0" placeholder="10000.00">
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="setValueRange(0, 500)">منخفض (0-500)</button>
+                                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="setValueRange(500, 2000)">متوسط (500-2000)</button>
+                                                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="setValueRange(2000, 5000)">عالي (2000-5000)</button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="setValueRange(5000, null)">VIP (+5000)</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Customer Type Targeting -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">نوع العميل</label>
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="typeAll" checked onchange="toggleTypeSelection(this)">
+                                                            <label class="form-check-label" for="typeAll">جميع الأنواع</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input type-option" type="checkbox" id="typeRegular" value="regular">
+                                                            <label class="form-check-label" for="typeRegular">عادي</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input type-option" type="checkbox" id="typeVip" value="vip">
+                                                            <label class="form-check-label" for="typeVip">VIP</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input type-option" type="checkbox" id="typePremium" value="premium">
+                                                            <label class="form-check-label" for="typePremium">مميز</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- App Usage Duration -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">مدة استخدام التطبيق</label>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">الحد الأدنى (أيام)</label>
+                                                        <input type="number" class="form-control" id="appUsageMin" min="0" placeholder="30">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">الحد الأقصى (أيام)</label>
+                                                        <input type="number" class="form-control" id="appUsageMax" min="0" placeholder="365">
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        <button type="button" class="btn btn-outline-info btn-sm" onclick="setUsageDuration(0, 7)">جديد (0-7 أيام)</button>
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="setUsageDuration(7, 30)">حديث (7-30 يوم)</button>
+                                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="setUsageDuration(30, 90)">منتظم (30-90 يوم)</button>
+                                                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="setUsageDuration(90, null)">مخضرم (+90 يوم)</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Additional Filters -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">فلاتر إضافية</label>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="activeOnly" value="active">
+                                                            <label class="form-check-label" for="activeOnly">العملاء النشطون فقط</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="hasOrders" value="has_orders">
+                                                            <label class="form-check-label" for="hasOrders">لديهم طلبات سابقة</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="firstTimeUsers" value="first_time">
+                                                            <label class="form-check-label" for="firstTimeUsers">مستخدمين لأول مرة</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="returningUsers" value="returning">
+                                                            <label class="form-check-label" for="returningUsers">عملاء عائدون</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reward Rules Section -->
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="fas fa-gift me-2"></i>قواعد المكافآت</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="rewardRules">
+                                                <div class="rule-item border rounded p-3 mb-2">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label">الشرط</label>
+                                                            <select class="form-select rule-condition">
+                                                                <option value="order_amount">مبلغ الطلب</option>
+                                                                <option value="order_count">عدد الطلبات</option>
+                                                                <option value="referral">إحالة صديق</option>
+                                                                <option value="first_order">أول طلب</option>
+                                                                <option value="app_rating">تقييم التطبيق</option>
+                                                                <option value="profile_completion">إكمال الملف الشخصي</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">القيمة</label>
+                                                            <input type="number" class="form-control rule-value" step="0.01" placeholder="100">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">المكافأة (ر.س)</label>
+                                                            <input type="number" class="form-control rule-reward" step="0.01" placeholder="10">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">&nbsp;</label>
+                                                            <button type="button" class="btn btn-outline-danger w-100" onclick="removeRule(this)">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary" onclick="addRewardRule()">
+                                                <i class="fas fa-plus me-1"></i>إضافة قاعدة
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Preview Panel -->
+                            <div class="col-md-4">
+                                <div class="card sticky-top" style="top: 20px;">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-eye me-2"></i>معاينة الاستهداف</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center mb-3">
+                                            <div class="display-4 text-primary" id="targetedCustomersCount">0</div>
+                                            <small class="text-muted">عميل مستهدف</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>ذكور</span>
+                                                <span id="malePercentage">0%</span>
+                                            </div>
+                                            <div class="progress mb-2" style="height: 8px;">
+                                                <div class="progress-bar bg-info" id="maleProgressBar" style="width: 0%"></div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>إناث</span>
+                                                <span id="femalePercentage">0%</span>
+                                            </div>
+                                            <div class="progress mb-3" style="height: 8px;">
+                                                <div class="progress-bar bg-pink" id="femaleProgressBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <h6 class="fw-bold">التوزيع حسب النوع:</h6>
+                                            <div class="d-flex justify-content-between">
+                                                <span>عادي:</span>
+                                                <span id="regularCount">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>VIP:</span>
+                                                <span id="vipCount">0</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>مميز:</span>
+                                                <span id="premiumCount">0</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <h6 class="fw-bold">التكلفة المتوقعة:</h6>
+                                            <div class="text-center">
+                                                <div class="h5 text-success" id="estimatedCost">0 ر.س</div>
+                                                <small class="text-muted">بناءً على قواعد المكافآت</small>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="btn btn-outline-info w-100 mb-2" onclick="updateTargetingPreview()">
+                                            <i class="fas fa-sync-alt me-1"></i>تحديث المعاينة
+                                        </button>
+                                        
+                                        <button type="button" class="btn btn-outline-secondary w-100" onclick="exportTargetingCriteria()">
+                                            <i class="fas fa-download me-1"></i>تصدير المعايير
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-info me-2" onclick="previewCampaign()">
+                            <i class="fas fa-eye me-1"></i>معاينة
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveCampaign()">
+                            <i class="fas fa-save me-1"></i>حفظ الحملة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Coupon Modal -->
+        <div class="modal fade" id="createCouponModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">إنشاء كوبون جديد</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="couponForm">
+                            <div class="mb-3">
+                                <label class="form-label">رمز الكوبون</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="couponCode" required>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="generateCouponCode()">توليد</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">نوع الخصم</label>
+                                    <select class="form-select" id="couponType" required>
+                                        <option value="percentage">نسبة مئوية</option>
+                                        <option value="fixed">مبلغ ثابت</option>
+                                        <option value="free_delivery">توصيل مجاني</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">قيمة الخصم</label>
+                                    <input type="number" class="form-control" id="couponValue" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">الحد الأدنى للطلب</label>
+                                    <input type="number" class="form-control" id="couponMinOrder" step="0.01">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">الحد الأقصى للاستخدام</label>
+                                    <input type="number" class="form-control" id="couponMaxUse">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">تاريخ البداية</label>
+                                    <input type="datetime-local" class="form-control" id="couponStartDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">تاريخ الانتهاء</label>
+                                    <input type="datetime-local" class="form-control" id="couponEndDate" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">وصف الكوبون</label>
+                                <textarea class="form-control" id="couponDescription" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-primary" onclick="saveCoupon()">حفظ الكوبون</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Promotion Modal -->
+        <div class="modal fade" id="createPromotionModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">إنشاء عرض جديد</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="promotionForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">عنوان العرض</label>
+                                    <input type="text" class="form-control" id="promotionTitle" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">نوع العرض</label>
+                                    <select class="form-select" id="promotionType" required>
+                                        <option value="buy_get">اشتري واحصل</option>
+                                        <option value="bundle">باقة مجمعة</option>
+                                        <option value="flash_sale">تخفيض سريع</option>
+                                        <option value="happy_hour">ساعة سعيدة</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">وصف العرض</label>
+                                <textarea class="form-control" id="promotionDescription" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">نسبة الخصم (%)</label>
+                                    <input type="number" class="form-control" id="promotionDiscount" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">التجار المشاركون</label>
+                                    <select class="form-select" id="promotionMerchants" multiple>
+                                        <option value="all">جميع التجار</option>
+                                        <option value="M001">مطعم الذواقة</option>
+                                        <option value="M002">متجر الوفرة</option>
+                                        <option value="M003">صيدلية النور</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">تاريخ البداية</label>
+                                    <input type="datetime-local" class="form-control" id="promotionStartDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">تاريخ الانتهاء</label>
+                                    <input type="datetime-local" class="form-control" id="promotionEndDate" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-primary" onclick="savePromotion()">حفظ العرض</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Reward System Manager
+        class RewardSystemManager {
+            constructor() {
+                this.campaigns = new Map();
+                this.coupons = new Map();
+                this.promotions = new Map();
+                this.init();
+            }
+
+            init() {
+                this.loadTestData();
+                this.renderCampaigns();
+                this.renderCoupons();
+                this.renderPromotions();
+                this.initCharts();
+            }
+
+            loadTestData() {
+                // Test campaigns
+                const campaigns = [
+                    {
+                        id: 'C001',
+                        name: 'حملة الولاء الشتوية',
+                        type: 'loyalty',
+                        description: 'احصل على نقاط مضاعفة مع كل طلب',
+                        status: 'active',
+                        startDate: new Date('2024-01-01'),
+                        endDate: new Date('2024-03-31'),
+                        budget: 10000,
+                        spent: 3500,
+                        target: 'all',
+                        participants: 1250,
+                        conversions: 890,
+                        rules: [
+                            { condition: 'order_amount', value: 50, reward: 10 },
+                            { condition: 'order_amount', value: 100, reward: 25 }
+                        ]
+                    },
+                    {
+                        id: 'C002',
+                        name: 'إحالة الأصدقاء',
+                        type: 'referral',
+                        description: 'ادع أصدقاءك واحصل على مكافآت',
+                        status: 'active',
+                        startDate: new Date('2024-01-15'),
+                        endDate: new Date('2024-12-31'),
+                        budget: 5000,
+                        spent: 1200,
+                        target: 'all',
+                        participants: 456,
+                        conversions: 234,
+                        rules: [
+                            { condition: 'referral', value: 1, reward: 20 }
+                        ]
+                    }
+                ];
+
+                campaigns.forEach(campaign => this.campaigns.set(campaign.id, campaign));
+
+                // Test coupons
+                const coupons = [
+                    {
+                        id: 'CP001',
+                        code: 'WELCOME20',
+                        type: 'percentage',
+                        value: 20,
+                        minOrder: 30,
+                        maxUse: 1000,
+                        used: 345,
+                        startDate: new Date('2024-01-01'),
+                        endDate: new Date('2024-06-30'),
+                        description: 'خصم 20% للعملاء الجدد',
+                        status: 'active'
+                    },
+                    {
+                        id: 'CP002',
+                        code: 'FREEDELIVERY',
+                        type: 'free_delivery',
+                        value: 0,
+                        minOrder: 25,
+                        maxUse: 500,
+                        used: 123,
+                        startDate: new Date('2024-02-01'),
+                        endDate: new Date('2024-02-29'),
+                        description: 'توصيل مجاني',
+                        status: 'expired'
+                    }
+                ];
+
+                coupons.forEach(coupon => this.coupons.set(coupon.id, coupon));
+
+                // Test promotions
+                const promotions = [
+                    {
+                        id: 'P001',
+                        title: 'اشتري 2 واحصل على 1 مجاناً',
+                        type: 'buy_get',
+                        description: 'عرض خاص على المشروبات',
+                        discount: 33,
+                        merchants: ['M001', 'M002'],
+                        startDate: new Date('2024-02-01'),
+                        endDate: new Date('2024-02-14'),
+                        status: 'active',
+                        redemptions: 234
+                    }
+                ];
+
+                promotions.forEach(promotion => this.promotions.set(promotion.id, promotion));
+            }
+
+            renderCampaigns() {
+                const container = document.getElementById('campaignsContainer');
+                container.innerHTML = '';
+                
+                this.campaigns.forEach(campaign => {
+                    const progressPercentage = (campaign.spent / campaign.budget) * 100;
+                    const conversionRate = ((campaign.conversions / campaign.participants) * 100).toFixed(1);
+                    
+                    const campaignCard = `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card reward-card h-100 position-relative">
+                                <span class="badge status-${campaign.status} campaign-status">${this.getStatusText(campaign.status)}</span>
+                                <div class="card-body">
+                                    <h5 class="card-title">${campaign.name}</h5>
+                                    <p class="card-text text-muted">${campaign.description}</p>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <small>الميزانية المستخدمة</small>
+                                            <small>${progressPercentage.toFixed(1)}%</small>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar" style="width: ${progressPercentage}%"></div>
+                                        </div>
+                                        <small class="text-muted">${campaign.spent} من ${campaign.budget} ر.س</small>
+                                    </div>
+                                    
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <strong class="text-primary">${campaign.participants}</strong><br>
+                                            <small class="text-muted">مشارك</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <strong class="text-success">${campaign.conversions}</strong><br>
+                                            <small class="text-muted">تحويل</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <strong class="text-info">${conversionRate}%</strong><br>
+                                            <small class="text-muted">معدل النجاح</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewCampaignDetails('${campaign.id}')">عرض</button>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editCampaign('${campaign.id}')">تعديل</button>
+                                        <button class="btn btn-outline-${campaign.status === 'active' ? 'danger' : 'success'} btn-sm" onclick="toggleCampaignStatus('${campaign.id}')">
+                                            ${campaign.status === 'active' ? 'إيقاف' : 'تفعيل'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += campaignCard;
+                });
+            }
+
+            renderCoupons() {
+                const tbody = document.getElementById('couponsTableBody');
+                tbody.innerHTML = '';
+                
+                this.coupons.forEach(coupon => {
+                    const usagePercentage = (coupon.used / coupon.maxUse) * 100;
+                    const row = `
+                        <tr>
+                            <td><code>${coupon.code}</code></td>
+                            <td>${this.getCouponTypeText(coupon.type)}</td>
+                            <td>${coupon.type === 'percentage' ? coupon.value + '%' : coupon.value + ' ر.س'}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">${coupon.used}/${coupon.maxUse}</span>
+                                    <div class="progress flex-grow-1" style="height: 4px;">
+                                        <div class="progress-bar" style="width: ${usagePercentage}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${this.formatDate(coupon.endDate)}</td>
+                            <td><span class="badge status-${coupon.status}">${this.getStatusText(coupon.status)}</span></td>
+                            <td>
+                                <button class="btn btn-outline-primary btn-sm" onclick="viewCouponDetails('${coupon.id}')">عرض</button>
+                                <button class="btn btn-outline-warning btn-sm" onclick="editCoupon('${coupon.id}')">تعديل</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+
+            renderPromotions() {
+                const container = document.getElementById('promotionsContainer');
+                container.innerHTML = '';
+                
+                this.promotions.forEach(promotion => {
+                    const promotionCard = `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card reward-card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">${promotion.title}</h5>
+                                    <p class="card-text">${promotion.description}</p>
+                                    <div class="mb-3">
+                                        <span class="badge bg-success">${promotion.discount}% خصم</span>
+                                        <span class="badge bg-info">${promotion.redemptions} استخدام</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">من: ${this.formatDate(promotion.startDate)}</small>
+                                        <small class="text-muted">إلى: ${this.formatDate(promotion.endDate)}</small>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewPromotionDetails('${promotion.id}')">عرض</button>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="editPromotion('${promotion.id}')">تعديل</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += promotionCard;
+                });
+            }
+
+            getStatusText(status) {
+                const statusMap = {
+                    'active': 'نشطة',
+                    'expired': 'منتهية',
+                    'scheduled': 'مجدولة',
+                    'draft': 'مسودة'
+                };
+                return statusMap[status] || status;
+            }
+
+            getCouponTypeText(type) {
+                const typeMap = {
+                    'percentage': 'نسبة مئوية',
+                    'fixed': 'مبلغ ثابت',
+                    'free_delivery': 'توصيل مجاني'
+                };
+                return typeMap[type] || type;
+            }
+
+            formatDate(date) {
+                return new Intl.DateTimeFormat('ar-SA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }).format(date);
+            }
+
+            initCharts() {
+                // Campaign Performance Chart
+                const campaignCtx = document.getElementById('campaignPerformanceChart').getContext('2d');
+                new Chart(campaignCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['نشطة', 'منتهية', 'مجدولة'],
+                        datasets: [{
+                            data: [12, 8, 3],
+                            backgroundColor: ['#28a745', '#dc3545', '#17a2b8']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+
+                // Coupon Usage Chart
+                const couponCtx = document.getElementById('couponUsageChart').getContext('2d');
+                new Chart(couponCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'],
+                        datasets: [{
+                            label: 'الكوبونات المستخدمة',
+                            data: [45, 78, 123, 89, 156],
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Modal functions
+        function showCreateCampaignModal() {
+            document.getElementById('campaignForm').reset();
+            document.getElementById('campaignName').value = '';
+            document.getElementById('campaignType').value = '';
+            document.getElementById('campaignDescription').value = '';
+            document.getElementById('campaignBudget').value = '';
+            new bootstrap.Modal(document.getElementById('createCampaignModal')).show();
+        }
+
+        function showCreateCouponModal() {
+            document.getElementById('couponForm').reset();
+            document.getElementById('couponCode').value = '';
+            new bootstrap.Modal(document.getElementById('createCouponModal')).show();
+        }
+
+        function showCreatePromotionModal() {
+            document.getElementById('promotionForm').reset();
+            new bootstrap.Modal(document.getElementById('createPromotionModal')).show();
+        }
+
+        function addRewardRule() {
+            const rulesContainer = document.getElementById('rewardRules');
+            const ruleHtml = `
+                <div class="rule-item border rounded p-3 mb-2">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">الشرط</label>
+                            <select class="form-select rule-condition">
+                                <option value="order_amount">مبلغ الطلب</option>
+                                <option value="order_count">عدد الطلبات</option>
+                                <option value="referral">إحالة صديق</option>
+                                <option value="first_order">أول طلب</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">القيمة</label>
+                            <input type="number" class="form-control rule-value" step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">المكافأة</label>
+                            <input type="number" class="form-control rule-reward" step="0.01">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-outline-danger w-100" onclick="removeRule(this)">حذف</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            rulesContainer.insertAdjacentHTML('beforeend', ruleHtml);
+        }
+
+        function removeRule(button) {
+            button.closest('.rule-item').remove();
+        }
+
+        function generateCouponCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('couponCode').value = code;
+        }
+
+        function saveCampaign() {
+            const formData = {
+                id: 'C' + Date.now(),
+                name: document.getElementById('campaignName').value,
+                type: document.getElementById('campaignType').value,
+                description: document.getElementById('campaignDescription').value,
+                startDate: new Date(document.getElementById('campaignStartDate').value),
+                endDate: new Date(document.getElementById('campaignEndDate').value),
+                budget: parseFloat(document.getElementById('campaignBudget').value),
+                spent: 0,
+                target: document.getElementById('campaignTarget').value,
+                participants: 0,
+                conversions: 0,
+                status: 'active',
+                rules: []
+            };
+
+            // Collect rules
+            const rules = document.querySelectorAll('.rule-item');
+            rules.forEach(rule => {
+                const condition = rule.querySelector('.rule-condition').value;
+                const value = parseFloat(rule.querySelector('.rule-value').value) || 0;
+                const reward = parseFloat(rule.querySelector('.rule-reward').value) || 0;
+                if (condition && value && reward) {
+                    formData.rules.push({ condition, value, reward });
+                }
+            });
+
+            rewardSystemManager.campaigns.set(formData.id, formData);
+            rewardSystemManager.renderCampaigns();
+            
+            // Show success message
+            showNotification('تم إنشاء الحملة بنجاح!', 'success');
+            
+            bootstrap.Modal.getInstance(document.getElementById('createCampaignModal')).hide();
+        }
+
+        function saveCoupon() {
+            const formData = {
+                id: 'CP' + Date.now(),
+                code: document.getElementById('couponCode').value,
+                type: document.getElementById('couponType').value,
+                value: parseFloat(document.getElementById('couponValue').value),
+                minOrder: parseFloat(document.getElementById('couponMinOrder').value) || 0,
+                maxUse: parseInt(document.getElementById('couponMaxUse').value) || 999999,
+                used: 0,
+                startDate: new Date(document.getElementById('couponStartDate').value),
+                endDate: new Date(document.getElementById('couponEndDate').value),
+                description: document.getElementById('couponDescription').value,
+                status: 'active'
+            };
+
+            rewardSystemManager.coupons.set(formData.id, formData);
+            rewardSystemManager.renderCoupons();
+            
+            showNotification('تم إنشاء الكوبون بنجاح!', 'success');
+            
+            bootstrap.Modal.getInstance(document.getElementById('createCouponModal')).hide();
+        }
+
+        function savePromotion() {
+            const formData = {
+                id: 'P' + Date.now(),
+                title: document.getElementById('promotionTitle').value,
+                type: document.getElementById('promotionType').value,
+                description: document.getElementById('promotionDescription').value,
+                discount: parseFloat(document.getElementById('promotionDiscount').value),
+                merchants: Array.from(document.getElementById('promotionMerchants').selectedOptions).map(option => option.value),
+                startDate: new Date(document.getElementById('promotionStartDate').value),
+                endDate: new Date(document.getElementById('promotionEndDate').value),
+                status: 'active',
+                redemptions: 0
+            };
+
+            rewardSystemManager.promotions.set(formData.id, formData);
+            rewardSystemManager.renderPromotions();
+            
+            showNotification('تم إنشاء العرض بنجاح!', 'success');
+            
+            bootstrap.Modal.getInstance(document.getElementById('createPromotionModal')).hide();
+        }
+
+        function viewCampaignDetails(id) {
+            const campaign = rewardSystemManager.campaigns.get(id);
+            if (!campaign) return;
+
+            const detailsHtml = `
+                <div class="modal fade" id="campaignDetailsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">تفاصيل الحملة: ${campaign.name}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>معلومات أساسية</h6>
+                                        <p><strong>النوع:</strong> ${rewardSystemManager.getCampaignTypeText(campaign.type)}</p>
+                                        <p><strong>الوصف:</strong> ${campaign.description}</p>
+                                        <p><strong>الحالة:</strong> <span class="badge status-${campaign.status}">${rewardSystemManager.getStatusText(campaign.status)}</span></p>
+                                        <p><strong>الهدف المستهدف:</strong> ${rewardSystemManager.getTargetText(campaign.target)}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>الإحصائيات</h6>
+                                        <p><strong>الميزانية:</strong> ${campaign.budget} ر.س</p>
+                                        <p><strong>المبلغ المستخدم:</strong> ${campaign.spent} ر.س</p>
+                                        <p><strong>المشاركون:</strong> ${campaign.participants}</p>
+                                        <p><strong>التحويلات:</strong> ${campaign.conversions}</p>
+                                        <p><strong>معدل النجاح:</strong> ${((campaign.conversions / campaign.participants) * 100).toFixed(1)}%</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h6>قواعد المكافأة</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>الشرط</th>
+                                                    <th>القيمة</th>
+                                                    <th>المكافأة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${campaign.rules.map(rule => `
+                                                    <tr>
+                                                        <td>${rewardSystemManager.getConditionText(rule.condition)}</td>
+                                                        <td>${rule.value}</td>
+                                                        <td>${rule.reward} ر.س</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                <button type="button" class="btn btn-warning" onclick="editCampaign('${id}')">تعديل</button>
+                                <button type="button" class="btn btn-${campaign.status === 'active' ? 'danger' : 'success'}" onclick="toggleCampaignStatus('${id}')">
+                                    ${campaign.status === 'active' ? 'إيقاف' : 'تفعيل'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('campaignDetailsModal');
+            if (existingModal) existingModal.remove();
+
+            // Add new modal to DOM
+            document.body.insertAdjacentHTML('beforeend', detailsHtml);
+            new bootstrap.Modal(document.getElementById('campaignDetailsModal')).show();
+        }
+
+        function editCampaign(id) {
+            const campaign = rewardSystemManager.campaigns.get(id);
+            if (!campaign) return;
+
+            // Populate form with existing data
+            document.getElementById('campaignName').value = campaign.name;
+            document.getElementById('campaignType').value = campaign.type;
+            document.getElementById('campaignDescription').value = campaign.description;
+            document.getElementById('campaignBudget').value = campaign.budget;
+            document.getElementById('campaignTarget').value = campaign.target;
+            
+            // Format dates for datetime-local input
+            const formatDate = (date) => {
+                const d = new Date(date);
+                return d.toISOString().slice(0, 16);
+            };
+            
+            document.getElementById('campaignStartDate').value = formatDate(campaign.startDate);
+            document.getElementById('campaignEndDate').value = formatDate(campaign.endDate);
+
+            // Clear and populate rules
+            const rulesContainer = document.getElementById('rewardRules');
+            rulesContainer.innerHTML = '';
+            
+            campaign.rules.forEach(rule => {
+                addRewardRule();
+                const lastRule = rulesContainer.lastElementChild;
+                lastRule.querySelector('.rule-condition').value = rule.condition;
+                lastRule.querySelector('.rule-value').value = rule.value;
+                lastRule.querySelector('.rule-reward').value = rule.reward;
+            });
+
+            // Modify save function to update instead of create
+            window.editingCampaignId = id;
+            
+            showCreateCampaignModal();
+        }
+
+        function toggleCampaignStatus(id) {
+            const campaign = rewardSystemManager.campaigns.get(id);
+            if (!campaign) return;
+
+            campaign.status = campaign.status === 'active' ? 'expired' : 'active';
+            rewardSystemManager.renderCampaigns();
+            
+            showNotification(`تم ${campaign.status === 'active' ? 'تفعيل' : 'إيقاف'} الحملة بنجاح!`, 'success');
+            
+            // Close details modal if open
+            const detailsModal = document.getElementById('campaignDetailsModal');
+            if (detailsModal) {
+                bootstrap.Modal.getInstance(detailsModal).hide();
+            }
+        }
+
+        function viewCouponDetails(id) {
+            const coupon = rewardSystemManager.coupons.get(id);
+            if (!coupon) return;
+
+            const usagePercentage = (coupon.used / coupon.maxUse) * 100;
+            const detailsHtml = `
+                <div class="modal fade" id="couponDetailsModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">تفاصيل الكوبون: ${coupon.code}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>رمز الكوبون:</strong> <code>${coupon.code}</code></p>
+                                        <p><strong>النوع:</strong> ${rewardSystemManager.getCouponTypeText(coupon.type)}</p>
+                                        <p><strong>القيمة:</strong> ${coupon.type === 'percentage' ? coupon.value + '%' : coupon.value + ' ر.س'}</p>
+                                        <p><strong>الحد الأدنى للطلب:</strong> ${coupon.minOrder} ر.س</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>مرات الاستخدام:</strong> ${coupon.used} من ${coupon.maxUse}</p>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar" style="width: ${usagePercentage}%">${usagePercentage.toFixed(1)}%</div>
+                                        </div>
+                                        <p><strong>تاريخ البداية:</strong> ${rewardSystemManager.formatDate(coupon.startDate)}</p>
+                                        <p><strong>تاريخ الانتهاء:</strong> ${rewardSystemManager.formatDate(coupon.endDate)}</p>
+                                        <p><strong>الحالة:</strong> <span class="badge status-${coupon.status}">${rewardSystemManager.getStatusText(coupon.status)}</span></p>
+                                    </div>
+                                </div>
+                                <p><strong>الوصف:</strong> ${coupon.description || 'لا يوجد وصف'}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                <button type="button" class="btn btn-warning" onclick="editCoupon('${id}')">تعديل</button>
+                                <button type="button" class="btn btn-danger" onclick="deleteCoupon('${id}')">حذف</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('couponDetailsModal');
+            if (existingModal) existingModal.remove();
+
+            document.body.insertAdjacentHTML('beforeend', detailsHtml);
+            new bootstrap.Modal(document.getElementById('couponDetailsModal')).show();
+        }
+
+        function editCoupon(id) {
+            const coupon = rewardSystemManager.coupons.get(id);
+            if (!coupon) return;
+
+            // Populate form
+            document.getElementById('couponCode').value = coupon.code;
+            document.getElementById('couponType').value = coupon.type;
+            document.getElementById('couponValue').value = coupon.value;
+            document.getElementById('couponMinOrder').value = coupon.minOrder;
+            document.getElementById('couponMaxUse').value = coupon.maxUse;
+            document.getElementById('couponDescription').value = coupon.description;
+            
+            const formatDate = (date) => new Date(date).toISOString().slice(0, 16);
+            document.getElementById('couponStartDate').value = formatDate(coupon.startDate);
+            document.getElementById('couponEndDate').value = formatDate(coupon.endDate);
+
+            window.editingCouponId = id;
+            showCreateCouponModal();
+        }
+
+        function viewPromotionDetails(id) {
+            const promotion = rewardSystemManager.promotions.get(id);
+            if (!promotion) return;
+
+            const detailsHtml = `
+                <div class="modal fade" id="promotionDetailsModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">تفاصيل العرض: ${promotion.title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>النوع:</strong> ${rewardSystemManager.getPromotionTypeText(promotion.type)}</p>
+                                <p><strong>الوصف:</strong> ${promotion.description}</p>
+                                <p><strong>نسبة الخصم:</strong> ${promotion.discount}%</p>
+                                <p><strong>عدد الاستخدامات:</strong> ${promotion.redemptions}</p>
+                                <p><strong>فترة العرض:</strong> من ${rewardSystemManager.formatDate(promotion.startDate)} إلى ${rewardSystemManager.formatDate(promotion.endDate)}</p>
+                                <p><strong>التجار المشاركون:</strong> ${promotion.merchants.includes('all') ? 'جميع التجار' : promotion.merchants.length + ' تاجر'}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                <button type="button" class="btn btn-warning" onclick="editPromotion('${id}')">تعديل</button>
+                                <button type="button" class="btn btn-danger" onclick="deletePromotion('${id}')">حذف</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const existingModal = document.getElementById('promotionDetailsModal');
+            if (existingModal) existingModal.remove();
+
+            document.body.insertAdjacentHTML('beforeend', detailsHtml);
+            new bootstrap.Modal(document.getElementById('promotionDetailsModal')).show();
+        }
+
+        function editPromotion(id) {
+            const promotion = rewardSystemManager.promotions.get(id);
+            if (!promotion) return;
+
+            document.getElementById('promotionTitle').value = promotion.title;
+            document.getElementById('promotionType').value = promotion.type;
+            document.getElementById('promotionDescription').value = promotion.description;
+            document.getElementById('promotionDiscount').value = promotion.discount;
+            
+            const formatDate = (date) => new Date(date).toISOString().slice(0, 16);
+            document.getElementById('promotionStartDate').value = formatDate(promotion.startDate);
+            document.getElementById('promotionEndDate').value = formatDate(promotion.endDate);
+
+            // Set selected merchants
+            const merchantSelect = document.getElementById('promotionMerchants');
+            Array.from(merchantSelect.options).forEach(option => {
+                option.selected = promotion.merchants.includes(option.value);
+            });
+
+            window.editingPromotionId = id;
+            showCreatePromotionModal();
+        }
+
+        function filterCampaigns() {
+            const searchTerm = document.getElementById('campaignSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('campaignStatusFilter').value;
+            const typeFilter = document.getElementById('campaignTypeFilter').value;
+            const dateFrom = document.getElementById('campaignDateFrom').value;
+            const dateTo = document.getElementById('campaignDateTo').value;
+
+            const container = document.getElementById('campaignsContainer');
+            const campaigns = Array.from(rewardSystemManager.campaigns.values());
+            
+            const filteredCampaigns = campaigns.filter(campaign => {
+                const matchesSearch = !searchTerm || campaign.name.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || campaign.status === statusFilter;
+                const matchesType = !typeFilter || campaign.type === typeFilter;
+                
+                let matchesDate = true;
+                if (dateFrom) {
+                    matchesDate = matchesDate && new Date(campaign.startDate) >= new Date(dateFrom);
+                }
+                if (dateTo) {
+                    matchesDate = matchesDate && new Date(campaign.endDate) <= new Date(dateTo);
+                }
+                
+                return matchesSearch && matchesStatus && matchesType && matchesDate;
+            });
+
+            // Re-render only filtered campaigns
+            container.innerHTML = '';
+            filteredCampaigns.forEach(campaign => {
+                const progressPercentage = (campaign.spent / campaign.budget) * 100;
+                const conversionRate = ((campaign.conversions / campaign.participants) * 100).toFixed(1);
+                
+                const campaignCard = `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card reward-card h-100 position-relative">
+                            <span class="badge status-${campaign.status} campaign-status">${rewardSystemManager.getStatusText(campaign.status)}</span>
+                            <div class="card-body">
+                                <h5 class="card-title">${campaign.name}</h5>
+                                <p class="card-text text-muted">${campaign.description}</p>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <small>الميزانية المستخدمة</small>
+                                        <small>${progressPercentage.toFixed(1)}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar" style="width: ${progressPercentage}%"></div>
+                                    </div>
+                                    <small class="text-muted">${campaign.spent} من ${campaign.budget} ر.س</small>
+                                </div>
+                                
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <strong class="text-primary">${campaign.participants}</strong><br>
+                                        <small class="text-muted">مشارك</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong class="text-success">${campaign.conversions}</strong><br>
+                                        <small class="text-muted">تحويل</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong class="text-info">${conversionRate}%</strong><br>
+                                        <small class="text-muted">معدل النجاح</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewCampaignDetails('${campaign.id}')">عرض</button>
+                                    <button class="btn btn-outline-warning btn-sm" onclick="editCampaign('${campaign.id}')">تعديل</button>
+                                    <button class="btn btn-outline-${campaign.status === 'active' ? 'danger' : 'success'} btn-sm" onclick="toggleCampaignStatus('${campaign.id}')">
+                                        ${campaign.status === 'active' ? 'إيقاف' : 'تفعيل'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += campaignCard;
+            });
+
+            showNotification(`تم العثور على ${filteredCampaigns.length} حملة`, 'info');
+        }
+
+        function exportRewardsData() {
+            const data = {
+                campaigns: Array.from(rewardSystemManager.campaigns.values()),
+                coupons: Array.from(rewardSystemManager.coupons.values()),
+                promotions: Array.from(rewardSystemManager.promotions.values()),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rewards-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('تم تصدير البيانات بنجاح!', 'success');
+        }
+
+        function deleteCoupon(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الكوبون؟')) {
+                rewardSystemManager.coupons.delete(id);
+                rewardSystemManager.renderCoupons();
+                showNotification('تم حذف الكوبون بنجاح!', 'success');
+                
+                const modal = document.getElementById('couponDetailsModal');
+                if (modal) bootstrap.Modal.getInstance(modal).hide();
+            }
+        }
+
+        function deletePromotion(id) {
+            if (confirm('هل أنت متأكد من حذف هذا العرض؟')) {
+                rewardSystemManager.promotions.delete(id);
+                rewardSystemManager.renderPromotions();
+                showNotification('تم حذف العرض بنجاح!', 'success');
+                
+                const modal = document.getElementById('promotionDetailsModal');
+                if (modal) bootstrap.Modal.getInstance(modal).hide();
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = {
+                'success': 'alert-success',
+                'error': 'alert-danger',
+                'warning': 'alert-warning',
+                'info': 'alert-info'
+            }[type] || 'alert-info';
+
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Add helper methods to RewardSystemManager
+        Object.assign(RewardSystemManager.prototype, {
+            getCampaignTypeText(type) {
+                const typeMap = {
+                    'loyalty': 'نقاط الولاء',
+                    'referral': 'إحالة الأصدقاء',
+                    'seasonal': 'موسمية',
+                    'welcome': 'ترحيب'
+                };
+                return typeMap[type] || type;
+            },
+
+            getTargetText(target) {
+                const targetMap = {
+                    'all': 'جميع العملاء',
+                    'new': 'عملاء جدد',
+                    'returning': 'عملاء عائدون',
+                    'vip': 'عملاء مميزون'
+                };
+                return targetMap[target] || target;
+            },
+
+            getConditionText(condition) {
+                const conditionMap = {
+                    'order_amount': 'مبلغ الطلب',
+                    'order_count': 'عدد الطلبات',
+                    'referral': 'إحالة صديق',
+                    'first_order': 'أول طلب'
+                };
+                return conditionMap[condition] || condition;
+            },
+
+            getPromotionTypeText(type) {
+                const typeMap = {
+                    'buy_get': 'اشتري واحصل',
+                    'bundle': 'باقة مجمعة',
+                    'flash_sale': 'تخفيض سريع',
+                    'happy_hour': 'ساعة سعيدة'
+                };
+                return typeMap[type] || type;
+            }
+        });
+
+        // Handle form submissions for editing
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalSaveCampaign = window.saveCampaign;
+            window.saveCampaign = function() {
+                if (window.editingCampaignId) {
+                    const campaign = rewardSystemManager.campaigns.get(window.editingCampaignId);
+                    campaign.name = document.getElementById('campaignName').value;
+                    campaign.type = document.getElementById('campaignType').value;
+                    campaign.description = document.getElementById('campaignDescription').value;
+                    campaign.budget = parseFloat(document.getElementById('campaignBudget').value);
+                    campaign.target = document.getElementById('campaignTarget').value;
+                    campaign.startDate = new Date(document.getElementById('campaignStartDate').value);
+                    campaign.endDate = new Date(document.getElementById('campaignEndDate').value);
+                    
+                    // Update rules
+                    campaign.rules = [];
+                    const rules = document.querySelectorAll('.rule-item');
+                    rules.forEach(rule => {
+                        const condition = rule.querySelector('.rule-condition').value;
+                        const value = parseFloat(rule.querySelector('.rule-value').value) || 0;
+                        const reward = parseFloat(rule.querySelector('.rule-reward').value) || 0;
+                        if (condition && value && reward) {
+                            campaign.rules.push({ condition, value, reward });
+                        }
+                    });
+
+                    rewardSystemManager.renderCampaigns();
+                    showNotification('تم تحديث الحملة بنجاح!', 'success');
+                    delete window.editingCampaignId;
+                    bootstrap.Modal.getInstance(document.getElementById('createCampaignModal')).hide();
+                } else {
+                    originalSaveCampaign();
+                }
+            };
+
+            const originalSaveCoupon = window.saveCoupon;
+            window.saveCoupon = function() {
+                if (window.editingCouponId) {
+                    const coupon = rewardSystemManager.coupons.get(window.editingCouponId);
+                    coupon.code = document.getElementById('couponCode').value;
+                    coupon.type = document.getElementById('couponType').value;
+                    coupon.value = parseFloat(document.getElementById('couponValue').value);
+                    coupon.minOrder = parseFloat(document.getElementById('couponMinOrder').value) || 0;
+                    coupon.maxUse = parseInt(document.getElementById('couponMaxUse').value) || 999999;
+                    coupon.startDate = new Date(document.getElementById('couponStartDate').value);
+                    coupon.endDate = new Date(document.getElementById('couponEndDate').value);
+                    coupon.description = document.getElementById('couponDescription').value;
+
+                    rewardSystemManager.renderCoupons();
+                    showNotification('تم تحديث الكوبون بنجاح!', 'success');
+                    delete window.editingCouponId;
+                    bootstrap.Modal.getInstance(document.getElementById('createCouponModal')).hide();
+                } else {
+                    originalSaveCoupon();
+                }
+            };
+
+            const originalSavePromotion = window.savePromotion;
+            window.savePromotion = function() {
+                if (window.editingPromotionId) {
+                    const promotion = rewardSystemManager.promotions.get(window.editingPromotionId);
+                    promotion.title = document.getElementById('promotionTitle').value;
+                    promotion.type = document.getElementById('promotionType').value;
+                    promotion.description = document.getElementById('promotionDescription').value;
+                    promotion.discount = parseFloat(document.getElementById('promotionDiscount').value);
+                    promotion.merchants = Array.from(document.getElementById('promotionMerchants').selectedOptions).map(option => option.value);
+                    promotion.startDate = new Date(document.getElementById('promotionStartDate').value);
+                    promotion.endDate = new Date(document.getElementById('promotionEndDate').value);
+
+                    rewardSystemManager.renderPromotions();
+                    showNotification('تم تحديث العرض بنجاح!', 'success');
+                    delete window.editingPromotionId;
+                    bootstrap.Modal.getInstance(document.getElementById('createPromotionModal')).hide();
+                } else {
+                    originalSavePromotion();
+                }
+            };
+        });
+
+        // Initialize reward system
+        const rewardSystemManager = new RewardSystemManager();
+
+        // Enhanced Campaign Targeting Functions
+        
+        // Sample customer data for targeting preview
+        const sampleCustomerData = {
+            total: 892,
+            male: 456,
+            female: 436,
+            ageGroups: {
+                '18-25': 178,
+                '26-35': 267,
+                '36-45': 223,
+                '46-55': 156,
+                '56+': 68
+            },
+            customerTypes: {
+                regular: 654,
+                vip: 156,
+                premium: 82
+            },
+            appUsageDays: {
+                '0-7': 89,
+                '8-30': 156,
+                '31-90': 234,
+                '91+': 413
+            },
+            customerValues: {
+                '0-500': 234,
+                '501-2000': 345,
+                '2001-5000': 201,
+                '5000+': 112
+            }
+        };
+
+        function toggleGenderSelection(allCheckbox) {
+            const genderOptions = document.querySelectorAll('.gender-option');
+            if (allCheckbox.checked) {
+                genderOptions.forEach(option => {
+                    option.checked = false;
+                    option.disabled = true;
+                });
+            } else {
+                genderOptions.forEach(option => {
+                    option.disabled = false;
+                });
+            }
+            updateTargetingPreview();
+        }
+
+        function toggleTypeSelection(allCheckbox) {
+            const typeOptions = document.querySelectorAll('.type-option');
+            if (allCheckbox.checked) {
+                typeOptions.forEach(option => {
+                    option.checked = false;
+                    option.disabled = true;
+                });
+            } else {
+                typeOptions.forEach(option => {
+                    option.disabled = false;
+                });
+            }
+            updateTargetingPreview();
+        }
+
+        function setValueRange(min, max) {
+            document.getElementById('customerValueMin').value = min;
+            document.getElementById('customerValueMax').value = max || '';
+            updateTargetingPreview();
+        }
+
+        function setUsageDuration(min, max) {
+            document.getElementById('appUsageMin').value = min;
+            document.getElementById('appUsageMax').value = max || '';
+            updateTargetingPreview();
+        }
+
+        function updateTargetingPreview() {
+            // Get targeting criteria
+            const genderAll = document.getElementById('genderAll').checked;
+            const genderMale = document.getElementById('genderMale').checked;
+            const genderFemale = document.getElementById('genderFemale').checked;
+            
+            const ageMin = parseInt(document.getElementById('ageMin').value) || 0;
+            const ageMax = parseInt(document.getElementById('ageMax').value) || 100;
+            
+            const valueMin = parseFloat(document.getElementById('customerValueMin').value) || 0;
+            const valueMax = parseFloat(document.getElementById('customerValueMax').value) || Infinity;
+            
+            const typeAll = document.getElementById('typeAll').checked;
+            const typeRegular = document.getElementById('typeRegular').checked;
+            const typeVip = document.getElementById('typeVip').checked;
+            const typePremium = document.getElementById('typePremium').checked;
+            
+            const usageMin = parseInt(document.getElementById('appUsageMin').value) || 0;
+            const usageMax = parseInt(document.getElementById('appUsageMax').value) || Infinity;
+
+            // Calculate targeted customers based on criteria
+            let targetedCount = 0;
+            let maleCount = 0;
+            let femaleCount = 0;
+            let regularCount = 0;
+            let vipCount = 0;
+            let premiumCount = 0;
+
+            // Apply gender filter
+            if (genderAll || (!genderMale && !genderFemale)) {
+                maleCount = sampleCustomerData.male;
+                femaleCount = sampleCustomerData.female;
+            } else {
+                maleCount = genderMale ? sampleCustomerData.male : 0;
+                femaleCount = genderFemale ? sampleCustomerData.female : 0;
+            }
+
+            // Apply customer type filter
+            if (typeAll || (!typeRegular && !typeVip && !typePremium)) {
+                regularCount = sampleCustomerData.customerTypes.regular;
+                vipCount = sampleCustomerData.customerTypes.vip;
+                premiumCount = sampleCustomerData.customerTypes.premium;
+            } else {
+                regularCount = typeRegular ? sampleCustomerData.customerTypes.regular : 0;
+                vipCount = typeVip ? sampleCustomerData.customerTypes.vip : 0;
+                premiumCount = typePremium ? sampleCustomerData.customerTypes.premium : 0;
+            }
+
+            // Simplified calculation (in real implementation, this would be more complex)
+            // Apply age filter (approximate)
+            let ageMultiplier = 1;
+            if (ageMin > 0 || ageMax < 100) {
+                ageMultiplier = 0.7; // Approximate reduction for age filtering
+            }
+
+            // Apply value filter (approximate)
+            let valueMultiplier = 1;
+            if (valueMin > 0 || valueMax < Infinity) {
+                if (valueMin >= 2000) valueMultiplier = 0.3;
+                else if (valueMin >= 500) valueMultiplier = 0.6;
+                else valueMultiplier = 0.8;
+            }
+
+            // Apply usage duration filter (approximate)
+            let usageMultiplier = 1;
+            if (usageMin > 0 || usageMax < Infinity) {
+                usageMultiplier = 0.8;
+            }
+
+            targetedCount = Math.round((maleCount + femaleCount) * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+            maleCount = Math.round(maleCount * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+            femaleCount = Math.round(femaleCount * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+            regularCount = Math.round(regularCount * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+            vipCount = Math.round(vipCount * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+            premiumCount = Math.round(premiumCount * ageMultiplier * valueMultiplier * usageMultiplier * 0.6);
+
+            // Update preview
+            document.getElementById('targetedCustomersCount').textContent = targetedCount.toLocaleString();
+            
+            const malePercentage = targetedCount > 0 ? Math.round((maleCount / targetedCount) * 100) : 0;
+            const femalePercentage = targetedCount > 0 ? Math.round((femaleCount / targetedCount) * 100) : 0;
+            
+            document.getElementById('malePercentage').textContent = malePercentage + '%';
+            document.getElementById('femalePercentage').textContent = femalePercentage + '%';
+            document.getElementById('maleProgressBar').style.width = malePercentage + '%';
+            document.getElementById('femaleProgressBar').style.width = femalePercentage + '%';
+            
+            document.getElementById('regularCount').textContent = regularCount.toLocaleString();
+            document.getElementById('vipCount').textContent = vipCount.toLocaleString();
+            document.getElementById('premiumCount').textContent = premiumCount.toLocaleString();
+
+            // Calculate estimated cost based on reward rules
+            calculateEstimatedCost(targetedCount);
+        }
+
+        function calculateEstimatedCost(targetedCount) {
+            const rules = document.querySelectorAll('.rule-item');
+            let totalEstimatedCost = 0;
+            
+            rules.forEach(rule => {
+                const rewardValue = parseFloat(rule.querySelector('.rule-reward').value) || 0;
+                if (rewardValue > 0) {
+                    // Assume 30% participation rate for cost estimation
+                    const participationRate = 0.3;
+                    totalEstimatedCost += targetedCount * participationRate * rewardValue;
+                }
+            });
+
+            document.getElementById('estimatedCost').textContent = totalEstimatedCost.toLocaleString() + ' ر.س';
+        }
+
+        function previewCampaign() {
+            const campaignData = {
+                name: document.getElementById('campaignName').value,
+                type: document.getElementById('campaignType').value,
+                description: document.getElementById('campaignDescription').value,
+                startDate: document.getElementById('campaignStartDate').value,
+                endDate: document.getElementById('campaignEndDate').value,
+                budget: document.getElementById('campaignBudget').value,
+                priority: document.getElementById('campaignPriority').value
+            };
+
+            // Get targeting criteria
+            const targeting = {
+                gender: {
+                    all: document.getElementById('genderAll').checked,
+                    male: document.getElementById('genderMale').checked,
+                    female: document.getElementById('genderFemale').checked
+                },
+                age: {
+                    min: document.getElementById('ageMin').value,
+                    max: document.getElementById('ageMax').value
+                },
+                customerValue: {
+                    min: document.getElementById('customerValueMin').value,
+                    max: document.getElementById('customerValueMax').value
+                },
+                customerType: {
+                    all: document.getElementById('typeAll').checked,
+                    regular: document.getElementById('typeRegular').checked,
+                    vip: document.getElementById('typeVip').checked,
+                    premium: document.getElementById('typePremium').checked
+                },
+                appUsage: {
+                    min: document.getElementById('appUsageMin').value,
+                    max: document.getElementById('appUsageMax').value
+                },
+                additionalFilters: {
+                    activeOnly: document.getElementById('activeOnly').checked,
+                    hasOrders: document.getElementById('hasOrders').checked,
+                    firstTimeUsers: document.getElementById('firstTimeUsers').checked,
+                    returningUsers: document.getElementById('returningUsers').checked
+                }
+            };
+
+            // Show preview modal
+            const previewModal = `
+                <div class="modal fade" id="campaignPreviewModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">معاينة الحملة: ${campaignData.name}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>معلومات الحملة:</h6>
+                                        <ul class="list-unstyled">
+                                            <li><strong>النوع:</strong> ${campaignData.type}</li>
+                                            <li><strong>الوصف:</strong> ${campaignData.description}</li>
+                                            <li><strong>الميزانية:</strong> ${campaignData.budget} ر.س</li>
+                                            <li><strong>الأولوية:</strong> ${campaignData.priority}</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>معايير الاستهداف:</h6>
+                                        <ul class="list-unstyled">
+                                            <li><strong>الجنس:</strong> ${targeting.gender.all ? 'الكل' : (targeting.gender.male ? 'ذكر ' : '') + (targeting.gender.female ? 'أنثى' : '')}</li>
+                                            <li><strong>العمر:</strong> ${targeting.age.min || 'غير محدد'} - ${targeting.age.max || 'غير محدد'}</li>
+                                            <li><strong>قيمة العميل:</strong> ${targeting.customerValue.min || '0'} - ${targeting.customerValue.max || '∞'} ر.س</li>
+                                            <li><strong>نوع العميل:</strong> ${targeting.customerType.all ? 'الكل' : (targeting.customerType.regular ? 'عادي ' : '') + (targeting.customerType.vip ? 'VIP ' : '') + (targeting.customerType.premium ? 'مميز' : '')}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <strong>العملاء المستهدفون:</strong> ${document.getElementById('targetedCustomersCount').textContent} عميل
+                                    <br><strong>التكلفة المتوقعة:</strong> ${document.getElementById('estimatedCost').textContent}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                <button type="button" class="btn btn-primary" onclick="saveCampaign()" data-bs-dismiss="modal">تأكيد وحفظ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const existingPreview = document.getElementById('campaignPreviewModal');
+            if (existingPreview) existingPreview.remove();
+
+            document.body.insertAdjacentHTML('beforeend', previewModal);
+            new bootstrap.Modal(document.getElementById('campaignPreviewModal')).show();
+        }
+
+        function exportTargetingCriteria() {
+            const criteria = {
+                gender: {
+                    all: document.getElementById('genderAll').checked,
+                    male: document.getElementById('genderMale').checked,
+                    female: document.getElementById('genderFemale').checked
+                },
+                age: {
+                    min: document.getElementById('ageMin').value,
+                    max: document.getElementById('ageMax').value
+                },
+                customerValue: {
+                    min: document.getElementById('customerValueMin').value,
+                    max: document.getElementById('customerValueMax').value
+                },
+                customerType: {
+                    all: document.getElementById('typeAll').checked,
+                    regular: document.getElementById('typeRegular').checked,
+                    vip: document.getElementById('typeVip').checked,
+                    premium: document.getElementById('typePremium').checked
+                },
+                appUsage: {
+                    min: document.getElementById('appUsageMin').value,
+                    max: document.getElementById('appUsageMax').value
+                },
+                additionalFilters: {
+                    activeOnly: document.getElementById('activeOnly').checked,
+                    hasOrders: document.getElementById('hasOrders').checked,
+                    firstTimeUsers: document.getElementById('firstTimeUsers').checked,
+                    returningUsers: document.getElementById('returningUsers').checked
+                },
+                targetedCount: document.getElementById('targetedCustomersCount').textContent,
+                estimatedCost: document.getElementById('estimatedCost').textContent,
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(criteria, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `campaign-targeting-criteria-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('تم تصدير معايير الاستهداف بنجاح!', 'success');
+        }
+
+        // Initialize targeting preview when modal is shown
+        document.getElementById('createCampaignModal').addEventListener('shown.bs.modal', function() {
+            updateTargetingPreview();
+            
+            // Add event listeners for real-time updates
+            const inputs = document.querySelectorAll('#createCampaignModal input, #createCampaignModal select');
+            inputs.forEach(input => {
+                input.addEventListener('change', updateTargetingPreview);
+                input.addEventListener('input', updateTargetingPreview);
+            });
+        });
+
+        // Enhanced saveCampaign function to include targeting data
+        const originalSaveCampaign = window.saveCampaign;
+        window.saveCampaign = function() {
+            // Get all form data including targeting criteria
+            const campaignData = {
+                name: document.getElementById('campaignName').value,
+                type: document.getElementById('campaignType').value,
+                description: document.getElementById('campaignDescription').value,
+                startDate: new Date(document.getElementById('campaignStartDate').value),
+                endDate: new Date(document.getElementById('campaignEndDate').value),
+                budget: parseFloat(document.getElementById('campaignBudget').value) || 0,
+                priority: document.getElementById('campaignPriority').value,
+                targeting: {
+                    gender: {
+                        all: document.getElementById('genderAll').checked,
+                        male: document.getElementById('genderMale').checked,
+                        female: document.getElementById('genderFemale').checked
+                    },
+                    age: {
+                        min: document.getElementById('ageMin').value,
+                        max: document.getElementById('ageMax').value
+                    },
+                    customerValue: {
+                        min: document.getElementById('customerValueMin').value,
+                        max: document.getElementById('customerValueMax').value
+                    },
+                    customerType: {
+                        all: document.getElementById('typeAll').checked,
+                        regular: document.getElementById('typeRegular').checked,
+                        vip: document.getElementById('typeVip').checked,
+                        premium: document.getElementById('typePremium').checked
+                    },
+                    appUsage: {
+                        min: document.getElementById('appUsageMin').value,
+                        max: document.getElementById('appUsageMax').value
+                    },
+                    additionalFilters: {
+                        activeOnly: document.getElementById('activeOnly').checked,
+                        hasOrders: document.getElementById('hasOrders').checked,
+                        firstTimeUsers: document.getElementById('firstTimeUsers').checked,
+                        returningUsers: document.getElementById('returningUsers').checked
+                    }
+                },
+                targetedCount: parseInt(document.getElementById('targetedCustomersCount').textContent.replace(/,/g, '')),
+                estimatedCost: document.getElementById('estimatedCost').textContent
+            };
+
+            // Validation
+            if (!campaignData.name.trim()) {
+                alert('يرجى إدخال اسم الحملة');
+                return;
+            }
+            if (!campaignData.type) {
+                alert('يرجى اختيار نوع الحملة');
+                return;
+            }
+            if (!campaignData.startDate || !campaignData.endDate) {
+                alert('يرجى تحديد تواريخ الحملة');
+                return;
+            }
+            if (campaignData.startDate >= campaignData.endDate) {
+                alert('تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية');
+                return;
+            }
+
+            // Get reward rules
+            const rules = [];
+            document.querySelectorAll('.rule-item').forEach(rule => {
+                const condition = rule.querySelector('.rule-condition').value;
+                const value = parseFloat(rule.querySelector('.rule-value').value) || 0;
+                const reward = parseFloat(rule.querySelector('.rule-reward').value) || 0;
+                if (condition && value && reward) {
+                    rules.push({ condition, value, reward });
+                }
+            });
+
+            campaignData.rules = rules;
+
+            // Create campaign with enhanced data
+            if (window.editingCampaignId) {
+                // Update existing campaign
+                const existingCampaign = rewardSystemManager.campaigns.get(window.editingCampaignId);
+                Object.assign(existingCampaign, campaignData);
+                showNotification('تم تحديث الحملة بنجاح!', 'success');
+                delete window.editingCampaignId;
+            } else {
+                // Create new campaign
+                const newCampaign = {
+                    id: 'C' + Date.now(),
+                    ...campaignData,
+                    status: 'draft',
+                    participants: 0,
+                    conversions: 0,
+                    spent: 0,
+                    createdAt: new Date()
+                };
+                
+                rewardSystemManager.campaigns.set(newCampaign.id, newCampaign);
+                showNotification('تم إنشاء الحملة بنجاح!', 'success');
+            }
+
+            rewardSystemManager.renderCampaigns();
+            bootstrap.Modal.getInstance(document.getElementById('createCampaignModal')).hide();
+            
+            // Reset form
+            document.getElementById('campaignForm').reset();
+            document.getElementById('genderAll').checked = true;
+            document.getElementById('typeAll').checked = true;
+            toggleGenderSelection(document.getElementById('genderAll'));
+            toggleTypeSelection(document.getElementById('typeAll'));
+        };
+    </script>
+</body>
+</html>

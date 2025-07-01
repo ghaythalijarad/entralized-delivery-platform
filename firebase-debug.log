@@ -1,0 +1,20 @@
+[debug] [2025-06-06T00:12:59.381Z] ----------------------------------------------------------------------
+[debug] [2025-06-06T00:12:59.382Z] Command:       /Users/ghaythallaheebi/.nvm/versions/node/v18.20.8/bin/node /Users/ghaythallaheebi/.nvm/versions/node/v18.20.8/bin/firebase use --add
+[debug] [2025-06-06T00:12:59.382Z] CLI Version:   13.35.1
+[debug] [2025-06-06T00:12:59.382Z] Platform:      darwin
+[debug] [2025-06-06T00:12:59.382Z] Node Version:  v18.20.8
+[debug] [2025-06-06T00:12:59.383Z] Time:          Fri Jun 06 2025 03:12:59 GMT+0300 (Arabian Standard Time)
+[debug] [2025-06-06T00:12:59.383Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-06T00:12:59.452Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-06T00:12:59.452Z] > authorizing via signed-in user (write2ghayth@gmail.com)
+[debug] [2025-06-06T00:12:59.452Z] Checked if tokens are valid: false, expires at: 1749169576004
+[debug] [2025-06-06T00:12:59.452Z] Checked if tokens are valid: false, expires at: 1749169576004
+[debug] [2025-06-06T00:12:59.452Z] > refreshing access token with scopes: []
+[debug] [2025-06-06T00:12:59.453Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-06-06T00:12:59.453Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-06-06T00:12:59.991Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-06-06T00:12:59.991Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-06-06T00:13:00.004Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-06-06T00:13:00.788Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-06-06T00:13:00.788Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]

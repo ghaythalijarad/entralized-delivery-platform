@@ -1,4 +1,5 @@
 version: 1
+<<<<<<< HEAD
 backend:
   phases:
     preBuild:
@@ -11,13 +12,20 @@ backend:
         - python -c "import models; print('Models loaded successfully')"
         - '# Execute Amplify-provided build script'
         - amplifyPush --simple
+=======
+>>>>>>> origin/main
 frontend:
   phases:
     preBuild:
       commands:
         - echo "No frontend build needed, serving static files."
     build:
+<<<<<<< HEAD
       commands: []
+=======
+      commands:
+        - echo "Build completed successfully"
+>>>>>>> origin/main
   artifacts:
     baseDirectory: fastapi-template/static
     files:

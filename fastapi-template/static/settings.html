@@ -31,6 +31,49 @@
         .config-card:hover {
             transform: translateY(-2px);
         }
+<<<<<<< HEAD
+=======
+
+        /* Accent color definition */
+        :root {
+            --accent-color: #00C1E8;
+        }
+
+        /* Primary buttons and outlines */
+        .btn-primary {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+        }
+        .btn-primary:hover {
+            background-color: #00A7CC !important;
+            border-color: #00A7CC !important;
+        }
+        .btn-outline-success,
+        .btn-outline-info,
+        .btn-outline-primary {
+            color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+        }
+        .btn-outline-success:hover,
+        .btn-outline-info:hover,
+        .btn-outline-primary:hover {
+            background-color: var(--accent-color) !important;
+            color: #fff !important;
+        }
+
+        /* Card headers and highlights */
+        .card-header {
+            border-bottom: 2px solid var(--accent-color) !important;
+        }
+        .card-header h5 {
+            color: var(--accent-color) !important;
+        }
+
+        /* Status indicator uses accent */
+        .status-indicator.status-connected {
+            background-color: var(--accent-color) !important;
+        }
+>>>>>>> origin/main
     </style>
 </head>
 <body>
@@ -39,9 +82,15 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>إعدادات النظام المركزي</h2>
             <div>
+<<<<<<< HEAD
                 <button class="btn btn-outline-success me-2" onclick="testAllConnections()">
                     <span class="material-icons-outlined me-1">wifi_find</span>
                     اختبار الاتصالات
+=======
+                <button class="btn btn-outline-success me-2" onclick="checkAllServices()">
+                    <span class="material-icons-outlined me-1">wifi_find</span>
+                    فحص الخدمات
+>>>>>>> origin/main
                 </button>
                 <button class="btn btn-outline-primary" onclick="exportSettings()">
                     <span class="material-icons-outlined me-1">download</span>
@@ -56,12 +105,17 @@
                 <span class="material-icons-outlined me-2">cloud</span>
                 <strong>حالة الاتصال:</strong>
                 <span class="status-indicator status-connected"></span>
+<<<<<<< HEAD
                 <span id="connectionText">متصل بـ AWS</span>
+=======
+                <span id="connectionText">متصل بـ AWS Cloud</span>
+>>>>>>> origin/main
             </div>
         </div>
 
         <!-- Settings Accordion -->
         <div class="accordion mb-4" id="settingsAccordion">
+<<<<<<< HEAD
             <!-- AWS Configuration as accordion-item -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingAws">
@@ -71,10 +125,24 @@
                 </h2>
                 <div id="collapseAws" class="accordion-collapse collapse show" aria-labelledby="headingAws" data-bs-parent="#settingsAccordion">
                     <div class="accordion-body">
+=======
+
+            <!-- AWS Core Services Configuration -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingCore">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCore" aria-expanded="true" aria-controls="collapseCore">
+                        إعدادات AWS الأساسية
+                    </button>
+                </h2>
+                <div id="collapseCore" class="accordion-collapse collapse show" aria-labelledby="headingCore" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <!-- Core Services Form -->
+>>>>>>> origin/main
                         <form id="awsForm">
                             <div class="mb-3">
                                 <label class="form-label">AWS Region</label>
                                 <select class="form-select" id="awsRegion">
+<<<<<<< HEAD
                                     <option value="us-east-1">US East (N. Virginia)</option>
                                     <option value="us-west-2">US West (Oregon)</option>
                                     <option value="eu-west-1">Europe (Ireland)</option>
@@ -82,28 +150,63 @@
                                     <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
                                 </select>
                                 <small class="text-muted">منطقة AWS المطلوبة</small>
+=======
+                                    <option value="me-south-1" selected>Middle East (Bahrain) - me-south-1</option>
+                                    <option value="eu-west-1">Europe (Ireland) - eu-west-1</option>
+                                    <option value="us-east-1">US East (N. Virginia) - us-east-1</option>
+                                    <option value="ap-southeast-1">Asia Pacific (Singapore) - ap-southeast-1</option>
+                                </select>
+                                <small class="text-muted">المنطقة الجغرافية لخدمات AWS</small>
+>>>>>>> origin/main
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Access Key ID</label>
                                 <div class="input-group">
+<<<<<<< HEAD
                                     <input type="password" class="form-control" id="accessKeyId" value="AKIAXXXXXXXXXXXXX">
+=======
+                                    <input type="password" class="form-control" id="accessKeyId" placeholder="AKIAIOSFODNN7EXAMPLE">
+>>>>>>> origin/main
                                     <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('accessKeyId')">
                                         <span class="material-icons-outlined">visibility</span>
                                     </button>
                                 </div>
+<<<<<<< HEAD
+=======
+                                <small class="text-muted">مفتاح الوصول لـ AWS IAM</small>
+>>>>>>> origin/main
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Secret Access Key</label>
                                 <div class="input-group">
+<<<<<<< HEAD
                                     <input type="password" class="form-control" id="secretAccessKey" value="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+=======
+                                    <input type="password" class="form-control" id="secretAccessKey" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+>>>>>>> origin/main
                                     <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('secretAccessKey')">
                                         <span class="material-icons-outlined">visibility</span>
                                     </button>
                                 </div>
+<<<<<<< HEAD
+=======
+                                <small class="text-muted">المفتاح السري لـ AWS</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Amplify App ID</label>
+                                <input type="text" class="form-control" id="amplifyAppId" value="d26nn5u6blbq6z" readonly>
+                                <small class="text-muted">معرف تطبيق AWS Amplify</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">CloudFront Distribution</label>
+                                <input type="text" class="form-control" id="cloudFrontId" placeholder="E1234567890123">
+                                <small class="text-muted">معرف توزيع CloudFront للتسريع</small>
+>>>>>>> origin/main
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">S3 Bucket Name</label>
                                 <input type="text" class="form-control" id="s3Bucket" value="centralized-delivery-platform-storage">
+<<<<<<< HEAD
                                 <small class="text-muted">اسم bucket لتخزين الملفات</small>
                             </div>
                             <div class="mb-3">
@@ -119,11 +222,24 @@
                             </div>
                             <button type="button" class="btn btn-primary" onclick="saveAWSConfig()">حفظ إعدادات AWS</button>
                             <button type="button" class="btn btn-outline-success ms-2" onclick="testAWSConnection()">اختبار الاتصال</button>
+=======
+                                <small class="text-muted">اسم حاوية S3 لتخزين الملفات</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableOffline" checked>
+                                    <label class="form-check-label">تفعيل وضع عدم الاتصال</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveAwsConfig()">حفظ إعدادات AWS</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testAwsConnection()">اختبار الاتصال</button>
+>>>>>>> origin/main
                         </form>
                     </div>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Push Notifications Configuration -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingNotifications">
@@ -205,6 +321,48 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="enableAuditLog" checked>
                                     <label class="form-check-label">تفعيل سجل المراجعة</label>
+=======
+            <!-- AWS Database Services -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDatabase">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatabase" aria-expanded="false" aria-controls="collapseDatabase">
+                        خدمات قواعد البيانات AWS
+                    </button>
+                </h2>
+                <div id="collapseDatabase" class="accordion-collapse collapse" aria-labelledby="headingDatabase" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <!-- Database Services Form -->
+                        <form id="databaseForm">
+                            <div class="mb-3">
+                                <label class="form-label">نوع قاعدة البيانات</label>
+                                <select class="form-select" id="databaseType">
+                                    <option value="dynamodb" selected>Amazon DynamoDB</option>
+                                    <option value="rds">Amazon RDS (PostgreSQL)</option>
+                                    <option value="documentdb">Amazon DocumentDB</option>
+                                    <option value="aurora">Amazon Aurora Serverless</option>
+                                </select>
+                                <small class="text-muted">نوع قاعدة البيانات المستخدمة</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">DynamoDB Table Prefix</label>
+                                <input type="text" class="form-control" id="tablePrefix" value="delivery-platform">
+                                <small class="text-muted">بادئة أسماء الجداول في DynamoDB</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Read Capacity Units</label>
+                                <input type="number" class="form-control" id="readCapacity" value="5" min="1">
+                                <small class="text-muted">وحدات سعة القراءة لـ DynamoDB</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Write Capacity Units</label>
+                                <input type="number" class="form-control" id="writeCapacity" value="5" min="1">
+                                <small class="text-muted">وحدات سعة الكتابة لـ DynamoDB</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableAutoScaling" checked>
+                                    <label class="form-check-label">تفعيل التوسع التلقائي</label>
+>>>>>>> origin/main
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -213,12 +371,65 @@
                                     <label class="form-check-label">النسخ الاحتياطي التلقائي</label>
                                 </div>
                             </div>
+<<<<<<< HEAD
+=======
+                            <button type="button" class="btn btn-primary" onclick="saveDatabaseConfig()">حفظ إعدادات قاعدة البيانات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="testDatabaseConnection()">اختبار الاتصال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AWS Security & IAM -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingSecurity">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSecurity" aria-expanded="false" aria-controls="collapseSecurity">
+                        الأمان وإدارة الهوية AWS
+                    </button>
+                </h2>
+                <div id="collapseSecurity" class="accordion-collapse collapse" aria-labelledby="headingSecurity" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form id="securityForm">
+                            <div class="mb-3">
+                                <label class="form-label">IAM Role للتطبيق</label>
+                                <input type="text" class="form-control" id="iamRole" value="arn:aws:iam::123456789012:role/DeliveryAppRole">
+                                <small class="text-muted">دور IAM للوصول لخدمات AWS</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cognito User Pool ID</label>
+                                <input type="text" class="form-control" id="cognitoPoolId" value="me-south-1_XXXXXXXXX">
+                                <small class="text-muted">معرف مجمع المستخدمين في Cognito</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cognito App Client ID</label>
+                                <input type="text" class="form-control" id="cognitoClientId" value="XXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                <small class="text-muted">معرف عميل التطبيق في Cognito</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">فترة انتهاء Token (ساعة)</label>
+                                <input type="number" class="form-control" id="tokenTimeout" value="24" min="1" max="168">
+                                <small class="text-muted">مدة صلاحية رمز المصادقة</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableMFA" checked>
+                                    <label class="form-check-label">تفعيل المصادقة الثنائية</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enableCloudTrail" checked>
+                                    <label class="form-check-label">تفعيل CloudTrail للمراجعة</label>
+                                </div>
+                            </div>
+>>>>>>> origin/main
                             <button type="button" class="btn btn-primary" onclick="saveSecurityConfig()">حفظ إعدادات الأمان</button>
                         </form>
                     </div>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Collections & Indexes -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingDatabase">
@@ -227,11 +438,22 @@
                     </button>
                 </h2>
                 <div id="collapseDatabase" class="accordion-collapse collapse" aria-labelledby="headingDatabase" data-bs-parent="#settingsAccordion">
+=======
+            <!-- AWS Tables & Resources -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTables">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTables" aria-expanded="false" aria-controls="collapseTables">
+                        جداول DynamoDB والموارد
+                    </button>
+                </h2>
+                <div id="collapseTables" class="accordion-collapse collapse" aria-labelledby="headingTables" data-bs-parent="#settingsAccordion">
+>>>>>>> origin/main
                     <div class="accordion-body">
                         <div class="mb-3">
                             <label class="form-label">الجداول الأساسية</label>
                             <div class="list-group">
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
+<<<<<<< HEAD
                                     orders
                                     <span class="badge bg-success">نشط</span>
                                 </div>
@@ -249,11 +471,31 @@
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
                                     rewards
+=======
+                                    delivery-platform-orders
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    delivery-platform-merchants
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    delivery-platform-drivers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    delivery-platform-customers
+                                    <span class="badge bg-success">نشط</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    delivery-platform-rewards
+>>>>>>> origin/main
                                     <span class="badge bg-warning">قيد الإنشاء</span>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
+<<<<<<< HEAD
                             <button type="button" class="btn btn-outline-primary" onclick="createIndexes()">إنشاء الفهارس المطلوبة</button>
                             <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeQueries()">تحسين الاستعلامات</button>
                         </div>
@@ -272,6 +514,20 @@
                                 <option value="db.t3.medium">db.t3.medium (2 vCPU, 4 GB RAM)</option>
                                 <option value="db.m5.large">db.m5.large (2 vCPU, 8 GB RAM)</option>
                             </select>
+=======
+                            <button type="button" class="btn btn-outline-primary" onclick="createTables()">إنشاء الجداول المطلوبة</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="optimizeIndices()">تحسين الفهارس</button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">استهلاك السعة الحالي</label>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: 30%">Read: 30%</div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: 25%">Write: 25%</div>
+                            </div>
+                            <small class="text-muted">استخدام Read/Write Capacity Units</small>
+>>>>>>> origin/main
                         </div>
                     </div>
                 </div>
@@ -281,7 +537,11 @@
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingRealtime">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRealtime" aria-expanded="false" aria-controls="collapseRealtime">
+<<<<<<< HEAD
                         <span class="material-icons-outlined me-2">sync</span>الميزات المباشرة
+=======
+                        الميزات المباشرة
+>>>>>>> origin/main
                     </button>
                 </h2>
                 <div id="collapseRealtime" class="accordion-collapse collapse" aria-labelledby="headingRealtime" data-bs-parent="#settingsAccordion">
@@ -323,18 +583,30 @@
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingBusiness">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusiness" aria-expanded="false" aria-controls="collapseBusiness">
+<<<<<<< HEAD
                         <span class="material-icons-outlined me-2">business</span>منطق الأعمال
+=======
+                        منطق الأعمال
+>>>>>>> origin/main
                     </button>
                 </h2>
                 <div id="collapseBusiness" class="accordion-collapse collapse" aria-labelledby="headingBusiness" data-bs-parent="#settingsAccordion">
                     <div class="accordion-body">
                         <form id="businessForm">
                             <div class="mb-3">
+<<<<<<< HEAD
                                 <label class="form-label">رسوم التوصيل الأساسية (IQD)</label>
                                 <input type="number" class="form-control" id="baseDeliveryFee" value="5" step="0.5">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">رسوم لكل كيلومتر (IQD)</label>
+=======
+                                <label class="form-label">رسوم التوصيل الأساسية (ر.س)</label>
+                                <input type="number" class="form-control" id="baseDeliveryFee" value="5" step="0.5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رسوم لكل كيلومتر (ر.س)</label>
+>>>>>>> origin/main
                                 <input type="number" class="form-control" id="perKmFee" value="2" step="0.1">
                             </div>
                             <div class="mb-3">
@@ -346,7 +618,11 @@
                                 <input type="number" class="form-control" id="maxDeliveryDistance" value="20" min="1">
                             </div>
                             <div class="mb-3">
+<<<<<<< HEAD
                                 <label class="form-label">الحد الأدنى لقيمة الطلب (IQD)</label>
+=======
+                                <label class="form-label">الحد الأدنى لقيمة الطلب (ر.س)</label>
+>>>>>>> origin/main
                                 <input type="number" class="form-control" id="minOrderValue" value="15" step="0.5">
                             </div>
                             <button type="button" class="btn btn-primary" onclick="saveBusinessConfig()">حفظ إعدادات الأعمال</button>
@@ -366,6 +642,7 @@
                     <div class="accordion-body">
                         <form id="apiKeysForm">
                             <div class="mb-3">
+<<<<<<< HEAD
                                 <label class="form-label">مفتاح API لخدمة SMS</label>
                                 <input type="text" class="form-control" id="smsKey" placeholder="ادخل مفتاح Twilio/SNS">
                                 <small class="text-muted">يستخدم لإرسال رسائل التحقق والتنبيهات</small>
@@ -374,6 +651,41 @@
                                 <label class="form-label">OneSignal App ID</label>
                                 <input type="text" class="form-control" id="oneSignalAppId" placeholder="ادخل معرف تطبيق OneSignal">
                                 <small class="text-muted">لإرسال إشعارات Push Notifications</small>
+=======
+                                <label class="form-label">Google Maps API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="googleMapsKey" value="AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('googleMapsKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">مطلوب للخرائط والملاحة</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Payment Gateway API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="paymentKey" placeholder="Enter your payment gateway API key">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('paymentKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">بوابة الدفع (Stripe/PayPal/etc)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">SMS Service API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="smsKey" value="ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('smsKey')">
+                                        <span class="material-icons-outlined">visibility</span>
+                                    </button>
+                                </div>
+                                <small class="text-muted">خدمة الرسائل النصية (Twilio/etc)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">OneSignal App ID</label>
+                                <input type="text" class="form-control" id="oneSignalAppId" value="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                                <small class="text-muted">للإشعارات المتقدمة</small>
+>>>>>>> origin/main
                             </div>
                             <button type="button" class="btn btn-primary" onclick="saveApiKeys()">حفظ مفاتيح API</button>
                         </form>
@@ -391,6 +703,7 @@
                 <div id="collapseMobileApps" class="accordion-collapse collapse" aria-labelledby="headingMobileApps" data-bs-parent="#settingsAccordion">
                     <div class="accordion-body">
                         <form id="mobileAppsForm">
+<<<<<<< HEAD
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">رابط تطبيق العميل (Android)</label>
@@ -415,20 +728,53 @@
                                 <small class="text-muted">لإجبار المستخدمين على التحديث</small>
                             </div>
                             <button type="button" class="btn btn-primary" onclick="saveMobileAppsConfig()">حفظ إعدادات التطبيقات</button>
+=======
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق العملاء (Android)</label>
+                                <input type="url" class="form-control" id="customerAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.customer">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق العملاء (iOS)</label>
+                                <input type="url" class="form-control" id="customerAppIOS" value="https://apps.apple.com/app/delivery-customer/id1234567890">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق السائقين (Android)</label>
+                                <input type="url" class="form-control" id="driverAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.driver">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">رابط تطبيق التجار (Android)</label>
+                                <input type="url" class="form-control" id="merchantAppAndroid" value="https://play.google.com/store/apps/details?id=com.delivery.merchant">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">إصدار التطبيق المطلوب</label>
+                                <input type="text" class="form-control" id="requiredAppVersion" value="1.2.0">
+                                <small class="text-muted">أقل إصدار مدعوم</small>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveMobileAppConfig()">حفظ إعدادات التطبيقات</button>
+>>>>>>> origin/main
                         </form>
                     </div>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Deployment & Checklist -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingChecklist">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChecklist" aria-expanded="false" aria-controls="collapseChecklist">
                         قائمة الجاهزية والنشر
+=======
+            <!-- Essential AWS Services Checklist -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingChecklist">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChecklist" aria-expanded="false" aria-controls="collapseChecklist">
+                        قائمة خدمات AWS المطلوبة
+>>>>>>> origin/main
                     </button>
                 </h2>
                 <div id="collapseChecklist" class="accordion-collapse collapse" aria-labelledby="headingChecklist" data-bs-parent="#settingsAccordion">
                     <div class="accordion-body">
+<<<<<<< HEAD
                         <h6>قائمة التحقق من الخدمات الأساسية</h6>
                         <ul class="list-group">
                             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -463,6 +809,186 @@
                                     aws cognito-idp create-user-pool --pool-name DeliveryPlatformUsers --region me-south-1<br><br>
                                     # Create S3 Bucket<br>
                                     aws s3 mb s3://centralized-delivery-platform-storage --region me-south-1
+=======
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6 class="text-primary">الخدمات الأساسية</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS Amplify</span>
+                                        <span class="badge bg-success" id="amplifyStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon Cognito</span>
+                                        <span class="badge bg-warning" id="cognitoStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon DynamoDB</span>
+                                        <span class="badge bg-success" id="dynamodbStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon S3</span>
+                                        <span class="badge bg-success" id="s3Status">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon CloudFront</span>
+                                        <span class="badge bg-warning" id="cloudfrontStatus">⚠</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-success">الميزات المتقدمة</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS Lambda Functions</span>
+                                        <span class="badge bg-warning" id="lambdaStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon API Gateway</span>
+                                        <span class="badge bg-warning" id="apigatewayStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon SNS (Push Notifications)</span>
+                                        <span class="badge bg-danger" id="snsStatus">✗</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon SES (Email Service)</span>
+                                        <span class="badge bg-danger" id="sesStatus">✗</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS IoT Core (Real-time)</span>
+                                        <span class="badge bg-warning" id="iotStatus">⚠</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-info">المراقبة والتحليل</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon CloudWatch</span>
+                                        <span class="badge bg-success" id="cloudwatchStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS X-Ray (Tracing)</span>
+                                        <span class="badge bg-warning" id="xrayStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS CloudTrail</span>
+                                        <span class="badge bg-success" id="cloudtrailStatus">✓</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Amazon Pinpoint (Analytics)</span>
+                                        <span class="badge bg-warning" id="pinpointStatus">⚠</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>AWS Config</span>
+                                        <span class="badge bg-warning" id="configStatus">⚠</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="checkAllServices()">فحص جميع الخدمات</button>
+                            <button type="button" class="btn btn-outline-success ms-2" onclick="deployBackend()">نشر Backend على Lambda</button>
+                            <button type="button" class="btn btn-outline-info ms-2" onclick="setupPipeline()">إعداد CI/CD Pipeline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AWS Configuration Templates -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTemplates">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTemplates" aria-expanded="false" aria-controls="collapseTemplates">
+                        قوالب الإعداد للبنية التحتية AWS
+                    </button>
+                </h2>
+                <div id="collapseTemplates" class="accordion-collapse collapse" aria-labelledby="headingTemplates" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>AWS Amplify Config</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "aws": {
+    "region": "me-south-1",
+    "amplifyAppId": "d26nn5u6blbq6z",
+    "cognito": {
+      "userPoolId": "me-south-1_XXXXXXXXX",
+      "clientId": "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "s3": {
+      "bucket": "centralized-delivery-platform-storage"
+    }
+  },
+  "maps": {
+    "apiKey": "AIzaSyBXXXXXXXX"
+  }
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-primary" onclick="downloadConfig('amplify')">تحميل Config</button>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>DynamoDB Tables Schema</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "tables": [
+    {
+      "tableName": "delivery-platform-orders",
+      "partitionKey": "orderId",
+      "sortKey": "timestamp"
+    },
+    {
+      "tableName": "delivery-platform-drivers",
+      "partitionKey": "driverId",
+      "gsi": ["location", "status"]
+    },
+    {
+      "tableName": "delivery-platform-merchants",
+      "partitionKey": "merchantId"
+    }
+  ]
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-success" onclick="downloadConfig('dynamodb')">تحميل Schema</button>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Lambda Functions Config</h6>
+                                <pre class="bg-light p-3 rounded" style="font-size: 12px;">
+{
+  "functions": {
+    "orderProcessor": {
+      "runtime": "python3.9",
+      "timeout": 30,
+      "memory": 512
+    },
+    "notificationSender": {
+      "runtime": "nodejs18.x",
+      "timeout": 10,
+      "memory": 256
+    },
+    "paymentProcessor": {
+      "runtime": "python3.9",
+      "timeout": 60,
+      "memory": 1024
+    }
+  }
+}
+                                </pre>
+                                <button class="btn btn-sm btn-outline-info" onclick="downloadConfig('lambda')">تحميل Config</button>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h6>AWS CLI Commands للإعداد السريع</h6>
+                            <div class="bg-dark text-light p-3 rounded">
+                                <code style="color: #00ff00;">
+# إنشاء DynamoDB Tables<br>
+aws dynamodb create-table --table-name delivery-platform-orders --region me-south-1<br><br>
+# إعداد Cognito User Pool<br>
+aws cognito-idp create-user-pool --pool-name DeliveryPlatformUsers --region me-south-1<br><br>
+# إنشاء S3 Bucket<br>
+aws s3 mb s3://centralized-delivery-platform-storage --region me-south-1
+>>>>>>> origin/main
                                 </code>
                             </div>
                         </div>
@@ -472,6 +998,7 @@
 
         </div> <!-- end of settingsAccordion -->
 
+<<<<<<< HEAD
         <!-- AWS SDKs -->
         <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1182.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
@@ -480,6 +1007,13 @@
         
         <script>
             // Renamed to AWSSettingsManager
+=======
+        <!-- AWS Amplify SDK -->
+        <script src="https://cdn.jsdelivr.net/npm/aws-amplify@4/dist/aws-amplify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Settings Manager Class
+>>>>>>> origin/main
             class AWSSettingsManager {
                 constructor() {
                     this.settings = JSON.parse(localStorage.getItem('systemSettings')) || this.getDefaultSettings();
@@ -493,9 +1027,16 @@
                             region: 'me-south-1',
                             accessKeyId: '',
                             secretAccessKey: '',
+<<<<<<< HEAD
                             s3Bucket: 'centralized-delivery-platform-storage',
                             rdsUrl: '',
                             enableCloudWatch: true
+=======
+                            amplifyAppId: 'd26nn5u6blbq6z',
+                            cloudFrontId: '',
+                            s3Bucket: 'centralized-delivery-platform-storage',
+                            enableOffline: true
+>>>>>>> origin/main
                         },
                         database: {
                             type: 'dynamodb',
@@ -506,11 +1047,20 @@
                             enableBackup: true
                         },
                         security: {
+<<<<<<< HEAD
                             level: 'moderate',
                             authMode: 'phone',
                             sessionTimeout: 60,
                             enableAuditLog: true,
                             enableBackup: true
+=======
+                            iamRole: 'arn:aws:iam::123456789012:role/DeliveryAppRole',
+                            cognitoPoolId: 'me-south-1_XXXXXXXXX',
+                            cognitoClientId: 'abcdefghijklmnopqrstuvwxyz',
+                            tokenTimeout: 60,
+                            enableMFA: false,
+                            enableCloudTrail: true
+>>>>>>> origin/main
                         },
                         realtime: {
                             locationUpdateRate: 5,
@@ -527,6 +1077,7 @@
                             minOrderValue: 15
                         },
                         apiKeys: {
+<<<<<<< HEAD
                             smsKey: '',
                             oneSignalAppId: ''
                         },
@@ -536,6 +1087,19 @@
                             driverAppAndroid: '',
                             merchantAppAndroid: '',
                             requiredAppVersion: ''
+=======
+                            googleMapsKey: '',
+                            stripeKey: '',
+                            smsKey: '',
+                            sesKey: ''
+                        },
+                        mobileApps: {
+                            customerAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.customer',
+                            customerAppIOS: 'https://apps.apple.com/app/delivery-customer/id1234567890',
+                            driverAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.driver',
+                            merchantAppAndroid: 'https://play.google.com/store/apps/details?id=com.delivery.merchant',
+                            requiredAppVersion: '1.2.0'
+>>>>>>> origin/main
                         }
                     };
                 }
@@ -543,6 +1107,7 @@
                 loadSettings() {
                     // Load AWS settings
                     document.getElementById('awsRegion').value = this.settings.aws.region;
+<<<<<<< HEAD
                     document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId;
                     document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey;
                     document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
@@ -576,6 +1141,61 @@
                     document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid;
                     document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid;
                     document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion;
+=======
+                    document.getElementById('accessKeyId').value = this.settings.aws.accessKeyId || '';
+                    document.getElementById('secretAccessKey').value = this.settings.aws.secretAccessKey || '';
+                    document.getElementById('amplifyAppId').value = this.settings.aws.amplifyAppId;
+                    document.getElementById('cloudFrontId').value = this.settings.aws.cloudFrontId || '';
+                    document.getElementById('s3Bucket').value = this.settings.aws.s3Bucket;
+                    document.getElementById('enableOffline').checked = this.settings.aws.enableOffline;
+
+                    // Load database settings
+                    document.getElementById('databaseType').value = this.settings.database.type;
+                    document.getElementById('tablePrefix').value = this.settings.database.tablePrefix;
+                    document.getElementById('readCapacity').value = this.settings.database.readCapacity;
+                    document.getElementById('writeCapacity').value = this.settings.database.writeCapacity;
+                    document.getElementById('enableAutoScaling').checked = this.settings.database.enableAutoScaling;
+                    document.getElementById('enableBackup').checked = this.settings.database.enableBackup;
+
+                    // Load security settings
+                    document.getElementById('iamRole').value = this.settings.security.iamRole;
+                    document.getElementById('cognitoPoolId').value = this.settings.security.cognitoPoolId;
+                    document.getElementById('cognitoClientId').value = this.settings.security.cognitoClientId;
+                    document.getElementById('tokenTimeout').value = this.settings.security.tokenTimeout;
+                    document.getElementById('enableMFA').checked = this.settings.security.enableMFA;
+                    document.getElementById('enableCloudTrail').checked = this.settings.security.enableCloudTrail;
+
+                    // Load realtime settings
+                    document.getElementById('locationUpdateRate').value = this.settings.realtime.locationUpdateRate;
+                    document.getElementById('orderResponseTimeout').value = this.settings.realtime.orderResponseTimeout;
+                    document.getElementById('enableRealTimeTracking').checked = this.settings.realtime.enableRealTimeTracking;
+                    document.getElementById('enableLiveChat').checked = this.settings.realtime.enableLiveChat;
+                    document.getElementById('enableAutoAssignment').checked = this.settings.realtime.enableAutoAssignment;
+
+                    // Load business settings
+                    document.getElementById('baseDeliveryFee').value = this.settings.business.baseDeliveryFee;
+                    document.getElementById('perKmFee').value = this.settings.business.perKmFee;
+                    document.getElementById('platformCommission').value = this.settings.business.platformCommission;
+                    document.getElementById('maxDeliveryDistance').value = this.settings.business.maxDeliveryDistance;
+                    document.getElementById('minOrderValue').value = this.settings.business.minOrderValue;
+
+                    // Load API keys
+                    if (this.settings.apiKeys) {
+                        document.getElementById('googleMapsKey').value = this.settings.apiKeys.googleMapsKey || '';
+                        document.getElementById('paymentKey').value = this.settings.apiKeys.paymentKey || '';
+                        document.getElementById('smsKey').value = this.settings.apiKeys.smsKey || '';
+                        document.getElementById('oneSignalAppId').value = this.settings.apiKeys.oneSignalAppId || '';
+                    }
+
+                    // Load mobile app settings
+                    if (this.settings.mobileApps) {
+                        document.getElementById('customerAppAndroid').value = this.settings.mobileApps.customerAppAndroid || '';
+                        document.getElementById('customerAppIOS').value = this.settings.mobileApps.customerAppIOS || '';
+                        document.getElementById('driverAppAndroid').value = this.settings.mobileApps.driverAppAndroid || '';
+                        document.getElementById('merchantAppAndroid').value = this.settings.mobileApps.merchantAppAndroid || '';
+                        document.getElementById('requiredAppVersion').value = this.settings.mobileApps.requiredAppVersion || '';
+                    }
+>>>>>>> origin/main
                 }
 
                 saveSettings() {
@@ -583,6 +1203,7 @@
                     this.showNotification('تم حفظ الإعدادات بنجاح!', 'success');
                 }
 
+<<<<<<< HEAD
                 initAWS() {
                     try {
                         // Initialize AWS SDK
@@ -606,6 +1227,31 @@
                     } catch (error) {
                         console.error('AWS SDK initialization error:', error);
                         this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+=======
+                // Initialize AWS Amplify configuration
+                initAWS() {
+                    try {
+                        Amplify.configure({
+                            Auth: {
+                                region: this.settings.aws.region,
+                                userPoolId: this.settings.security.cognitoPoolId,
+                                userPoolWebClientId: this.settings.security.cognitoClientId
+                            },
+                            Storage: {
+                                AWSS3: {
+                                    bucket: this.settings.aws.s3Bucket,
+                                    region: this.settings.aws.region
+                            }
+                        });
+                        this.updateConnectionStatus('connected', 'متصل بـ AWS Cloud');
+                        document.getElementById('awsStatus').textContent = 'متصل';
+                        document.getElementById('awsStatus').className = 'badge bg-success';
+                    } catch (error) {
+                        console.error('AWS initialization error:', error);
+                        this.updateConnectionStatus('disconnected', 'خطأ في الاتصال بـ AWS');
+                        document.getElementById('awsStatus').textContent = 'غير متصل';
+                        document.getElementById('awsStatus').className = 'badge bg-danger';
+>>>>>>> origin/main
                     }
                 }
 
@@ -655,7 +1301,11 @@
                 }
             }
 
+<<<<<<< HEAD
             // Global Functions
+=======
+            // Global Functions for AWS
+>>>>>>> origin/main
             function togglePasswordVisibility(fieldId) {
                 const field = document.getElementById(fieldId);
                 const button = field.nextElementSibling.querySelector('.material-icons-outlined');
@@ -669,11 +1319,17 @@
                 }
             }
 
+<<<<<<< HEAD
             function saveAWSConfig() {
+=======
+            // Save AWS configuration to localStorage and reinitialize
+            function saveAwsConfig() {
+>>>>>>> origin/main
                 settingsManager.settings.aws = {
                     region: document.getElementById('awsRegion').value,
                     accessKeyId: document.getElementById('accessKeyId').value,
                     secretAccessKey: document.getElementById('secretAccessKey').value,
+<<<<<<< HEAD
                     s3Bucket: document.getElementById('s3Bucket').value,
                     rdsUrl: document.getElementById('rdsUrl').value,
                     enableCloudWatch: document.getElementById('enableCloudWatch').checked
@@ -812,3 +1468,90 @@
                             setTimeout(() => {
                                 settingsManager.showNotification('انتهى اختبار الاتصالات AWS', 'info');
                            
+=======
+                    amplifyAppId: settingsManager.settings.aws.amplifyAppId,
+                    cloudFrontId: document.getElementById('cloudFrontId').value,
+                    s3Bucket: document.getElementById('s3Bucket').value,
+                    enableOffline: document.getElementById('enableOffline').checked
+                };
+                settingsManager.saveSettings();
+                settingsManager.initAWS();
+            }
+
+            // Test AWS connectivity by listing S3 buckets
+            async function testAwsConnection() {
+                settingsManager.showNotification('جاري اختبار الاتصال بـ AWS...', 'info');
+                try {
+                    const s3 = new AWS.S3({
+                        region: settingsManager.settings.aws.region,
+                        credentials: {
+                            accessKeyId: settingsManager.settings.aws.accessKeyId,
+                            secretAccessKey: settingsManager.settings.aws.secretAccessKey
+                        }
+                    });
+                    await s3.listBuckets().promise();
+                    settingsManager.showNotification('تم الاتصال بـ AWS بنجاح!', 'success');
+                    document.getElementById('awsStatus').textContent = 'متصل';
+                    document.getElementById('awsStatus').className = 'badge bg-success';
+                } catch (error) {
+                    console.error('AWS test failed:', error);
+                    settingsManager.showNotification('فشل في الاتصال بـ AWS: ' + error.message, 'error');
+                    document.getElementById('awsStatus').textContent = 'خطأ';
+                    document.getElementById('awsStatus').className = 'badge bg-danger';
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add backup buttons
+                const headerDiv = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 > div');
+                headerDiv.insertAdjacentHTML('afterbegin', `
+                    <button class="btn btn-outline-info me-2" onclick="createBackup()">
+                        <span class="material-icons-outlined me-1">backup</span>
+                        نسخة احتياطية
+                    </button>
+                    <div class="btn-group me-2">
+                        <button class="btn btn-outline-warning dropdown-toggle" data-bs-toggle="dropdown">
+                            <span class="material-icons-outlined me-1">schedule</span>
+                            نسخ تلقائي
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="scheduleAutoBackup()">تفعيل النسخ التلقائي</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="createBackup()">نسخة فورية</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="settingsManager.showNotification('تم إيقاف النسخ التلقائي', 'warning')">إيقاف النسخ التلقائي</a></li>
+                        </ul>
+                    </div>
+                `);
+                
+                headerDiv.insertAdjacentHTML('afterbegin', `
+                    <input type="file" id="importSettings" accept=".json" style="display: none;" onchange="importSettings(event)">
+                    <button class="btn btn-outline-secondary me-2" onclick="document.getElementById('importSettings').click()">
+                        <span class="material-icons-outlined me-1">upload</span>
+                        استيراد الإعدادات
+                    </button>
+                `);
+                
+                // Initialize AWS settings manager
+                window.settingsManager = new AWSSettingsManager();
+                
+                // Add reset button functionality
+                const resetButton = document.createElement('button');
+                resetButton.className = 'btn btn-outline-danger me-2';
+                resetButton.innerHTML = '<span class="material-icons-outlined me-1">restore</span>إعادة تعيين';
+                resetButton.onclick = function() {
+                    if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟')) {
+                        settingsManager.settings = settingsManager.getDefaultSettings();
+                        settingsManager.loadSettings();
+                        settingsManager.saveSettings();
+                        settingsManager.showNotification('تم إعادة تعيين الإعدادات بنجاح!', 'success');
+                    }
+                };
+                headerDiv.insertAdjacentElement('afterbegin', resetButton);
+            });
+
+            console.log('🔧 Settings page loaded successfully');
+        </script>
+    </div>
+</body>
+</html>
+>>>>>>> origin/main

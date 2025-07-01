@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Server Connection Test</h1>
+    <div id="tests"></div>
+    
+    <script>
+        const testResults = document.getElementById('tests');
+        
+        function addTest(message, type = 'success') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            testResults.appendChild(div);
+        }
+        
+        // Test 1: Basic page load
+        addTest('✅ HTML file loaded successfully');
+        
+        // Test 2: JavaScript execution
+        addTest('✅ JavaScript is working');
+        
+        // Test 3: Check current URL
+        addTest(`📍 Current URL: ${window.location.href}`);
+        
+        // Test 4: Test fetch to check server
+        fetch(window.location.href)
+            .then(response => {
+                if (response.ok) {
+                    addTest('✅ Server is responding to requests');
+                } else {
+                    addTest(`❌ Server response error: ${response.status}`, 'error');
+                }
+            })
+            .catch(error => {
+                addTest(`❌ Network error: ${error.message}`, 'error');
+            });
+        
+        // Test 5: Check for admin.html
+        fetch('admin.html')
+            .then(response => {
+                if (response.ok) {
+                    addTest('✅ admin.html is accessible');
+                } else {
+                    addTest('❌ admin.html not found', 'error');
+                }
+            })
+            .catch(error => {
+                addTest(`❌ Cannot access admin.html: ${error.message}`, 'error');
+            });
+        
+        // Test 6: Check for merchants.html
+        fetch('merchants.html')
+            .then(response => {
+                if (response.ok) {
+                    addTest('✅ merchants.html is accessible');
+                } else {
+                    addTest('❌ merchants.html not found', 'error');
+                }
+            })
+            .catch(error => {
+                addTest(`❌ Cannot access merchants.html: ${error.message}`, 'error');
+            });
+        
+        // Test 7: Check for dashboard.html
+        fetch('dashboard.html')
+            .then(response => {
+                if (response.ok) {
+                    addTest('✅ dashboard.html is accessible');
+                } else {
+                    addTest('❌ dashboard.html not found', 'warning');
+                }
+            })
+            .catch(error => {
+                addTest(`❌ Cannot access dashboard.html: ${error.message}`, 'warning');
+            });
+        
+        addTest('🔍 Test completed. Check results above.');
+    </script>
+</body>
+</html>
