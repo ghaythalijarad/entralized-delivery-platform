@@ -151,10 +151,85 @@
                 margin-bottom: 1.5rem;
             }
         }
+        
+        /* Mobile responsiveness enhancements */
+        @media (max-width: 991.98px) {
+            .content-area { padding: 1rem 1.5rem; }
+            .stats-row { margin-bottom: 1.5rem; }
+        }
+        
+        @media (max-width: 575.98px) {
+            .content-area { padding: 1rem; }
+            .stats-card .card-body { padding: 1rem 0.5rem; }
+            .stats-card h3 { font-size: 1.5rem; }
+            .stats-card p { font-size: 0.85rem; }
+        }
+        
+        /* Loading and animation styles */
+        .animate-count {
+            animation: countUp 0.6s ease-out;
+        }
+        
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Real-time indicator */
+        .live-indicator {
+            position: relative;
+        }
+        
+        .live-indicator::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid p-4">
+        <!-- Dashboard Header with Refresh Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="badge bg-success live-indicator me-2">مباشر</span>
+                <small class="text-muted" id="lastUpdated">آخر تحديث: جاري التحميل...</small>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()" id="refreshBtn">
+                <span class="material-icons-outlined me-1">refresh</span>
+                تحديث
+            </button>
+        </div>
+        
         <div class="alert alert-success">
             ✅ تم تحميل لوحة القيادة بنجاح - الخادم يعمل بشكل صحيح
         </div>
@@ -165,7 +240,9 @@
                 <div class="card stats-card bg-primary text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">shopping_cart</span>
-                        <h3 class="mt-2">150</h3>
+                        <h3 class="mt-2" id="ordersToday">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </h3>
                         <p class="mb-0">إجمالي الطلبات اليوم</p>
                     </div>
                 </div>
@@ -174,7 +251,9 @@
                 <div class="card stats-card bg-success text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">store</span>
-                        <h3 class="mt-2">23</h3>
+                        <h3 class="mt-2" id="connectedMerchants">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </h3>
                         <p class="mb-0">التجار المتصلون</p>
                     </div>
                 </div>
@@ -183,7 +262,9 @@
                 <div class="card stats-card bg-info text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">local_shipping</span>
-                        <h3 class="mt-2">18</h3>
+                        <h3 class="mt-2" id="activeDrivers">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </h3>
                         <p class="mb-0">السائقون النشطون</p>
                     </div>
                 </div>
@@ -192,7 +273,9 @@
                 <div class="card stats-card bg-warning text-white">
                     <div class="card-body text-center">
                         <span class="material-icons-outlined" style="font-size: 3rem;">people</span>
-                        <h3 class="mt-2">1,247</h3>
+                        <h3 class="mt-2" id="totalCustomers">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </h3>
                         <p class="mb-0">إجمالي العملاء</p>
                     </div>
                 </div>
@@ -226,6 +309,126 @@
     </div>
     
     <script>
+        // Dashboard Data Manager
+        class DashboardManager {
+            constructor() {
+                this.refreshInterval = 30000; // 30 seconds
+                this.init();
+            }
+
+            async init() {
+                await this.loadDashboardStats();
+                this.startAutoRefresh();
+                console.log('✅ Dashboard Manager initialized');
+            }
+
+            async loadDashboardStats() {
+                try {
+                    const response = await fetch('/api/dashboard/stats');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.updateStatsCards(data);
+                    
+                    console.log('📊 Dashboard stats loaded:', data);
+                } catch (error) {
+                    console.error('❌ Error loading dashboard stats:', error);
+                    this.showErrorState();
+                }
+            }
+
+            updateStatsCards(data) {
+                // Update Orders Today
+                const ordersElement = document.getElementById('ordersToday');
+                if (ordersElement) {
+                    ordersElement.innerHTML = data.orders_today || 0;
+                    ordersElement.classList.add('animate-count');
+                }
+
+                // Update Connected Merchants
+                const merchantsElement = document.getElementById('connectedMerchants');
+                if (merchantsElement) {
+                    merchantsElement.innerHTML = `${data.connected_merchants || 0}`;
+                    merchantsElement.classList.add('animate-count');
+                }
+
+                // Update Active Drivers
+                const driversElement = document.getElementById('activeDrivers');
+                if (driversElement) {
+                    driversElement.innerHTML = data.active_drivers || 0;
+                    driversElement.classList.add('animate-count');
+                }
+
+                // Update Total Customers
+                const customersElement = document.getElementById('totalCustomers');
+                if (customersElement) {
+                    customersElement.innerHTML = this.formatNumber(data.total_customers || 0);
+                    customersElement.classList.add('animate-count');
+                }
+
+                // Update last refresh time
+                const now = new Date().toLocaleTimeString('ar-SA');
+                document.getElementById('lastUpdated').innerText = `آخر تحديث: ${now}`;
+                console.log(`🔄 Stats updated at ${now}`);
+            }
+
+            showErrorState() {
+                // Show fallback data if API fails
+                const fallbackData = {
+                    orders_today: 0,
+                    connected_merchants: 0,
+                    active_drivers: 0,
+                    total_customers: 0
+                };
+                
+                this.updateStatsCards(fallbackData);
+                
+                // Show error indicator
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-warning alert-dismissible fade show';
+                errorAlert.innerHTML = `
+                    <strong>⚠️ تحذير:</strong> لا يمكن تحميل البيانات الحية. يتم عرض بيانات افتراضية.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                const container = document.querySelector('.container-fluid');
+                if (container) {
+                    container.insertBefore(errorAlert, container.firstChild.nextSibling);
+                }
+            }
+
+            formatNumber(num) {
+                return new Intl.NumberFormat('ar-SA').format(num);
+            }
+
+            startAutoRefresh() {
+                setInterval(() => {
+                    this.loadDashboardStats();
+                }, this.refreshInterval);
+                
+                console.log(`🔄 Auto-refresh enabled (${this.refreshInterval/1000}s interval)`);
+            }
+
+            async refreshManually() {
+                console.log('🔄 Manual refresh triggered');
+                await this.loadDashboardStats();
+            }
+        }
+
+        // Manual refresh function for button
+        function refreshDashboard() {
+            if (window.dashboardManager) {
+                window.dashboardManager.refreshManually();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dashboardManager = new DashboardManager();
+        });
+
         console.log('✅ Dashboard loaded successfully');
         console.log('📍 Dashboard URL:', window.location.href);
     </script>
