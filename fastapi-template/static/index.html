@@ -80,67 +80,63 @@
             border-radius: 8px;
         }
         
-        /* Mobile Navigation */
+        /* Mobile Navigation - Simplified and Reliable */
         .mobile-nav {
             display: none;
             background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+            border-bottom: 3px solid #1976d2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             padding: 1rem 1.5rem;
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 1000;
+            left: 0;
+            right: 0;
+            z-index: 2000;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
+            width: 100vw;
         }
         
         .mobile-nav h5 {
             color: #1976d2;
-            font-weight: 600;
+            font-weight: 700;
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
         }
         
         .mobile-menu-btn {
-            background: none;
+            background: #1976d2;
             border: none;
             font-size: 1.8rem;
-            color: #1976d2;
+            color: white;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 8px;
-            transition: background-color 0.2s;
+            padding: 0.75rem;
+            border-radius: 12px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 48px;
-            min-height: 48px;
+            min-width: 52px;
+            min-height: 52px;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
         }
         
         .mobile-menu-btn:hover {
-            background-color: #f0f4fa;
+            background-color: #1565c0;
+            transform: scale(1.05);
         }
         
         .mobile-nav-menu {
             display: none;
-            position: absolute;
-            top: 100%;
+            position: fixed;
+            top: 80px;
             left: 0;
             right: 0;
             background: #fff;
             border-top: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 999;
-            max-height: 70vh;
-            overflow-y: auto;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border-top: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 999;
-            max-height: 70vh;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1999;
+            max-height: calc(100vh - 80px);
             overflow-y: auto;
         }
         
@@ -191,7 +187,7 @@
             min-width: 24px;
         }
         
-        /* Responsive adjustments */
+        /* CRITICAL: Force mobile nav visibility on small screens */
         @media (max-width: 991.98px) {
             .sidebar { 
                 display: none !important; 
@@ -202,19 +198,35 @@
             }
             .mobile-nav {
                 display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
             #contentFrame {
                 height: calc(100vh - 80px) !important;
                 border-radius: 0;
+                margin-top: 80px;
             }
-            .main-container {
-                padding: 0;
+            .container-fluid {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
             }
             body {
                 padding-top: 0;
+                margin-top: 0;
             }
         }
         
+        /* Desktop sidebar visibility */
+        @media (min-width: 992px) {
+            .mobile-nav {
+                display: none !important;
+            }
+            .sidebar {
+                display: block !important;
+            }
+        }
+        
+        /* Mobile responsive adjustments */
         @media (max-width: 768px) {
             .mobile-nav {
                 padding: 1rem;
@@ -224,9 +236,12 @@
             }
             .mobile-menu-btn {
                 font-size: 1.6rem;
+                min-width: 48px;
+                min-height: 48px;
             }
-            #contentFrame {
-                height: calc(100vh - 75px) !important;
+            .mobile-nav-menu .nav-link {
+                min-height: 56px;
+                font-size: 1.1rem;
             }
         }
         
@@ -246,9 +261,6 @@
                 min-width: 44px;
                 min-height: 44px;
             }
-            #contentFrame {
-                height: calc(100vh - 70px) !important;
-            }
         }
         
         /* Enhanced iframe responsiveness */
@@ -256,59 +268,6 @@
             width: 100%;
             border: none;
             background: #f4f6fb;
-        }
-        
-        /* Desktop sidebar visibility */
-        @media (min-width: 992px) {
-            .mobile-nav {
-                display: none !important;
-            }
-            .sidebar {
-                display: block !important;
-            }
-        }
-        
-        /* Debug: Ensure mobile nav is visible */
-        @media (max-width: 991.98px) {
-            .mobile-nav {
-                display: flex !important;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 1000;
-                background: #fff !important;
-                border-bottom: 2px solid #1976d2;
-                box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-            }
-            
-            .container-fluid {
-                padding-top: 80px; /* Account for fixed mobile nav */
-            }
-            
-            #contentFrame {
-                height: calc(100vh - 80px) !important;
-            }
-            
-            /* Force visibility */
-            .mobile-nav * {
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-        }
-        
-        /* Touch targets for mobile */
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                min-width: 48px;
-                min-height: 48px;
-                font-size: 1.8rem;
-            }
-            
-            .mobile-nav-menu .nav-link {
-                min-height: 56px;
-                font-size: 1.1rem;
-            }
         }
         
         /* Touch-friendly interactions */
@@ -678,19 +637,43 @@
             testServerConnectivity();
             setResponsiveHeight();
             
-            // Debug mobile navigation
+            // Debug mobile navigation - CRITICAL
             const mobileNav = document.getElementById('mobileNavBar');
             const screenWidth = window.innerWidth;
             console.log(`📱 Screen width: ${screenWidth}px`);
             console.log(`📱 Mobile nav element:`, mobileNav);
-            console.log(`📱 Mobile nav computed style:`, window.getComputedStyle(mobileNav).display);
             
-            if (screenWidth <= 991) {
-                console.log('📱 Mobile mode detected - mobile nav should be visible');
-                if (mobileNav) {
+            if (mobileNav) {
+                const computedStyle = window.getComputedStyle(mobileNav);
+                console.log(`📱 Mobile nav display:`, computedStyle.display);
+                console.log(`📱 Mobile nav visibility:`, computedStyle.visibility);
+                console.log(`📱 Mobile nav position:`, computedStyle.position);
+                console.log(`📱 Mobile nav z-index:`, computedStyle.zIndex);
+                
+                // Force visibility for mobile screens
+                if (screenWidth <= 991) {
+                    console.log('📱 FORCING mobile nav visibility');
                     mobileNav.style.display = 'flex';
-                    console.log('📱 Forced mobile nav display to flex');
+                    mobileNav.style.visibility = 'visible';
+                    mobileNav.style.opacity = '1';
+                    mobileNav.style.position = 'fixed';
+                    mobileNav.style.top = '0';
+                    mobileNav.style.left = '0';
+                    mobileNav.style.right = '0';
+                    mobileNav.style.zIndex = '2000';
+                    mobileNav.style.background = '#fff';
+                    mobileNav.style.borderBottom = '3px solid #1976d2';
+                    
+                    // Add a test indicator
+                    mobileNav.style.outline = '2px solid red';
+                    console.log('📱 Added red outline for debugging');
+                    
+                    setTimeout(() => {
+                        mobileNav.style.outline = 'none';
+                    }, 3000);
                 }
+            } else {
+                console.error('❌ Mobile nav element not found!');
             }
         });
 
