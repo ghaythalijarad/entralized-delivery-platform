@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -171,112 +171,112 @@
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">🚚 DeliveryHub</div>
-        <div class="subtitle">Admin Dashboard Login</div>
+        <div class="logo">🚚 لوحة التوصيل المركزية</div>
+        <div class="subtitle">تسجيل دخول لوحة الإدارة</div>
         
         <div id="alertContainer"></div>
         
         <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
+            <div class="form-group" style="text-align: right;">
+                <label for="username">اسم المستخدم</label>
                 <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
+            <div class="form-group" style="text-align: right;">
+                <label for="password">كلمة المرور</label>
                 <input type="password" id="password" name="password" required autocomplete="current-password">
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">
-                Sign In
+                تسجيل الدخول
             </button>
             
             <div class="loading" id="loading"></div>
         </form>
 
-        <div class="demo-credentials">
-            <strong>Demo Credentials:</strong><br>
-            Username: <code>admin</code><br>
-            Password: <code>admin123</code><br>
-            <small>⚠️ Change default password after first login</small>
-        </div>
+        <div class="demo-credentials" style="text-align: right;">
+            <strong>بيانات تجريبية:</strong><br>
+            اسم المستخدم: <code>admin</code><br>
+            كلمة المرور: <code>admin123</code><br>
+            <small>⚠️ قم بتغيير كلمة المرور بعد أول تسجيل دخول</small>
+         </div>
     </div>
 
     <script>
         const API_BASE = window.location.origin;
-        
+         
         // Check if already logged in
         if (localStorage.getItem('authToken')) {
-            window.location.href = '/static/dashboard.html';
+            window.location.href = '/';
         }
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const loading = document.getElementById('loading');
-            
-            // Show loading state
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Signing In...';
-            loading.style.display = 'block';
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
-                
+         document.getElementById('loginForm').addEventListener('submit', async (e) => {
+             e.preventDefault();
+             
+             const username = document.getElementById('username').value;
+             const password = document.getElementById('password').value;
+             const loginBtn = document.getElementById('loginBtn');
+             const loading = document.getElementById('loading');
+             
+             // Show loading state
+             loginBtn.disabled = true;
+            loginBtn.textContent = 'جاري تسجيل الدخول...';
+             loading.style.display = 'block';
+             
+             try {
+                 const response = await fetch(`${API_BASE}/api/auth/login`, {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                     body: JSON.stringify({
+                         username: username,
+                         password: password
+                     })
+                 });
+                 
                 const data = await response.json();
-                
-                if (data.success && data.token) {
-                    // Store authentication token
-                    localStorage.setItem('authToken', data.token.access_token);
-                    localStorage.setItem('userInfo', JSON.stringify(data.token.user));
-                    
-                    showAlert('Login successful! Redirecting...', 'success');
-                    
-                    // Redirect to dashboard
-                    setTimeout(() => {
-                        window.location.href = '/static/index.html';
-                    }, 1000);
-                } else {
-                    showAlert(data.message || 'Login failed', 'error');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                showAlert('Network error. Please try again.', 'error');
-            } finally {
-                // Reset button state
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Sign In';
-                loading.style.display = 'none';
-            }
-        });
+                 
+                 if (data.success && data.token) {
+                     // Store authentication token
+                     localStorage.setItem('authToken', data.token.access_token);
+                     localStorage.setItem('userInfo', JSON.stringify(data.token.user));
+                     
+                    showAlert('تم تسجيل الدخول بنجاح! جارٍ التحويل...', 'success');
+                     
+                     // Redirect to dashboard
+                     setTimeout(() => {
+                        window.location.href = '/';
+                     }, 1000);
+                 } else {
+                    showAlert(data.message || 'فشل تسجيل الدخول', 'error');
+                 }
+             } catch (error) {
+                 console.error('Login error:', error);
+                showAlert('خطأ في الشبكة. الرجاء المحاولة مرة أخرى.', 'error');
+             } finally {
+                 // Reset button state
+                 loginBtn.disabled = false;
+                loginBtn.textContent = 'تسجيل الدخول';
+                 loading.style.display = 'none';
+             }
+         });
 
-        function showAlert(message, type = 'info') {
-            const alertContainer = document.getElementById('alertContainer');
-            alertContainer.innerHTML = `<div class="alert ${type}">${message}</div>`;
-            
-            // Auto-hide after 5 seconds for non-error messages
-            if (type !== 'error') {
-                setTimeout(() => {
-                    alertContainer.innerHTML = '';
-                }, 5000);
-            }
-        }
+         function showAlert(message, type = 'info') {
+             const alertContainer = document.getElementById('alertContainer');
+             alertContainer.innerHTML = `<div class="alert ${type}">${message}</div>`;
+             
+             // Auto-hide after 5 seconds for non-error messages
+             if (type !== 'error') {
+                 setTimeout(() => {
+                     alertContainer.innerHTML = '';
+                 }, 5000);
+             }
+         }
 
         // Show default credentials reminder
         window.addEventListener('load', () => {
-            showAlert('Use demo credentials below to login. Change password after first login!', 'info');
+            showAlert('استخدم بيانات التجربة أدناه لتسجيل الدخول. قم بتغيير كلمة المرور بعد أول تسجيل دخول!', 'info');
         });
     </script>
 </body>

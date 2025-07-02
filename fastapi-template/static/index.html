@@ -504,8 +504,8 @@
             contentArea.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             
             try {
-                // Fetch the partial HTML from the static directory
-                const response = await auth.apiRequest(`/static/${sectionFile}`);
+                // Fetch the partial HTML from root (static files mounted at '/')
+                const response = await auth.apiRequest(`/${sectionFile}`);
                 if (!response) return; // Auth failed, user redirected
                 
                 if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -574,18 +574,19 @@
             const statusElement = document.getElementById('database-status');
             if (statusElement) {
                 try {
-                    const response = await auth.apiRequest('/api/db-status'); // Changed to /api/db-status
+                    // Use health endpoint to check database status
+                    const response = await auth.apiRequest('/health');
                     if (response && response.ok) {
                         const data = await response.json();
-                        const isConnected = data.connected; // Changed to data.connected
-                        statusElement.textContent = isConnected ? '🟢 قاعدة البيانات متصلة' : '🟡 استخدام قاعدة بيانات تجريبية';
-                        statusElement.className = 'top-bar-status ' + (isConnected ? 'connected' : 'connecting');
+                        const isConnected = data.database === 'connected';
+                        statusElement.textContent = isConnected ? '🟢 قاعدة البيانات متصلة' : '🔴 قاعدة البيانات غير متصلة';
+                        statusElement.className = isConnected ? 'connected' : 'disconnected';
                     } else {
                         throw new Error('Health check failed');
                     }
                 } catch (error) {
                     statusElement.textContent = '🔴 قاعدة البيانات غير متصلة';
-                    statusElement.className = 'top-bar-status disconnected';
+                    statusElement.className = 'disconnected';
                 }
             }
         }
