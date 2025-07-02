@@ -1,737 +1,722 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>لوحة القيادة - Delivery Platform</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <script src="auth.js"></script>
-    <style>
-        body {
-            background: #f4f6fb;
-            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        /* Mobile-first responsive design */
+<style>
+    /* Mobile-first responsive design */
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    @media (min-width: 768px) {
         .container-fluid {
-            padding: 1rem;
+            padding: 2rem;
         }
-        
-        @media (min-width: 768px) {
-            .container-fluid {
-                padding: 2rem;
-            }
+    }
+    
+    @media (min-width: 992px) {
+        .container-fluid {
+            padding: 2.5rem 3rem;
         }
-        
-        @media (min-width: 992px) {
-            .container-fluid {
-                padding: 2.5rem 3rem;
-            }
-        }
-        
-        /* Responsive typography */
+    }
+    
+    /* Responsive typography */
+    h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1976d2;
+    }
+    
+    @media (min-width: 768px) {
         h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1976d2;
+            font-size: 2rem;
         }
-        
-        @media (min-width: 768px) {
-            h2 {
-                font-size: 2rem;
-            }
-        }
-        
-        /* Enhanced card design */
+    }
+    
+    /* Enhanced card design */
+    .stats-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        min-height: 140px;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stats-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    @media (max-width: 767.98px) {
         .stats-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-            min-height: 140px;
+            min-height: 120px;
+            margin-bottom: 1rem;
         }
-        
-        .stats-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
         .stats-card .card-body {
-            padding: 1.5rem;
-        }
-        
-        @media (max-width: 767.98px) {
-            .stats-card {
-                min-height: 120px;
-                margin-bottom: 1rem;
-            }
-            .stats-card .card-body {
-                padding: 1rem;
-            }
-        }
-        
-        /* Mobile-optimized statistics layout */
-        @media (max-width: 767.98px) {
-            .stats-row {
-                gap: 1rem !important;
-            }
-            .stats-card .material-icons-outlined {
-                font-size: 2.5rem !important;
-            }
-            .stats-card h3 {
-                font-size: 1.8rem;
-                margin: 0.5rem 0;
-            }
-            .stats-card p {
-                font-size: 0.9rem;
-            }
-        }
-        
-        /* Activity section improvements */
-        .activity-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        
-        .activity-card .card-header {
-            background: #fff;
-            border-bottom: 2px solid #f1f3f4;
-            border-radius: 16px 16px 0 0;
-        }
-        
-        /* Mobile-friendly alerts */
-        .alert {
-            border-radius: 12px;
-            border: none;
             padding: 1rem;
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
         }
-        
-        @media (max-width: 767.98px) {
-            .alert {
-                padding: 0.75rem;
-                font-size: 0.9rem;
-            }
+    }
+    
+    /* Mobile-optimized statistics layout */
+    @media (max-width: 767.98px) {
+        .stats-row {
+            gap: 1rem !important;
         }
-        
-        /* Touch-friendly interactions */
-        @media (hover: none) {
-            .stats-card:hover {
-                transform: none;
-            }
-            .stats-card:active {
-                transform: scale(0.98);
-            }
+        .stats-card .material-icons-outlined {
+            font-size: 2.5rem !important;
         }
-        
-        /* Accessibility improvements */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+        .stats-card h3 {
+            font-size: 1.8rem;
+            margin: 0.5rem 0;
         }
-        
-        /* Focus states */
-        .stats-card:focus-within {
-            outline: 2px solid #1976d2;
-            outline-offset: 2px;
+        .stats-card p {
+            font-size: 0.9rem;
         }
-        
-        /* RTL optimizations */
-        @media (max-width: 575.98px) {
-            h2 {
-                text-align: center;
-                margin-bottom: 1.5rem;
-            }
+    }
+    
+    /* Activity section improvements */
+    .activity-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .activity-card .card-header {
+        background: #fff;
+        border-bottom: 2px solid #f1f3f4;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    /* Mobile-friendly alerts */
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+    
+    @media (max-width: 767.98px) {
+        .alert {
+            padding: 0.75rem;
+            font-size: 0.9rem;
         }
-        
-        /* Mobile responsiveness enhancements */
-        @media (max-width: 991.98px) {
-            .content-area { padding: 1rem 1.5rem; }
-            .stats-row { margin-bottom: 1.5rem; }
+    }
+    
+    /* Touch-friendly interactions */
+    @media (hover: none) {
+        .stats-card:hover {
+            transform: none;
         }
-        
-        @media (max-width: 575.98px) {
-            .content-area { padding: 1rem; }
-            .stats-card .card-body { padding: 1rem 0.5rem; }
-            .stats-card h3 { font-size: 1.5rem; }
-            .stats-card p { font-size: 0.85rem; }
+        .stats-card:active {
+            transform: scale(0.98);
         }
-        
-        /* Loading and animation styles */
-        .animate-count {
-            animation: countUp 0.6s ease-out;
+    }
+    
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
         }
-        
-        @keyframes countUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+    }
+    
+    /* Focus states */
+    .stats-card:focus-within {
+        outline: 2px solid #1976d2;
+        outline-offset: 2px;
+    }
+    
+    /* RTL optimizations */
+    @media (max-width: 575.98px) {
+        h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
+    }
+    
+    /* Mobile responsiveness enhancements */
+    @media (max-width: 991.98px) {
+        .content-area { padding: 1rem 1.5rem; }
+        .stats-row { margin-bottom: 1.5rem; }
+    }
+    
+    @media (max-width: 575.98px) {
+        .content-area { padding: 1rem; }
+        .stats-card .card-body { padding: 1rem 0.5rem; }
+        .stats-card h3 { font-size: 1.5rem; }
+        .stats-card p { font-size: 0.85rem; }
+    }
+    
+    /* Loading and animation styles */
+    .animate-count {
+        animation: countUp 0.6s ease-out;
+    }
+    
+    @keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
         }
-        
-        /* Real-time indicator */
-        .live-indicator {
-            position: relative;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
-        .live-indicator::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: #28a745;
-            border-radius: 50%;
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            animation: pulse 2s infinite;
+    }
+    
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+    
+    /* Real-time indicator */
+    .live-indicator {
+        position: relative;
+    }
+    
+    .live-indicator::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #28a745;
+        border-radius: 50%;
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
         }
-        
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-            }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
         }
-    </style>
-</head>
-<body>
-    <div class="main-content">
-        <div class="container-fluid p-4">
-        <!-- Dashboard Header with Refresh Button -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-success live-indicator">مباشر</span>
-                <small class="text-muted" id="lastUpdated">آخر تحديث: جاري التحميل...</small>
-                <span class="badge bg-info" id="serverStatus">متصل</span>
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
-                    <span class="material-icons-outlined me-1">home</span>
-                    الرئيسية
-                </button>
-                <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()" id="refreshBtn">
-                    <span class="material-icons-outlined me-1">refresh</span>
-                    تحديث
-                </button>
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+</style>
+<div class="main-content">
+    <div class="container-fluid p-4">
+    <!-- Dashboard Header with Refresh Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-success live-indicator">مباشر</span>
+            <small class="text-muted" id="lastUpdated">آخر تحديث: جاري التحميل...</small>
+            <span class="badge bg-info" id="serverStatus">متصل</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
+                <span class="material-icons-outlined me-1">home</span>
+                الرئيسية
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()" id="refreshBtn">
+                <span class="material-icons-outlined me-1">refresh</span>
+                تحديث
+            </button>
+        </div>
+    </div>
+    
+    <div class="alert alert-success">
+        ✅ تم تحميل لوحة القيادة بنجاح - الخادم يعمل بشكل صحيح
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-3 stats-row mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <span class="material-icons-outlined" style="font-size: 3rem;">shopping_cart</span>
+                    <h3 class="mt-2" id="ordersToday">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </h3>
+                    <p class="mb-0">إجمالي الطلبات اليوم</p>
+                </div>
             </div>
         </div>
-        
-        <div class="alert alert-success">
-            ✅ تم تحميل لوحة القيادة بنجاح - الخادم يعمل بشكل صحيح
-        </div>
-        
-        <!-- Statistics Cards -->
-        <div class="row g-3 stats-row mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card stats-card bg-primary text-white">
-                    <div class="card-body text-center">
-                        <span class="material-icons-outlined" style="font-size: 3rem;">shopping_cart</span>
-                        <h3 class="mt-2" id="ordersToday">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                        </h3>
-                        <p class="mb-0">إجمالي الطلبات اليوم</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stats-card bg-success text-white">
-                    <div class="card-body text-center">
-                        <span class="material-icons-outlined" style="font-size: 3rem;">store</span>
-                        <h3 class="mt-2" id="connectedMerchants">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                        </h3>
-                        <p class="mb-0">التجار المتصلون</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stats-card bg-info text-white">
-                    <div class="card-body text-center">
-                        <span class="material-icons-outlined" style="font-size: 3rem;">local_shipping</span>
-                        <h3 class="mt-2" id="activeDrivers">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                        </h3>
-                        <p class="mb-0">السائقون النشطون</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stats-card bg-warning text-white">
-                    <div class="card-body text-center">
-                        <span class="material-icons-outlined" style="font-size: 3rem;">people</span>
-                        <h3 class="mt-2" id="totalCustomers">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                        </h3>
-                        <p class="mb-0">إجمالي العملاء</p>
-                    </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body text-center">
+                    <span class="material-icons-outlined" style="font-size: 3rem;">store</span>
+                    <h3 class="mt-2" id="connectedMerchants">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </h3>
+                    <p class="mb-0">التجار المتصلون</p>
                 </div>
             </div>
         </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body text-center">
+                    <span class="material-icons-outlined" style="font-size: 3rem;">local_shipping</span>
+                    <h3 class="mt-2" id="activeDrivers">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </h3>
+                    <p class="mb-0">السائقون النشطون</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stats-card bg-warning text-white">
+                <div class="card-body text-center">
+                    <span class="material-icons-outlined" style="font-size: 3rem;">people</span>
+                    <h3 class="mt-2" id="totalCustomers">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </h3>
+                    <p class="mb-0">إجمالي العملاء</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- User Management Modal (Admin Only) -->
-        <div class="modal fade" id="userManagementModal" tabindex="-1" data-role="admin">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">👥 User Management</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h6>System Users</h6>
-                            <button class="btn btn-primary btn-sm" onclick="showCreateUserForm()">
-                                ➕ Add New User
-                            </button>
-                        </div>
-                        <div id="usersList">
-                            <div class="text-center p-4">
-                                <div class="spinner-border" role="status"></div>
-                                <p class="mt-2">Loading users...</p>
-                            </div>
-                        </div>
-                    </div>
+    <!-- User Management Modal (Admin Only) -->
+    <div class="modal fade" id="userManagementModal" tabindex="-1" data-role="admin">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">👥 User Management</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Create User Modal -->
-        <div class="modal fade" id="createUserModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">➕ Create New User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6>System Users</h6>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateUserForm()">
+                            ➕ Add New User
+                        </button>
                     </div>
-                    <div class="modal-body">
-                        <form id="createUserForm">
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-control" name="username" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" class="form-control" name="full_name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" class="form-control" name="password" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Role</label>
-                                <select class="form-select" name="role" required>
-                                    <option value="viewer">Viewer</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="createUser()">Create User</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card activity-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">النشاط الأخير</h5>
-                        <span class="badge bg-primary" id="activityCount">0</span>
-                    </div>
-                    <div class="card-body" id="activityFeed">
+                    <div id="usersList">
                         <div class="text-center p-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">جاري التحميل...</span>
-                            </div>
-                            <p class="mt-2 text-muted">جاري تحميل النشاط الأخير...</p>
+                            <div class="spinner-border" role="status"></div>
+                            <p class="mt-2">Loading users...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        // Dashboard Data Manager
-        class DashboardManager {
-            constructor() {
-                this.refreshInterval = 30000; // 30 seconds
-                this.init();
-            }
 
-            async init() {
-                await this.loadDashboardStats();
-                this.startAutoRefresh();
-                console.log('✅ Dashboard Manager initialized');
-            }
-
-            async loadDashboardStats() {
-                try {
-                    // Update refresh button state
-                    const refreshBtn = document.getElementById('refreshBtn');
-                    if (refreshBtn) {
-                        refreshBtn.disabled = true;
-                        refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري التحديث...';
-                    }
-
-                    // Use authenticated API call
-                    const data = await apiGet('/api/dashboard/stats');
-                    if (!data) {
-                        throw new Error('Failed to fetch dashboard stats');
-                    }
-                    
-                    this.updateStatsCards(data);
-                    this.updateServerStatus('متصل', 'success');
-                    
-                    // Load recent activity
-                    await this.loadRecentActivity();
-                    
-                    console.log('📊 Dashboard stats loaded:', data);
-                } catch (error) {
-                    console.error('❌ Error loading dashboard stats:', error);
-                    this.updateServerStatus('غير متصل', 'danger');
-                    this.showErrorState();
-                } finally {
-                    // Reset refresh button
-                    const refreshBtn = document.getElementById('refreshBtn');
-                    if (refreshBtn) {
-                        refreshBtn.disabled = false;
-                        refreshBtn.innerHTML = '<span class="material-icons-outlined me-1">refresh</span>تحديث';
-                    }
-                }
-            }
-
-            async loadRecentActivity() {
-                try {
-                    const data = await apiGet('/api/dashboard/recent-activity');
-                    if (data && data.activities) {
-                        this.updateActivityFeed(data.activities);
-                    } else {
-                        // Fallback to sample data
-                        const activities = [
-                            {
-                                type: 'order',
-                                message: 'تم تأكيد طلب جديد من مطعم الذواقة',
-                                time: 'منذ 5 دقائق',
-                                status: 'success'
-                            },
-                            {
-                                type: 'driver',
-                                message: 'تم تعيين سائق للطلب #1234',
-                                time: 'منذ 10 دقائق',
-                                status: 'info'
-                            },
-                            {
-                                type: 'warning',
-                                message: 'طلب في الانتظار ينتظر تأكيد التاجر',
-                                time: 'منذ 15 دقيقة',
-                                status: 'warning'
-                            }
-                        ];
-                        this.updateActivityFeed(activities);
-                    }
-                } catch (error) {
-                    console.error('❌ Error loading recent activity:', error);
-                    // Show fallback empty state
-                    this.updateActivityFeed([]);
-                }
-            }
-
-            updateActivityFeed(activities) {
-                const activityFeed = document.getElementById('activityFeed');
-                const activityCount = document.getElementById('activityCount');
-                
-                if (activityFeed && activities.length > 0) {
-                    activityFeed.innerHTML = activities.map(activity => `
-                        <div class="alert alert-${activity.status} d-flex align-items-center">
-                            <span class="material-icons-outlined me-2">
-                                ${this.getActivityIcon(activity.type)}
-                            </span>
-                            <div class="flex-grow-1">
-                                <strong>${activity.message}</strong><br>
-                                <small class="text-${activity.status}">${activity.time}</small>
-                            </div>
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">➕ Create New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createUserForm">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" required>
                         </div>
-                    `).join('');
-                    
-                    if (activityCount) {
-                        activityCount.textContent = activities.length;
-                    }
-                } else if (activityFeed) {
-                    activityFeed.innerHTML = `
-                        <div class="text-center p-4 text-muted">
-                            <span class="material-icons-outlined" style="font-size: 3rem; opacity: 0.3;">inbox</span>
-                            <p class="mt-2">لا توجد أنشطة حديثة</p>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
                         </div>
-                    `;
-                }
-            }
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role" required>
+                                <option value="viewer">Viewer</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createUser()">Create User</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            getActivityIcon(type) {
-                const icons = {
-                    'order': 'shopping_cart',
-                    'driver': 'local_shipping',
-                    'merchant': 'store',
-                    'warning': 'warning',
-                    'error': 'error',
-                    'success': 'check_circle'
-                };
-                return icons[type] || 'notifications';
-            }
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">النشاط الأخير</h5>
+                    <span class="badge bg-primary" id="activityCount">0</span>
+                </div>
+                <div class="card-body" id="activityFeed">
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                        <p class="mt-2 text-muted">جاري تحميل النشاط الأخير...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            updateServerStatus(status, type) {
-                const serverStatus = document.getElementById('serverStatus');
-                if (serverStatus) {
-                    serverStatus.className = `badge bg-${type}`;
-                    serverStatus.textContent = status;
-                }
-            }
-
-            updateStatsCards(data) {
-                // Update Orders Today with animation
-                const ordersElement = document.getElementById('ordersToday');
-                if (ordersElement) {
-                    this.animateCounterUpdate(ordersElement, data.orders_today || 0);
-                }
-
-                // Update Connected Merchants with ratio display
-                const merchantsElement = document.getElementById('connectedMerchants');
-                if (merchantsElement) {
-                    const ratio = `${data.connected_merchants || 0}/${data.total_merchants || 0}`;
-                    this.animateCounterUpdate(merchantsElement, ratio);
-                }
-
-                // Update Active Drivers
-                const driversElement = document.getElementById('activeDrivers');
-                if (driversElement) {
-                    this.animateCounterUpdate(driversElement, data.active_drivers || 0);
-                }
-
-                // Update Total Customers
-                const customersElement = document.getElementById('totalCustomers');
-                if (customersElement) {
-                    this.animateCounterUpdate(customersElement, this.formatNumber(data.total_customers || 0));
-                }
-
-                // Update last refresh time
-                const now = new Date().toLocaleTimeString('ar-SA');
-                const lastUpdatedElement = document.getElementById('lastUpdated');
-                if (lastUpdatedElement) {
-                    lastUpdatedElement.textContent = `آخر تحديث: ${now}`;
-                }
-                
-                console.log(`🔄 Stats updated at ${now}`);
-            }
-
-            animateCounterUpdate(element, newValue) {
-                element.style.opacity = '0.5';
-                element.style.transform = 'scale(0.95)';
-                
-                setTimeout(() => {
-                    element.innerHTML = newValue;
-                    element.style.opacity = '1';
-                    element.style.transform = 'scale(1)';
-                    element.style.transition = 'all 0.3s ease';
-                    element.classList.add('animate-count');
-                }, 150);
-                
-                setTimeout(() => {
-                    element.classList.remove('animate-count');
-                }, 600);
-            }
-
-            showErrorState() {
-                // Show fallback data if API fails
-                const fallbackData = {
-                    orders_today: 0,
-                    connected_merchants: 0,
-                    active_drivers: 0,
-                    total_customers: 0
-                };
-                
-                this.updateStatsCards(fallbackData);
-                
-                // Show error indicator
-                const errorAlert = document.createElement('div');
-                errorAlert.className = 'alert alert-warning alert-dismissible fade show';
-                errorAlert.innerHTML = `
-                    <strong>⚠️ تحذير:</strong> لا يمكن تحميل البيانات الحية. يتم عرض بيانات افتراضية.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                
-                const container = document.querySelector('.container-fluid');
-                if (container) {
-                    container.insertBefore(errorAlert, container.firstChild.nextSibling);
-                }
-            }
-
-            formatNumber(num) {
-                return new Intl.NumberFormat('ar-SA').format(num);
-            }
-
-            startAutoRefresh() {
-                setInterval(() => {
-                    this.loadDashboardStats();
-                }, this.refreshInterval);
-                
-                console.log(`🔄 Auto-refresh enabled (${this.refreshInterval/1000}s interval)`);
-            }
-
-            async refreshManually() {
-                console.log('🔄 Manual refresh triggered');
-                await this.loadDashboardStats();
-            }
+<script>
+    // Dashboard Data Manager
+    class DashboardManager {
+        constructor() {
+            this.refreshInterval = 30000; // 30 seconds
+            this.init();
         }
 
-        // Manual refresh function for button
-        function refreshDashboard() {
-            if (window.dashboardManager) {
-                window.dashboardManager.refreshManually();
-            }
+        async init() {
+            await this.loadDashboardStats();
+            this.startAutoRefresh();
+            console.log('✅ Dashboard Manager initialized');
         }
 
-        // User Management Functions
-        async function openUserManagement() {
-            const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
-            modal.show();
-            await loadUsers();
-        }
-
-        async function loadUsers() {
+        async loadDashboardStats() {
             try {
-                const data = await apiGet('/api/users');
-                const usersList = document.getElementById('usersList');
+                // Update refresh button state
+                const refreshBtn = document.getElementById('refreshBtn');
+                if (refreshBtn) {
+                    refreshBtn.disabled = true;
+                    refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري التحديث...';
+                }
+
+                // Use authenticated API call
+                const data = await auth.apiRequest('/api/dashboard/stats');
+                if (!data) {
+                    throw new Error('Failed to fetch dashboard stats');
+                }
                 
-                if (data && data.users) {
-                    usersList.innerHTML = data.users.map(user => `
-                        <div class="card mb-2">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <h6 class="mb-1">${user.full_name}</h6>
-                                        <small class="text-muted">@${user.username} • ${user.email}</small>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role}</span>
-                                        ${user.is_active ? '<span class="badge bg-success ms-1">Active</span>' : '<span class="badge bg-secondary ms-1">Inactive</span>'}
-                                    </div>
-                                    <div class="col-md-3 text-end">
-                                        <button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(${user.id}, ${!user.is_active})">
-                                            ${user.is_active ? 'Deactivate' : 'Activate'}
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteUser(${user.id}, '${user.username}')">
-                                            Delete
-                                        </button>
-                                    </div>
+                this.updateStatsCards(data);
+                this.updateServerStatus('متصل', 'success');
+                
+                // Load recent activity
+                await this.loadRecentActivity();
+                
+                console.log('📊 Dashboard stats loaded:', data);
+            } catch (error) {
+                console.error('❌ Error loading dashboard stats:', error);
+                this.updateServerStatus('غير متصل', 'danger');
+                this.showErrorState();
+            } finally {
+                // Reset refresh button
+                const refreshBtn = document.getElementById('refreshBtn');
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<span class="material-icons-outlined me-1">refresh</span>تحديث';
+                }
+            }
+        }
+
+        async loadRecentActivity() {
+            try {
+                const data = await auth.apiRequest('/api/dashboard/recent-activity');
+                if (data && data.activities) {
+                    this.updateActivityFeed(data.activities);
+                } else {
+                    // Fallback to sample data
+                    const activities = [
+                        {
+                            type: 'order',
+                            message: 'تم تأكيد طلب جديد من مطعم الذواقة',
+                            time: 'منذ 5 دقائق',
+                            status: 'success'
+                        },
+                        {
+                            type: 'driver',
+                            message: 'تم تعيين سائق للطلب #1234',
+                            time: 'منذ 10 دقائق',
+                            status: 'info'
+                        },
+                        {
+                            type: 'warning',
+                            message: 'طلب في الانتظار ينتظر تأكيد التاجر',
+                            time: 'منذ 15 دقيقة',
+                            status: 'warning'
+                        }
+                    ];
+                    this.updateActivityFeed(activities);
+                }
+            } catch (error) {
+                console.error('❌ Error loading recent activity:', error);
+                // Show fallback empty state
+                this.updateActivityFeed([]);
+            }
+        }
+
+        updateActivityFeed(activities) {
+            const activityFeed = document.getElementById('activityFeed');
+            const activityCount = document.getElementById('activityCount');
+            
+            if (activityFeed && activities.length > 0) {
+                activityFeed.innerHTML = activities.map(activity => `
+                    <div class="alert alert-${activity.status} d-flex align-items-center">
+                        <span class="material-icons-outlined me-2">
+                            ${this.getActivityIcon(activity.type)}
+                        </span>
+                        <div class="flex-grow-1">
+                            <strong>${activity.message}</strong><br>
+                            <small class="text-${activity.status}">${activity.time}</small>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (activityCount) {
+                    activityCount.textContent = activities.length;
+                }
+            } else if (activityFeed) {
+                activityFeed.innerHTML = `
+                    <div class="text-center p-4 text-muted">
+                        <span class="material-icons-outlined" style="font-size: 3rem; opacity: 0.3;">inbox</span>
+                        <p class="mt-2">لا توجد أنشطة حديثة</p>
+                    </div>
+                `;
+            }
+        }
+
+        getActivityIcon(type) {
+            const icons = {
+                'order': 'shopping_cart',
+                'driver': 'local_shipping',
+                'merchant': 'store',
+                'warning': 'warning',
+                'error': 'error',
+                'success': 'check_circle'
+            };
+            return icons[type] || 'notifications';
+        }
+
+        updateServerStatus(status, type) {
+            const serverStatus = document.getElementById('serverStatus');
+            if (serverStatus) {
+                serverStatus.className = `badge bg-${type}`;
+                serverStatus.textContent = status;
+            }
+        }
+
+        updateStatsCards(data) {
+            // Update Orders Today with animation
+            const ordersElement = document.getElementById('ordersToday');
+            if (ordersElement) {
+                this.animateCounterUpdate(ordersElement, data.orders_today || 0);
+            }
+
+            // Update Connected Merchants with ratio display
+            const merchantsElement = document.getElementById('connectedMerchants');
+            if (merchantsElement) {
+                const ratio = `${data.connected_merchants || 0}/${data.total_merchants || 0}`;
+                this.animateCounterUpdate(merchantsElement, ratio);
+            }
+
+            // Update Active Drivers
+            const driversElement = document.getElementById('activeDrivers');
+            if (driversElement) {
+                this.animateCounterUpdate(driversElement, data.active_drivers || 0);
+            }
+
+            // Update Total Customers
+            const customersElement = document.getElementById('totalCustomers');
+            if (customersElement) {
+                this.animateCounterUpdate(customersElement, this.formatNumber(data.total_customers || 0));
+            }
+
+            // Update last refresh time
+            const now = new Date().toLocaleTimeString('ar-SA');
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = `آخر تحديث: ${now}`;
+            }
+            
+            console.log(`🔄 Stats updated at ${now}`);
+        }
+
+        animateCounterUpdate(element, newValue) {
+            element.style.opacity = '0.5';
+            element.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                element.innerHTML = newValue;
+                element.style.opacity = '1';
+                element.style.transform = 'scale(1)';
+                element.style.transition = 'all 0.3s ease';
+                element.classList.add('animate-count');
+            }, 150);
+            
+            setTimeout(() => {
+                element.classList.remove('animate-count');
+            }, 600);
+        }
+
+        showErrorState() {
+            // Show fallback data if API fails
+            const fallbackData = {
+                orders_today: 0,
+                connected_merchants: 0,
+                active_drivers: 0,
+                total_customers: 0
+            };
+            
+            this.updateStatsCards(fallbackData);
+            
+            // Show error indicator
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-warning alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                <strong>⚠️ تحذير:</strong> لا يمكن تحميل البيانات الحية. يتم عرض بيانات افتراضية.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container-fluid');
+            if (container) {
+                container.insertBefore(errorAlert, container.firstChild.nextSibling);
+            }
+        }
+
+        formatNumber(num) {
+            return new Intl.NumberFormat('ar-SA').format(num);
+        }
+
+        startAutoRefresh() {
+            setInterval(() => {
+                this.loadDashboardStats();
+            }, this.refreshInterval);
+            
+            console.log(`🔄 Auto-refresh enabled (${this.refreshInterval/1000}s interval)`);
+        }
+
+        async refreshManually() {
+            console.log('🔄 Manual refresh triggered');
+            await this.loadDashboardStats();
+        }
+    }
+
+    // Manual refresh function for button
+    function refreshDashboard() {
+        if (window.dashboardManager) {
+            window.dashboardManager.refreshManually();
+        }
+    }
+
+    // User Management Functions
+    async function openUserManagement() {
+        const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
+        modal.show();
+        await loadUsers();
+    }
+
+    async function loadUsers() {
+        try {
+            const data = await auth.apiRequest('/api/users');
+            const usersList = document.getElementById('usersList');
+            
+            if (data && data.users) {
+                usersList.innerHTML = data.users.map(user => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">${user.full_name}</h6>
+                                    <small class="text-muted">@${user.username} • ${user.email}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role}</span>
+                                    ${user.is_active ? '<span class="badge bg-success ms-1">Active</span>' : '<span class="badge bg-secondary ms-1">Inactive</span>'}
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(${user.id}, ${!user.is_active})">
+                                        ${user.is_active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteUser(${user.id}, '${user.username}')">
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    `).join('');
-                } else {
-                    usersList.innerHTML = '<div class="text-center p-4 text-muted">No users found</div>';
-                }
-            } catch (error) {
-                console.error('Error loading users:', error);
-                document.getElementById('usersList').innerHTML = '<div class="alert alert-danger">Failed to load users</div>';
+                    </div>
+                `).join('');
+            } else {
+                usersList.innerHTML = '<div class="text-center p-4 text-muted">No users found</div>';
             }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            document.getElementById('usersList').innerHTML = '<div class="alert alert-danger">Failed to load users</div>';
         }
+    }
 
-        function getRoleBadgeColor(role) {
-            const colors = {
-                'admin': 'danger',
-                'manager': 'warning',
-                'viewer': 'info'
-            };
-            return colors[role] || 'secondary';
-        }
+    function getRoleBadgeColor(role) {
+        const colors = {
+            'admin': 'danger',
+            'manager': 'warning',
+            'viewer': 'info'
+        };
+        return colors[role] || 'secondary';
+    }
 
-        function showCreateUserForm() {
-            const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
-            modal.show();
-        }
+    function showCreateUserForm() {
+        const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+        modal.show();
+    }
 
-        async function createUser() {
-            const form = document.getElementById('createUserForm');
-            const formData = new FormData(form);
-            const userData = Object.fromEntries(formData);
+    async function createUser() {
+        const form = document.getElementById('createUserForm');
+        const formData = new FormData(form);
+        const userData = Object.fromEntries(formData);
 
-            try {
-                const result = await apiPost('/api/users', userData);
-                
-                if (result && result.success) {
-                    alert('User created successfully!');
-                    bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
-                    form.reset();
-                    await loadUsers();
-                } else {
-                    alert(`Failed to create user: ${result?.message || 'Unknown error'}`);
-                }
-            } catch (error) {
-                console.error('Error creating user:', error);
-                alert('Failed to create user');
+        try {
+            const result = await auth.apiRequest('/api/users', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            
+            if (result && result.id) {
+                alert('User created successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+                form.reset();
+                await loadUsers();
+            } else {
+                alert(`Failed to create user: ${result?.detail || 'Unknown error'}`);
             }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            alert('Failed to create user');
         }
+    }
 
-        async function toggleUserStatus(userId, activate) {
+    async function toggleUserStatus(userId, activate) {
+        try {
+            await auth.apiRequest(`/api/users/${userId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ is_active: activate })
+            });
+            await loadUsers();
+        } catch (error) {
+            console.error('Error updating user status:', error);
+            alert('Failed to update user status');
+        }
+    }
+
+    async function deleteUser(userId, username) {
+        if (confirm(`Are you sure you want to delete user "${username}"?`)) {
             try {
-                const result = await apiPut(`/api/users/${userId}`, { is_active: activate });
+                await auth.apiRequest(`/api/users/${userId}`, { method: 'DELETE' });
                 await loadUsers();
             } catch (error) {
-                console.error('Error updating user status:', error);
-                alert('Failed to update user status');
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user');
             }
         }
+    }
 
-        async function deleteUser(userId, username) {
-            if (confirm(`Are you sure you want to delete user "${username}"?`)) {
-                try {
-                    await apiDelete(`/api/users/${userId}`);
-                    await loadUsers();
-                } catch (error) {
-                    console.error('Error deleting user:', error);
-                    alert('Failed to delete user');
-                }
-            }
-        }
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        window.dashboardManager = new DashboardManager();
+    });
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            window.dashboardManager = new DashboardManager();
-        });
-
-        console.log('✅ Dashboard loaded successfully');
-        console.log('📍 Dashboard URL:', window.location.href);
-    </script>
-</body>
-</html>
+    console.log('✅ Dashboard loaded successfully');
+    console.log('📍 Dashboard URL:', window.location.href);
+</script>

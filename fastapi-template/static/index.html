@@ -54,21 +54,23 @@
             padding: 2.5rem 3rem;
         }
         
-        /* Iframe specific styles to prevent duplication */
-        #contentFrame {
-            display: block;
+        /* Styles for the main content area to ensure it fills the viewport */
+        .content-area-frame {
             width: 100%;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 80px); /* Default for desktop */
             border: none;
-            overflow: hidden;
+            overflow-y: auto;
             background: #f4f6fb;
         }
         
         @media (max-width: 991.98px) {
-            #contentFrame {
-                height: calc(100vh - 120px);
+            .content-area-frame {
+                height: calc(100vh - 80px) !important;
+                margin-top: 80px;
+                border-radius: 0;
             }
         }
+
         .navbar {
             background: #fff;
             border-bottom: 1px solid #e5e7eb;
@@ -223,7 +225,7 @@
                 visibility: visible !important;
                 opacity: 1 !important;
             }
-            #contentFrame {
+            #contentArea {
                 height: calc(100vh - 80px) !important;
                 border-radius: 0;
                 margin-top: 80px;
@@ -241,11 +243,6 @@
         }
         
         /* Enhanced iframe responsiveness */
-        #contentFrame {
-            width: 100%;
-            border: none;
-            background: #f4f6fb;
-        }
         
         /* Database status indicator */
         .database-status {
