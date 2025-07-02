@@ -1,19 +1,46 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 import random
 
 # Import database components
 from app.database import get_db, check_database_connection, init_database
-from app.models import Merchant as MerchantModel, Driver as DriverModel, Customer as CustomerModel, Order as OrderModel, OrderItem, DailyStats, MerchantStatus, DriverStatus, OrderStatus, VehicleType
+from app.models import (
+    Merchant as MerchantModel, Driver as DriverModel, Customer as CustomerModel, 
+    Order as OrderModel, OrderItem, DailyStats, MerchantStatus, DriverStatus, 
+    OrderStatus, VehicleType, User
+)
 from app.schemas import Merchant, Driver, Customer, Order, DashboardStats, ActivityItem
+
+# Import authentication
+from app.auth import (
+    create_access_token, authenticate_user, get_current_active_user, 
+    require_admin, require_admin_or_manager, require_any_role,
+    create_default_admin_user, get_password_hash, create_user,
+    get_user_by_username, ACCESS_TOKEN_EXPIRE_MINUTES
+)
+from app.auth_schemas import (
+    UserLogin, UserCreate, UserResponse, Token, LoginResponse,
+    UserListResponse, CreateUserResponse, UserUpdate, PasswordChange,
+    UserRole, has_permission
+)
 
 # Import fallback mock database for development
 from app.db import db as mock_db
 
 app = FastAPI(title="Centralized Delivery Platform API", version="1.0.0")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure this for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -26,6 +53,15 @@ async def startup_event():
         # Initialize database tables
         init_database()
         print("✅ Database initialized successfully")
+        
+        # Create default admin user if needed
+        try:
+            db = next(get_db())
+            if create_default_admin_user(db):
+                print("👤 Default admin user created")
+            db.close()
+        except Exception as e:
+            print(f"⚠️  Error creating default admin user: {e}")
     else:
         print("⚠️  Database connection failed, falling back to mock database")
     
@@ -41,6 +77,189 @@ async def health_check():
         "database": "connected" if db_status else "disconnected",
         "timestamp": datetime.now().isoformat()
     }
+
+
+# ==========================================
+# AUTHENTICATION ENDPOINTS
+# ==========================================
+
+@app.post("/api/auth/login", response_model=LoginResponse)
+async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
+    """Login endpoint - authenticate user and return JWT token"""
+    try:
+        # Authenticate user
+        user = authenticate_user(db, user_credentials.username, user_credentials.password)
+        if not user:
+            return LoginResponse(
+                success=False,
+                message="Invalid username or password"
+            )
+        
+        if not user.is_active:
+            return LoginResponse(
+                success=False,
+                message="Account is disabled"
+            )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        
+        # Update last login
+        user.last_login = datetime.utcnow()
+        db.commit()
+        
+        # Return token and user info
+        user_response = UserResponse.from_orm(user)
+        token = Token(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user=user_response
+        )
+        
+        return LoginResponse(
+            success=True,
+            message="Login successful",
+            token=token
+        )
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return LoginResponse(
+            success=False,
+            message="Login failed"
+        )
+
+@app.post("/api/auth/logout")
+async def logout(current_user: User = Depends(get_current_active_user)):
+    """Logout endpoint - invalidate current session"""
+    return {"message": "Logout successful"}
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
+    """Get current user information"""
+    return UserResponse.from_orm(current_user)
+
+@app.post("/api/auth/change-password")
+async def change_password(
+    password_data: PasswordChange,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Change user password"""
+    from app.auth import verify_password
+    
+    # Verify current password
+    if not verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    current_user.hashed_password = get_password_hash(password_data.new_password)
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
+
+
+# ==========================================
+# USER MANAGEMENT ENDPOINTS (Admin only)
+# ==========================================
+
+@app.get("/api/users", response_model=UserListResponse)
+async def list_users(
+    page: int = 1,
+    per_page: int = 20,
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
+    """List all users (Admin/Manager only)"""
+    offset = (page - 1) * per_page
+    users = db.query(User).offset(offset).limit(per_page).all()
+    total = db.query(User).count()
+    
+    return UserListResponse(
+        users=[UserResponse.from_orm(user) for user in users],
+        total=total,
+        page=page,
+        per_page=per_page
+    )
+
+@app.post("/api/users", response_model=CreateUserResponse)
+async def create_new_user(
+    user_data: UserCreate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Create a new user (Admin only)"""
+    try:
+        # Create user with created_by tracking
+        new_user = create_user(db, user_data)
+        new_user.created_by_id = current_user.id
+        db.commit()
+        db.refresh(new_user)
+        
+        return CreateUserResponse(
+            success=True,
+            message=f"User '{user_data.username}' created successfully",
+            user=UserResponse.from_orm(new_user)
+        )
+        
+    except HTTPException as e:
+        return CreateUserResponse(
+            success=False,
+            message=e.detail
+        )
+    except Exception as e:
+        print(f"User creation error: {e}")
+        return CreateUserResponse(
+            success=False,
+            message="Failed to create user"
+        )
+
+@app.put("/api/users/{user_id}")
+async def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user (Admin only)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update fields
+    for field, value in user_data.dict(exclude_unset=True).items():
+        setattr(user, field, value)
+    
+    db.commit()
+    return {"message": f"User '{user.username}' updated successfully"}
+
+@app.delete("/api/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete user (Admin only)"""
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account"
+        )
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db.delete(user)
+    db.commit()
+    return {"message": f"User '{user.username}' deleted successfully"}
 
 def to_dict(doc):
     data = doc.to_dict()
@@ -74,7 +293,9 @@ async def delete_merchant(mid: str):
 
 # -- Dashboard Statistics Endpoints --
 @app.get("/api/dashboard/stats")
-async def get_dashboard_stats(db: Session = Depends(get_db)):
+async def get_dashboard_stats(
+    db: Session = Depends(get_db)
+):
     """Get real-time dashboard statistics for all cards"""
     try:
         # Use real database when available, fallback to mock data
@@ -135,7 +356,7 @@ async def get_dashboard_stats(db: Session = Depends(get_db)):
         raise HTTPException(500, f"Error fetching dashboard stats: {str(e)}")
 
 @app.get("/api/dashboard/orders-today")
-async def get_orders_today():
+async def get_orders_today(current_user: User = Depends(require_any_role)):
     """Get today's orders count"""
     try:
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -145,7 +366,7 @@ async def get_orders_today():
         raise HTTPException(500, f"Error fetching today's orders: {str(e)}")
 
 @app.get("/api/dashboard/merchants-status")
-async def get_merchants_status():
+async def get_merchants_status(current_user: User = Depends(require_any_role)):
     """Get merchants connection status"""
     try:
         merchants = list(mock_db.collection("merchants").stream())
@@ -165,7 +386,7 @@ async def get_merchants_status():
         raise HTTPException(500, f"Error fetching merchants status: {str(e)}")
 
 @app.get("/api/dashboard/drivers-status") 
-async def get_drivers_status():
+async def get_drivers_status(current_user: User = Depends(require_any_role)):
     """Get drivers activity status"""
     try:
         drivers = list(mock_db.collection("drivers").stream())
@@ -185,7 +406,7 @@ async def get_drivers_status():
         raise HTTPException(500, f"Error fetching drivers status: {str(e)}")
 
 @app.get("/api/dashboard/customers-count")
-async def get_customers_count():
+async def get_customers_count(current_user: User = Depends(require_any_role)):
     """Get total customers count"""
     try:
         customers = list(mock_db.collection("customers").stream())
@@ -197,7 +418,7 @@ async def get_customers_count():
         raise HTTPException(500, f"Error fetching customers count: {str(e)}")
 
 @app.get("/api/dashboard/recent-activity")
-async def get_recent_activity():
+async def get_recent_activity(current_user: User = Depends(require_any_role)):
     """Get recent system activity for dashboard"""
     try:
         # Get recent orders
@@ -413,6 +634,7 @@ async def get_orders(
     driver_id: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Get orders with optional filtering and pagination"""
@@ -483,7 +705,11 @@ async def get_orders(
         raise HTTPException(500, f"Error fetching orders: {str(e)}")
 
 @app.get("/api/orders/{order_id}")
-async def get_order(order_id: str, db: Session = Depends(get_db)):
+async def get_order(
+    order_id: str, 
+    current_user: User = Depends(require_any_role),
+    db: Session = Depends(get_db)
+):
     """Get a specific order by ID"""
     try:
         if check_database_connection():
@@ -515,7 +741,12 @@ async def get_order(order_id: str, db: Session = Depends(get_db)):
         raise HTTPException(500, f"Error fetching order: {str(e)}")
 
 @app.put("/api/orders/{order_id}/status")
-async def update_order_status(order_id: str, status: str, db: Session = Depends(get_db)):
+async def update_order_status(
+    order_id: str, 
+    status: str, 
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
     """Update order status"""
     try:
         if check_database_connection():
@@ -552,6 +783,7 @@ async def get_merchants(
     category: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Get merchants with optional filtering and pagination"""
@@ -659,6 +891,7 @@ async def get_drivers(
     vehicle_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Get drivers with optional filtering and pagination"""
@@ -764,6 +997,7 @@ async def get_customers(
     limit: int = 50,
     offset: int = 0,
     search: Optional[str] = None,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Get customers with optional search and pagination"""
@@ -858,6 +1092,7 @@ async def create_customer(customer: Customer, db: Session = Depends(get_db)):
 async def get_order_analytics(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Get order analytics and statistics"""
@@ -924,7 +1159,10 @@ async def get_order_analytics(
         raise HTTPException(500, f"Error fetching order analytics: {str(e)}")
 
 @app.get("/api/analytics/performance")
-async def get_performance_metrics(db: Session = Depends(get_db)):
+async def get_performance_metrics(
+    current_user: User = Depends(require_any_role),
+    db: Session = Depends(get_db)
+):
     """Get performance metrics for dashboard"""
     try:
         if check_database_connection():
@@ -970,7 +1208,12 @@ async def get_performance_metrics(db: Session = Depends(get_db)):
 
 # -- Real-time Status Updates --
 @app.put("/api/drivers/{driver_id}/status")
-async def update_driver_status(driver_id: str, status: str, db: Session = Depends(get_db)):
+async def update_driver_status(
+    driver_id: str, 
+    status: str, 
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
     """Update driver status (active, inactive, busy)"""
     try:
         if check_database_connection():
@@ -1001,7 +1244,12 @@ async def update_driver_status(driver_id: str, status: str, db: Session = Depend
         raise HTTPException(500, f"Error updating driver status: {str(e)}")
 
 @app.put("/api/merchants/{merchant_id}/status")
-async def update_merchant_status(merchant_id: str, status: str, db: Session = Depends(get_db)):
+async def update_merchant_status(
+    merchant_id: str, 
+    status: str, 
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
     """Update merchant status (online, offline)"""
     try:
         if check_database_connection():
@@ -1037,6 +1285,7 @@ async def global_search(
     q: str,  # Changed from 'query' to 'q' to match test
     type: Optional[str] = None,  # orders, merchants, drivers, customers
     limit: int = 20,
+    current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
 ):
     """Global search across all entities"""
@@ -1081,102 +1330,6 @@ async def global_search(
                 results[type] = mock_results.get(type, [])
             else:
                 results = mock_results
-        
-        return {
-            "query": q,
-            "type": type,
-            "results": results,
-            "total_found": sum(len(items) for items in results.values())
-        }
-            if not type or type == "orders":
-                orders = db.query(OrderModel).filter(
-                    OrderModel.order_number.contains(query)
-                ).limit(limit).all()
-                results["orders"] = [{
-                    "id": order.id,
-                    "order_number": order.order_number,
-                    "status": order.status.value,
-                    "total_amount": order.total_amount,
-                    "created_at": order.created_at.isoformat()
-                } for order in orders]
-            
-            if not type or type == "merchants":
-                merchants = db.query(MerchantModel).filter(
-                    MerchantModel.name.contains(query) |
-                    MerchantModel.owner.contains(query)
-                ).limit(limit).all()
-                results["merchants"] = [{
-                    "id": merchant.id,
-                    "name": merchant.name,
-                    "owner": merchant.owner,
-                    "status": merchant.status.value,
-                    "category": merchant.category
-                } for merchant in merchants]
-            
-            if not type or type == "drivers":
-                drivers = db.query(DriverModel).filter(
-                    DriverModel.name.contains(query) |
-                    DriverModel.phone.contains(query)
-                ).limit(limit).all()
-                results["drivers"] = [{
-                    "id": driver.id,
-                    "name": driver.name,
-                    "phone": driver.phone,
-                    "status": driver.status.value,
-                    "vehicle_type": driver.vehicle_type.value
-                } for driver in drivers]
-            
-            if not type or type == "customers":
-                customers = db.query(CustomerModel).filter(
-                    CustomerModel.name.contains(query) |
-                    CustomerModel.phone.contains(query)
-                ).limit(limit).all()
-                results["customers"] = [{
-                    "id": customer.id,
-                    "name": customer.name,
-                    "phone": customer.phone,
-                    "email": customer.email
-                } for customer in customers]
-        else:
-            # Mock search using mock database
-            query_lower = query.lower()
-            
-            if not type or type == "orders":
-                orders_docs = list(mock_db.collection("orders").stream())
-                for doc in orders_docs[:limit]:
-                    order = to_dict(doc)
-                    if query_lower in str(order.get("id", "")).lower():
-                        results["orders"].append(order)
-            
-            if not type or type == "merchants":
-                merchants_docs = list(mock_db.collection("merchants").stream())
-                for doc in merchants_docs[:limit]:
-                    merchant = to_dict(doc)
-                    if (query_lower in merchant.get("name", "").lower() or 
-                        query_lower in merchant.get("owner", "").lower()):
-                        results["merchants"].append(merchant)
-            
-            if not type or type == "drivers":
-                drivers_docs = list(mock_db.collection("drivers").stream())
-                for doc in drivers_docs[:limit]:
-                    driver = to_dict(doc)
-                    if (query_lower in driver.get("name", "").lower() or 
-                        query_lower in driver.get("phone", "").lower()):
-                        results["drivers"].append(driver)
-            
-            if not type or type == "customers":
-                customers_docs = list(mock_db.collection("customers").stream())
-                for doc in customers_docs[:limit]:
-                    customer = to_dict(doc)
-                    if (query_lower in customer.get("name", "").lower() or 
-                        query_lower in customer.get("phone", "").lower()):
-                        results["customers"].append(customer)
-        
-        return {
-            "query": query,
-            "results": results,
-            "total_found": sum(len(v) for v in results.values())
-        }
     except Exception as e:
         raise HTTPException(500, f"Error performing search: {str(e)}")
 

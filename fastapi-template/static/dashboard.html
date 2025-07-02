@@ -6,9 +6,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>لوحة القيادة</title>
+    <title>لوحة القيادة - Delivery Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script src="auth.js"></script>
     <style>
         body {
             background: #f4f6fb;
@@ -217,6 +218,30 @@
     </style>
 </head>
 <body>
+    <!-- User Authentication Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
+        <div class="container-fluid">
+            <span class="navbar-brand">🚚 Delivery Platform</span>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <span class="user-name">Loading...</span> 
+                        <small class="text-light">(<span class="user-role">...</span>)</small>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">User Info</h6></li>
+                        <li><span class="dropdown-item-text"><strong>Name:</strong> <span class="user-name">-</span></span></li>
+                        <li><span class="dropdown-item-text"><strong>Role:</strong> <span class="user-role">-</span></span></li>
+                        <li><span class="dropdown-item-text"><strong>Email:</strong> <span class="user-email">-</span></span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" data-role="admin" onclick="openUserManagement()">👥 User Management</a></li>
+                        <li><a class="dropdown-item logout-btn" href="#">🚪 Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="main-content">
         <div class="container-fluid p-4">
         <!-- Dashboard Header with Refresh Button -->
@@ -290,6 +315,76 @@
             </div>
         </div>
 
+        <!-- User Management Modal (Admin Only) -->
+        <div class="modal fade" id="userManagementModal" tabindex="-1" data-role="admin">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">👥 User Management</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6>System Users</h6>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateUserForm()">
+                                ➕ Add New User
+                            </button>
+                        </div>
+                        <div id="usersList">
+                            <div class="text-center p-4">
+                                <div class="spinner-border" role="status"></div>
+                                <p class="mt-2">Loading users...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create User Modal -->
+        <div class="modal fade" id="createUserModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">➕ Create New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createUserForm">
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" name="full_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <select class="form-select" name="role" required>
+                                    <option value="viewer">Viewer</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="createUser()">Create User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activity -->
         <div class="row">
             <div class="col-12">
@@ -334,12 +429,12 @@
                         refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري التحديث...';
                     }
 
-                    const response = await fetch('/api/dashboard/stats');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    // Use authenticated API call
+                    const data = await apiGet('/api/dashboard/stats');
+                    if (!data) {
+                        throw new Error('Failed to fetch dashboard stats');
                     }
                     
-                    const data = await response.json();
                     this.updateStatsCards(data);
                     this.updateServerStatus('متصل', 'success');
                     
@@ -363,9 +458,8 @@
 
             async loadRecentActivity() {
                 try {
-                    const response = await fetch('/api/dashboard/recent-activity');
-                    if (response.ok) {
-                        const data = await response.json();
+                    const data = await apiGet('/api/dashboard/recent-activity');
+                    if (data && data.activities) {
                         this.updateActivityFeed(data.activities);
                     } else {
                         // Fallback to sample data
@@ -551,6 +645,110 @@
             }
         }
 
+        // User Management Functions
+        async function openUserManagement() {
+            const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
+            modal.show();
+            await loadUsers();
+        }
+
+        async function loadUsers() {
+            try {
+                const data = await apiGet('/api/users');
+                const usersList = document.getElementById('usersList');
+                
+                if (data && data.users) {
+                    usersList.innerHTML = data.users.map(user => `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-1">${user.full_name}</h6>
+                                        <small class="text-muted">@${user.username} • ${user.email}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role}</span>
+                                        ${user.is_active ? '<span class="badge bg-success ms-1">Active</span>' : '<span class="badge bg-secondary ms-1">Inactive</span>'}
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(${user.id}, ${!user.is_active})">
+                                            ${user.is_active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteUser(${user.id}, '${user.username}')">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    usersList.innerHTML = '<div class="text-center p-4 text-muted">No users found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersList').innerHTML = '<div class="alert alert-danger">Failed to load users</div>';
+            }
+        }
+
+        function getRoleBadgeColor(role) {
+            const colors = {
+                'admin': 'danger',
+                'manager': 'warning',
+                'viewer': 'info'
+            };
+            return colors[role] || 'secondary';
+        }
+
+        function showCreateUserForm() {
+            const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+            modal.show();
+        }
+
+        async function createUser() {
+            const form = document.getElementById('createUserForm');
+            const formData = new FormData(form);
+            const userData = Object.fromEntries(formData);
+
+            try {
+                const result = await apiPost('/api/users', userData);
+                
+                if (result && result.success) {
+                    alert('User created successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+                    form.reset();
+                    await loadUsers();
+                } else {
+                    alert(`Failed to create user: ${result?.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('Failed to create user');
+            }
+        }
+
+        async function toggleUserStatus(userId, activate) {
+            try {
+                const result = await apiPut(`/api/users/${userId}`, { is_active: activate });
+                await loadUsers();
+            } catch (error) {
+                console.error('Error updating user status:', error);
+                alert('Failed to update user status');
+            }
+        }
+
+        async function deleteUser(userId, username) {
+            if (confirm(`Are you sure you want to delete user "${username}"?`)) {
+                try {
+                    await apiDelete(`/api/users/${userId}`);
+                    await loadUsers();
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    alert('Failed to delete user');
+                }
+            }
+        }
+
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             window.dashboardManager = new DashboardManager();
@@ -559,8 +757,5 @@
         console.log('✅ Dashboard loaded successfully');
         console.log('📍 Dashboard URL:', window.location.href);
     </script>
-    
-    <!-- Navigation System -->
-    <script src="/navigation.js"></script>
 </body>
 </html>

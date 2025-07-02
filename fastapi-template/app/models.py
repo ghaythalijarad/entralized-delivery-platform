@@ -29,6 +29,11 @@ class MerchantStatus(enum.Enum):
 class DriverStatus(enum.Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+
+class UserRole(enum.Enum):
+    ADMIN = "admin"
+    MANAGER = "manager"
+    VIEWER = "viewer"
     BUSY = "busy"
 
 class VehicleType(enum.Enum):
@@ -239,6 +244,50 @@ class DailyStats(Base):
     
     # Performance Metrics
     average_delivery_time = Column(Float, default=0.0)  # in minutes
+
+
+# User Authentication and Authorization
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    
+    # User Details
+    full_name = Column(String(255), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.VIEWER)
+    is_active = Column(Boolean, default=True)
+    
+    # Audit Trail
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Created by (for admin tracking)
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_by = relationship("User", remote_side=[id], backref="created_users")
+
+
+# User Session Management
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_jti = Column(String(255), nullable=False, index=True)  # JWT ID
+    
+    # Session Details
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_active = Column(Boolean, default=True)
+    
+    # Session Metadata
+    ip_address = Column(String(45), nullable=True)  # IPv6 support
+    user_agent = Column(Text, nullable=True)
+    
+    user = relationship("User", backref="sessions")
     average_order_value = Column(Float, default=0.0)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())

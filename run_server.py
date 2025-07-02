@@ -11,10 +11,10 @@ Handler = http.server.SimpleHTTPRequestHandler
 
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
     print(f"Server running at http://localhost:{PORT}")
-    print(f"Admin panel: http://localhost:{PORT}/admin.html")
+    print(f"Admin panel: http://localhost:{PORT}/index.html")
     
     # Automatically open browser
-    webbrowser.open(f'http://localhost:{PORT}/admin.html')
+    webbrowser.open(f'http://localhost:{PORT}/index.html')
     
     try:
         httpd.serve_forever()
