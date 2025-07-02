@@ -278,44 +278,6 @@
     <!-- Database Status Indicator -->
     <div id="database-status" class="database-status connecting">🟡 جاري الاتصال...</div>
 
-    <!-- Mobile Navigation -->
-    <div class="mobile-nav" id="mobileNavBar">
-        <h5 class="mb-0">🏠 لوحة التحكم</h5>
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="قائمة التنقل">
-            <span class="material-icons-outlined">menu</span>
-        </button>
-        <div class="mobile-nav-menu" id="mobileNavMenu">
-            <a class="nav-link active" href="#" onclick="loadSection('dashboard.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">dashboard</span>
-                الرئيسية
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('orders.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">receipt_long</span>
-                الطلبات
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('merchants.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">store</span>
-                التجار
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('customers.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">people</span>
-                العملاء
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('drivers.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">local_shipping</span>
-                السائقون
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('rewards.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">redeem</span>
-                المكافآت
-            </a>
-            <a class="nav-link" href="#" onclick="loadSection('settings.html'); closeMobileMenu();">
-                <span class="material-icons-outlined">settings</span>
-                الإعدادات
-            </a>
-        </div>
-    </div>
-
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -368,57 +330,30 @@
             
             <!-- Main Content -->
             <main class="col-lg-10 ms-auto content-area">
-                <iframe id="contentFrame" src="./dashboard.html" 
-                        style="width: 100%; height: calc(100vh - 80px); border: none; overflow: hidden;">
-                </iframe>
+                <div id="contentArea" class="content-area-frame">Loading...</div>
             </main>
         </div>
     </div>
 
     <script>
         // Navigation functions
-        function loadSection(sectionFile) {
+        async function loadSection(sectionFile) {
             console.log(`Loading section: ${sectionFile}`);
-            const iframe = document.getElementById('contentFrame');
-            
-            // Add loading state
-            iframe.classList.add('loading');
-
-            // Add error handling for iframe loading
-            iframe.onload = function() {
-                console.log(`✅ Successfully loaded: ${sectionFile}`);
-                iframe.classList.remove('loading');
-            };
-
-            iframe.onerror = function() {
-                console.log(`❌ Failed to load: ${sectionFile}`);
-                iframe.classList.remove('loading');
-            };
-
-            // Set the source
-            iframe.src = sectionFile;
-
-            // Update active nav link for both desktop and mobile
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-
-            const clickedLink = event?.target?.closest('a') || 
-                                document.querySelector(`[onclick*="${sectionFile}"]`);
-            if (clickedLink) {
-                clickedLink.classList.add('active');
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '<div class="spinner-border" role="status"></div>';
+            try {
+                const response = await fetch(sectionFile);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const html = await response.text();
+                contentArea.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading section:', error);
+                contentArea.innerHTML = '<div class="alert alert-danger">Failed to load content.</div>';
             }
-
-            // Also update mobile nav links
-            document.querySelectorAll('.mobile-nav-menu .nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            const mobileClickedLink = document.querySelector(`.mobile-nav-menu [onclick*="${sectionFile}"]`);
-            if (mobileClickedLink) {
-                mobileClickedLink.classList.add('active');
-            }
-        }
+            // Update active nav items
+            document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-page="${sectionFile.replace('.html','')}"]`)?.classList.add('active');
+         }
 
         // Mobile menu functions
         function toggleMobileMenu() {
