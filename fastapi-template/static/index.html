@@ -51,6 +51,22 @@
         .content-area {
             padding: 2.5rem 3rem;
         }
+        
+        /* Iframe specific styles to prevent duplication */
+        #contentFrame {
+            display: block;
+            width: 100%;
+            height: calc(100vh - 80px);
+            border: none;
+            overflow: hidden;
+            background: #f4f6fb;
+        }
+        
+        @media (max-width: 991.98px) {
+            #contentFrame {
+                height: calc(100vh - 120px);
+            }
+        }
         .navbar {
             background: #fff;
             border-bottom: 1px solid #e5e7eb;
@@ -353,7 +369,7 @@
             <!-- Main Content -->
             <main class="col-lg-10 ms-auto content-area">
                 <iframe id="contentFrame" src="./dashboard.html" 
-                        style="width: 100%; height: 100vh; border: none;">
+                        style="width: 100%; height: calc(100vh - 80px); border: none; overflow: hidden;">
                 </iframe>
             </main>
         </div>
