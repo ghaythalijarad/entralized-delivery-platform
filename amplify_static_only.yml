@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "📁 Preparing Centralized Delivery Platform"
+        - echo "🔧 Setting up static files"
+    build:
+      commands:
+        - echo "🌐 Building static deployment"
+        - echo "✅ Build complete"
+  artifacts:
+    baseDirectory: fastapi-template/static
+    files:
+      - '**/*'
+  cache:
+    paths: []
