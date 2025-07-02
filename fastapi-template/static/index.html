@@ -443,14 +443,17 @@
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
             if (!auth.isAuthenticated()) {
-                window.location.href = '/static/login.html';
+                window.location.href = 'login.html'; // Simplified path
                 return;
             }
             
             // Display user info
             const user = auth.getUser();
             if (user) {
-                document.getElementById('userDisplayName').textContent = user.full_name || user.username;
+                const displayName = document.getElementById('userDisplayName');
+                if(displayName) {
+                    displayName.textContent = user.full_name || user.username;
+                }
             }
             
             console.log('🚀 Admin panel loaded');
@@ -458,9 +461,8 @@
             // Load default dashboard content
             loadSection('dashboard.html');
             
-            // Initialize database status check
+            // Initialize database status check and set interval
             updateDatabaseStatus();
-            // Update status every 30 seconds
             setInterval(updateDatabaseStatus, 30000);
             
             // Initialize API-based system
@@ -491,7 +493,7 @@
         function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
                 auth.logout();
-                window.location.href = '/static/login.html';
+                window.location.href = 'login.html'; // Simplified path
             }
         }
 
@@ -499,13 +501,14 @@
         async function loadSection(sectionFile) {
             console.log(`Loading section: ${sectionFile}`);
             const contentArea = document.getElementById('contentArea');
-            contentArea.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>';
+            contentArea.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             
             try {
-                const response = await auth.apiRequest(`/static/${sectionFile}`);
+                // Correctly fetch from the static path
+                const response = await auth.apiRequest(sectionFile); 
                 if (!response) return; // Auth failed, user redirected
                 
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const html = await response.text();
                 contentArea.innerHTML = html;
                 
@@ -514,12 +517,12 @@
                 scripts.forEach(script => {
                     const newScript = document.createElement('script');
                     newScript.textContent = script.textContent;
-                    script.parentNode.replaceChild(newScript, script);
+                    document.body.appendChild(newScript).parentNode.removeChild(newScript);
                 });
                 
             } catch (error) {
                 console.error('Error loading section:', error);
-                contentArea.innerHTML = '<div class="alert alert-danger">Failed to load content. Please try again.</div>';
+                contentArea.innerHTML = '<div class="alert alert-danger m-3">Failed to load content. Please try again.</div>';
             }
             
             // Update active nav items
@@ -528,7 +531,7 @@
             });
             
             // Set active nav item
-            const navLink = document.querySelector(`[onclick*="${sectionFile}"]`);
+            const navLink = document.querySelector(`a[onclick*="'${sectionFile}'"]`);
             if (navLink) {
                 navLink.classList.add('active');
             }
@@ -571,18 +574,18 @@
             const statusElement = document.getElementById('database-status');
             if (statusElement) {
                 try {
-                    const response = await auth.apiRequest('/health');
+                    const response = await auth.apiRequest('/api/db-status'); // Changed to /api/db-status
                     if (response && response.ok) {
                         const data = await response.json();
-                        const isConnected = data.database === 'connected';
+                        const isConnected = data.connected; // Changed to data.connected
                         statusElement.textContent = isConnected ? '🟢 قاعدة البيانات متصلة' : '🟡 استخدام قاعدة بيانات تجريبية';
-                        statusElement.className = isConnected ? 'database-status connected' : 'database-status connecting';
+                        statusElement.className = 'top-bar-status ' + (isConnected ? 'connected' : 'connecting');
                     } else {
                         throw new Error('Health check failed');
                     }
                 } catch (error) {
                     statusElement.textContent = '🔴 قاعدة البيانات غير متصلة';
-                    statusElement.className = 'database-status disconnected';
+                    statusElement.className = 'top-bar-status disconnected';
                 }
             }
         }
@@ -646,39 +649,6 @@
                 }
             });
         }
-
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Admin panel loaded');
-            
-            // Initialize database status check
-            updateDatabaseStatus();
-            // Update status every 30 seconds
-            setInterval(updateDatabaseStatus, 30000);
-            
-            // Initialize API-based system
-            initializeAPIRealTimeSystem();
-
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(event) {
-                const menu = document.getElementById('mobileNavMenu');
-                const btn = document.querySelector('.mobile-menu-btn');
-                
-                if (menu && menu.classList.contains('show') && 
-                    !menu.contains(event.target) && 
-                    !btn.contains(event.target)) {
-                    closeMobileMenu();
-                }
-            });
-
-            // Handle window resize for responsive behavior
-            window.addEventListener('resize', function() {
-                const menu = document.getElementById('mobileNavMenu');
-                if (window.innerWidth > 991 && menu && menu.classList.contains('show')) {
-                    closeMobileMenu();
-                }
-            });
-        });
 
         console.log('🚀 Centralized Delivery Platform admin panel loaded');
     </script>
