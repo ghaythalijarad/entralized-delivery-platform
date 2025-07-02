@@ -7,10 +7,8 @@ from datetime import datetime
 from typing import Optional
 from enum import Enum
 
-class UserRole(str, Enum):
-    ADMIN = "admin"
-    MANAGER = "manager"
-    VIEWER = "viewer"
+# Import UserRole from models to avoid conflicts
+from .models import UserRole
 
 # Authentication Requests
 class UserLogin(BaseModel):

@@ -34,7 +34,6 @@ class UserRole(enum.Enum):
     ADMIN = "admin"
     MANAGER = "manager"
     VIEWER = "viewer"
-    BUSY = "busy"
 
 class VehicleType(enum.Enum):
     MOTORCYCLE = "motorcycle"

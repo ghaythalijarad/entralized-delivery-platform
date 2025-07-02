@@ -168,6 +168,9 @@
             }
         }
     </style>
+    <!-- Demo credentials info -->
+    <!-- API base URL override: set this meta tag to your API server's URL in production -->
+    <meta name="api-base" content="">
 </head>
 <body>
     <div class="login-container">
@@ -203,7 +206,9 @@
     </div>
 
     <script>
-        const API_BASE = window.location.origin;
+        // Determine API base URL from meta tag or default to origin
+        const metaApi = document.querySelector('meta[name="api-base"]');
+        const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
          
         // Check if already logged in
         if (localStorage.getItem('authToken')) {

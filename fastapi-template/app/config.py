@@ -47,7 +47,7 @@ class DevelopmentConfig:
     ENVIRONMENT = "development"
     DEBUG = True
     SECRET_KEY = "dev-secret-key"
-    ALLOWED_ORIGINS = ["*"]
+    ALLOWED_ORIGINS = ["*"]  # Allow all origins in development
     DATABASE_URL = "sqlite:///./delivery_platform_dev.db"
     DB_ECHO = True
     

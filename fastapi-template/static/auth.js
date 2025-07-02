@@ -5,7 +5,9 @@
 
 class AuthManager {
     constructor() {
-        this.API_BASE = window.location.origin;
+        // Determine API base URL from meta tag or default to origin
+        const meta = document.querySelector('meta[name="api-base"]');
+        this.API_BASE = (meta && meta.content) ? meta.content : window.location.origin;
         this.TOKEN_KEY = 'authToken';
         this.USER_KEY = 'userInfo';
     }
