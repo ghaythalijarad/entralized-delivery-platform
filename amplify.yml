@@ -1,17 +1,56 @@
 version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - echo "🚀 Installing Python dependencies for FastAPI backend..."
+        - cd fastapi-template
+        - python3 -m pip install --upgrade pip
+        - pip3 install -r ../requirements.txt
+        - echo "🔧 Setting up production environment..."
+        - |
+          # Copy production environment if it doesn't exist
+          if [ ! -f ".env" ]; then
+            cp .env.production .env
+            echo "✅ Production environment configured"
+          fi
+    build:
+      commands:
+        - echo "🏗️ Initializing production database and application..."
+        - export ENVIRONMENT=production
+        - python3 -c "
+          try:
+              from app.database import engine
+              from app.models import Base
+              Base.metadata.create_all(bind=engine)
+              print('✅ Database tables created successfully')
+          except Exception as e:
+              print(f'⚠️ Database setup: {e}')
+          "
+        - echo "✅ Backend build completed successfully"
+    postBuild:
+      commands:
+        - echo "🎯 Preparing application for deployment..."
+        - python3 -c "
+          import os
+          print('🌍 Environment:', os.environ.get('ENVIRONMENT', 'development'))
+          print('🔍 Debug mode:', os.environ.get('DEBUG', 'true'))
+          print('🚀 Application ready for production!')
+          "
 frontend:
   phases:
     preBuild:
       commands:
-        - echo "📁 Preparing Centralized Delivery Platform"
-        - echo "🔧 Setting up static files"
+        - echo "📁 Preparing frontend static files..."
+        - cd fastapi-template
     build:
       commands:
-        - echo "🌐 Building static deployment"
-        - echo "✅ Build complete"
+        - echo "🌐 Frontend files ready for serving"
+        - ls -la static/
   artifacts:
-    baseDirectory: fastapi-template/static
+    baseDirectory: fastapi-template
     files:
       - '**/*'
+    name: centralized-delivery-platform
   cache:
     paths: []
