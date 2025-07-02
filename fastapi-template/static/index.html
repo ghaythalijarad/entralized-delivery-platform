@@ -191,7 +191,7 @@
             min-width: 24px;
         }
         
-        /* 🚨 AMPLIFY FIX: Ultra-aggressive mobile nav visibility */
+        /* Mobile responsive design */
         @media (max-width: 991.98px) {
             .sidebar { 
                 display: none !important; 
@@ -204,39 +204,11 @@
                 display: flex !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                z-index: 2000 !important;
-                background: #fff !important;
-                border-bottom: 3px solid #1976d2 !important;
-            }
-            /* Force show mobile nav with additional selectors */
-            #mobileNavBar {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-            /* Ensure no conflicting styles */
-            .mobile-nav[style*="display: none"] {
-                display: flex !important;
-            }
-            .mobile-nav[style*="visibility: hidden"] {
-                visibility: visible !important;
             }
             #contentFrame {
                 height: calc(100vh - 80px) !important;
                 border-radius: 0;
                 margin-top: 80px;
-            }
-            .container-fluid {
-                padding-top: 0 !important;
-                margin-top: 0 !important;
-            }
-            body {
-                padding-top: 0;
-                margin-top: 0;
             }
         }
         
@@ -250,43 +222,6 @@
             }
         }
         
-        /* Mobile responsive adjustments */
-        @media (max-width: 768px) {
-            .mobile-nav {
-                padding: 1rem;
-            }
-            .mobile-nav h5 {
-                font-size: 1.1rem;
-            }
-            .mobile-menu-btn {
-                font-size: 1.6rem;
-                min-width: 48px;
-                min-height: 48px;
-            }
-            .mobile-nav-menu .nav-link {
-                min-height: 56px;
-                font-size: 1.1rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .mobile-nav {
-                padding: 0.75rem 1rem;
-            }
-            .mobile-nav h5 {
-                font-size: 1rem;
-            }
-            .mobile-nav-menu .nav-link {
-                padding: 1rem;
-                font-size: 0.95rem;
-            }
-            .mobile-menu-btn {
-                font-size: 1.5rem;
-                min-width: 44px;
-                min-height: 44px;
-            }
-        }
-        
         /* Enhanced iframe responsiveness */
         #contentFrame {
             width: 100%;
@@ -294,58 +229,39 @@
             background: #f4f6fb;
         }
         
-        /* Touch-friendly interactions */
-        @media (hover: none) {
-            .nav-link:hover,
-            .mobile-nav-menu .nav-link:hover {
-                background: inherit;
-            }
-            
-            .nav-link:active,
-            .mobile-nav-menu .nav-link:active {
-                background: #f0f4fa;
-                transform: scale(0.98);
-            }
+        /* Database status indicator */
+        .database-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 9999;
+            cursor: pointer;
         }
         
-        /* Accessibility improvements */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+        .database-status.connected {
+            background-color: #d4edda;
+            color: #155724;
         }
         
-        /* Focus states for keyboard navigation */
-        .nav-link:focus,
-        .mobile-menu-btn:focus {
-            outline: 2px solid #1976d2;
-            outline-offset: 2px;
+        .database-status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
         }
         
-        /* Loading state for iframe */
-        #contentFrame {
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        
-        #contentFrame.loading {
-            opacity: 0.7;
-        }
-        
-        /* Scroll behavior */
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        /* Prevent horizontal scroll */
-        body {
-            overflow-x: hidden;
+        .database-status.connecting {
+            background-color: #fff3cd;
+            color: #856404;
         }
     </style>
 </head>
 <body>
+    <!-- Database Status Indicator -->
+    <div id="database-status" class="database-status connecting">🟡 جاري الاتصال...</div>
+
     <!-- Mobile Navigation -->
     <div class="mobile-nav" id="mobileNavBar">
         <h5 class="mb-0">🏠 لوحة التحكم</h5>
@@ -444,6 +360,7 @@
     </div>
 
     <script>
+        // Navigation functions
         function loadSection(sectionFile) {
             console.log(`Loading section: ${sectionFile}`);
             const iframe = document.getElementById('contentFrame');
@@ -460,12 +377,6 @@
             iframe.onerror = function() {
                 console.log(`❌ Failed to load: ${sectionFile}`);
                 iframe.classList.remove('loading');
-                // Fallback content
-                iframe.src = `data:text/html,<div style="padding:20px;text-align:center;color:#666;">
-                    <h3>الصفحة غير متوفرة</h3>
-                    <p>الصفحة ${sectionFile} غير موجودة</p>
-                    <button onclick="parent.location.reload()">إعادة تحميل</button>
-                </div>`;
             };
 
             // Set the source
@@ -476,7 +387,6 @@
                 link.classList.remove('active');
             });
 
-            // Use event.target if available, otherwise find the clicked link
             const clickedLink = event?.target?.closest('a') || 
                                 document.querySelector(`[onclick*="${sectionFile}"]`);
             if (clickedLink) {
@@ -494,7 +404,7 @@
             }
         }
 
-        // Mobile menu toggle functions - PROTECTED AGAINST DUPLICATES
+        // Mobile menu functions
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileNavMenu');
             const btn = document.querySelector('.mobile-menu-btn .material-icons-outlined');
@@ -503,13 +413,6 @@
                 console.error('Mobile menu elements not found');
                 return;
             }
-            
-            // Prevent rapid clicking
-            if (menu.dataset.transitioning === 'true') {
-                return;
-            }
-            
-            menu.dataset.transitioning = 'true';
             
             if (menu.classList.contains('show')) {
                 menu.classList.remove('show');
@@ -520,11 +423,6 @@
                 btn.textContent = 'close';
                 document.body.style.overflow = 'hidden';
             }
-            
-            // Reset transition flag after animation
-            setTimeout(() => {
-                menu.dataset.transitioning = 'false';
-            }, 300);
         }
 
         function closeMobileMenu() {
@@ -535,12 +433,101 @@
                 menu.classList.remove('show');
                 btn.textContent = 'menu';
                 document.body.style.overflow = 'auto';
-                menu.dataset.transitioning = 'false';
             }
         }
 
-        // Close mobile menu when clicking outside - SINGLE LISTENER
-        if (!window.mobileMenuClickListenerAdded) {
+        // Database Status Update
+        function updateDatabaseStatus() {
+            const statusElement = document.getElementById('database-status');
+            if (statusElement) {
+                // Check API health endpoint
+                fetch('/health')
+                    .then(response => response.json())
+                    .then(data => {
+                        const isConnected = data.database === 'connected';
+                        statusElement.textContent = isConnected ? '🟢 قاعدة البيانات متصلة' : '🟡 استخدام قاعدة بيانات تجريبية';
+                        statusElement.className = isConnected ? 'database-status connected' : 'database-status connecting';
+                    })
+                    .catch(() => {
+                        statusElement.textContent = '🔴 قاعدة البيانات غير متصلة';
+                        statusElement.className = 'database-status disconnected';
+                    });
+            }
+        }
+
+        // Initialize API-based real-time system
+        function initializeAPIRealTimeSystem() {
+            console.log('🔄 Initializing API-based real-time system...');
+            
+            // Set up API polling for real-time updates
+            setupAPIPolling();
+            
+            // Initialize dashboard with API data
+            loadDashboardData();
+        }
+
+        // Set up API polling for real-time updates
+        function setupAPIPolling() {
+            // Poll dashboard stats every 30 seconds
+            setInterval(async () => {
+                try {
+                    const response = await fetch('/api/dashboard/stats');
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateDashboardMetrics(data);
+                    }
+                } catch (error) {
+                    console.log('⚠️ API polling error:', error);
+                }
+            }, 30000);
+        }
+
+        // Load dashboard data from API
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardMetrics(data);
+                    console.log('✅ Dashboard data loaded from API');
+                }
+            } catch (error) {
+                console.log('⚠️ Failed to load dashboard data:', error);
+            }
+        }
+
+        // Update dashboard metrics with API data
+        function updateDashboardMetrics(data) {
+            // Update metrics cards if they exist
+            const metricsMap = {
+                'orders-today': data.today_orders || data.orders_today || 0,
+                'active-merchants': data.active_merchants || data.connected_merchants || 0,
+                'active-drivers': data.active_drivers || 0,
+                'total-customers': data.total_customers || 0,
+                'pending-orders': data.pending_orders || 0
+            };
+
+            Object.entries(metricsMap).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin panel loaded');
+            
+            // Initialize database status check
+            updateDatabaseStatus();
+            // Update status every 30 seconds
+            setInterval(updateDatabaseStatus, 30000);
+            
+            // Initialize API-based system
+            initializeAPIRealTimeSystem();
+
+            // Close mobile menu when clicking outside
             document.addEventListener('click', function(event) {
                 const menu = document.getElementById('mobileNavMenu');
                 const btn = document.querySelector('.mobile-menu-btn');
@@ -551,1030 +538,14 @@
                     closeMobileMenu();
                 }
             });
-            window.mobileMenuClickListenerAdded = true;
-        }
 
-        // Handle window resize for responsive behavior - SINGLE LISTENER
-        function handleResize() {
-            const menu = document.getElementById('mobileNavMenu');
-            if (window.innerWidth > 991 && menu && menu.classList.contains('show')) {
-                closeMobileMenu();
-            }
-        }
-
-        if (!window.resizeListenerAdded) {
-            window.addEventListener('resize', handleResize);
-            window.resizeListenerAdded = true;
-        }
-
-        // Handle orientation change for mobile devices - SINGLE LISTENER  
-        if (!window.orientationListenerAdded) {
-            window.addEventListener('orientationchange', function() {
-                setTimeout(function() {
-                    handleResize();
-                    // Adjust iframe height after orientation change
-                    const iframe = document.getElementById('contentFrame');
-                    if (iframe) {
-                        const isMobile = window.innerWidth <= 991;
-                        if (isMobile) {
-                            const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 80;
-                            iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
-                        }
-                    }
-                }, 100);
+            // Handle window resize for responsive behavior
+            window.addEventListener('resize', function() {
+                const menu = document.getElementById('mobileNavMenu');
+                if (window.innerWidth > 991 && menu && menu.classList.contains('show')) {
+                    closeMobileMenu();
+                }
             });
-            window.orientationListenerAdded = true;
-        }
-
-        // Initialize responsive iframe height
-        function setResponsiveHeight() {
-            const iframe = document.getElementById('contentFrame');
-            if (iframe && window.innerWidth <= 991) {
-                const mobileNavHeight = document.querySelector('.mobile-nav')?.offsetHeight || 70;
-                iframe.style.height = `calc(100vh - ${mobileNavHeight}px)`;
-            }
-        }
-
-        // Test server connectivity on load
-        function testServerConnectivity() {
-            console.log('🔍 Testing server connectivity...');
-
-            // Test if we can reach the current page
-            fetch(window.location.href)
-                .then(response => {
-                    if (response.ok) {
-                        console.log('✅ Server is accessible');
-                        updateConnectionStatus('server_ok');
-                    } else {
-                        console.log('⚠️ Server response issues');
-                        updateConnectionStatus('server_warning');
-                    }
-                })
-                .catch(error => {
-                    console.log('❌ Server connectivity issues:', error);
-                    updateConnectionStatus('server_error');
-                });
-        }
-
-        // Enhanced connection status
-        function updateConnectionStatus(status) {
-            const statusElement = document.createElement('div');
-            statusElement.id = 'connection-status';
-            statusElement.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                z-index: 9999;
-                cursor: pointer;
-            `;
-
-            let statusText, bgColor, textColor;
-
-            switch(status) {
-                case 'connected':
-                    statusText = '🟢 Firebase Connected';
-                    bgColor = '#d4edda';
-                    textColor = '#155724';
-                    break;
-                case 'server_ok':
-                    statusText = '🟢 Server Online';
-                    bgColor = '#d4edda';
-                    textColor = '#155724';
-                    break;
-                case 'server_warning':
-                    statusText = '🟡 Server Issues';
-                    bgColor = '#fff3cd';
-                    textColor = '#856404';
-                    break;
-                case 'server_error':
-                    statusText = '🔴 Server Offline';
-                    bgColor = '#f8d7da';
-                    textColor = '#721c24';
-                    break;
-                default: // mock
-                    statusText = '🟡 مجهز للعمل';
-                    bgColor = '#fff3cd';
-                    textColor = '#856404';
-            }
-
-            statusElement.innerHTML = statusText;
-            statusElement.style.backgroundColor = bgColor;
-            statusElement.style.color = textColor;
-
-            // Add click handler for diagnostics
-            statusElement.onclick = function() {
-                window.open('test-server.html', '_blank');
-            };
-
-            // Remove existing status if any
-            const existing = document.getElementById('connection-status');
-            if (existing) existing.remove();
-
-            document.body.appendChild(statusElement);
-        }
-
-        // Initialize server test on page load - SINGLE INITIALIZATION
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Admin panel DOM loaded');
-            
-            // Prevent multiple initializations
-            if (window.adminPanelInitialized) {
-                console.log('⚠️ Admin panel already initialized, skipping...');
-                return;
-            }
-            window.adminPanelInitialized = true;
-            
-            testServerConnectivity();
-            setResponsiveHeight();
-            
-            // Debug mobile navigation - AGGRESSIVE FORCE (ONE TIME ONLY)
-            const mobileNav = document.getElementById('mobileNavBar');
-            const screenWidth = window.innerWidth;
-            console.log(`📱 Screen width: ${screenWidth}px`);
-            console.log(`📱 Mobile nav element:`, mobileNav);
-            
-            if (mobileNav) {
-                const computedStyle = window.getComputedStyle(mobileNav);
-                console.log(`📱 Mobile nav display:`, computedStyle.display);
-                console.log(`📱 Mobile nav visibility:`, computedStyle.visibility);
-                
-                // AGGRESSIVE FORCE for ALL mobile screens - AMPLIFY FIX
-                if (screenWidth <= 991) {
-                    console.log('📱 🚨 AMPLIFY FIX: FORCING mobile nav visibility');
-                    
-                    // Remove any conflicting styles
-                    mobileNav.style.removeProperty('display');
-                    mobileNav.style.removeProperty('visibility');
-                    
-                    // Force display with highest specificity
-                    mobileNav.style.setProperty('display', 'flex', 'important');
-                    mobileNav.style.setProperty('visibility', 'visible', 'important');
-                    mobileNav.style.setProperty('opacity', '1', 'important');
-                    mobileNav.style.setProperty('position', 'fixed', 'important');
-                    mobileNav.style.setProperty('top', '0', 'important');
-                    mobileNav.style.setProperty('left', '0', 'important');
-                    mobileNav.style.setProperty('right', '0', 'important');
-                    mobileNav.style.setProperty('z-index', '2000', 'important');
-                    mobileNav.style.setProperty('background', '#fff', 'important');
-                    mobileNav.style.setProperty('border-bottom', '3px solid #1976d2', 'important');
-                    
-                    // Also force sidebar to hide on mobile
-                    const sidebar = document.querySelector('.sidebar');
-                    if (sidebar) {
-                        sidebar.style.setProperty('display', 'none', 'important');
-                    }
-                    
-                    // Add debug outline - ONE TIME ONLY
-                    if (!mobileNav.dataset.debugged) {
-                        mobileNav.style.setProperty('outline', '2px solid red', 'important');
-                        mobileNav.dataset.debugged = 'true';
-                        console.log('📱 🚨 Added red outline for AMPLIFY debugging');
-                        
-                        setTimeout(() => {
-                            mobileNav.style.removeProperty('outline');
-                        }, 5000); // Extended debug time
-                    }
-                    
-                    // Also ensure iframe positioning
-                    const iframe = document.getElementById('contentFrame');
-                    if (iframe) {
-                        iframe.style.setProperty('margin-top', '80px', 'important');
-                        iframe.style.setProperty('height', 'calc(100vh - 80px)', 'important');
-                    }
-                }
-            } else {
-                console.error('❌ 🚨 AMPLIFY ERROR: Mobile nav element not found!');
-                
-                // Try to find it with alternative methods
-                const allNavs = document.querySelectorAll('[id*="mobile"], [class*="mobile"]');
-                console.log('🔍 Found mobile elements:', allNavs);
-            }
-        });
-
-        // 🚨 AMPLIFY FIX: Aggressive window resize handler
-        window.addEventListener('resize', function() {
-            const mobileNav = document.getElementById('mobileNavBar');
-            const screenWidth = window.innerWidth;
-            
-            if (mobileNav && screenWidth <= 991) {
-                console.log('📱 🚨 RESIZE: Re-forcing mobile nav visibility');
-                
-                // Re-apply mobile navigation styles
-                mobileNav.style.setProperty('display', 'flex', 'important');
-                mobileNav.style.setProperty('visibility', 'visible', 'important');
-                mobileNav.style.setProperty('opacity', '1', 'important');
-                mobileNav.style.setProperty('position', 'fixed', 'important');
-                mobileNav.style.setProperty('top', '0', 'important');
-                mobileNav.style.setProperty('left', '0', 'important');
-                mobileNav.style.setProperty('right', '0', 'important');
-                mobileNav.style.setProperty('z-index', '2000', 'important');
-                
-                // Hide sidebar on mobile
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) {
-                    sidebar.style.setProperty('display', 'none', 'important');
-                }
-            } else if (mobileNav && screenWidth > 991) {
-                // Desktop mode - hide mobile nav
-                mobileNav.style.setProperty('display', 'none', 'important');
-                
-                // Show sidebar on desktop
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) {
-                    sidebar.style.removeProperty('display');
-                }
-            }
-        });
-
-        // 🚨 AMPLIFY FIX: Force mobile nav on orientation change
-        window.addEventListener('orientationchange', function() {
-            setTimeout(() => {
-                const mobileNav = document.getElementById('mobileNavBar');
-                const screenWidth = window.innerWidth;
-                
-                if (mobileNav && screenWidth <= 991) {
-                    console.log('📱 🚨 ORIENTATION: Re-forcing mobile nav visibility');
-                    mobileNav.style.setProperty('display', 'flex', 'important');
-                    mobileNav.style.setProperty('visibility', 'visible', 'important');
-                    mobileNav.style.setProperty('opacity', '1', 'important');
-                }
-            }, 100);
-        });
-
-    </script>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-analytics-compat.js"></script>
-
-    <script>
-        // Firebase Configuration for Centralized Platform
-        const firebaseConfig = {
-            apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            authDomain: "centralized-delivery-platform.firebaseapp.com", 
-            projectId: "centralized-delivery-platform",
-            storageBucket: "centralized-delivery-platform.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdefghijklmnop",
-            measurementId: "G-XXXXXXXXXX"
-        };
-
-        // Initialize Firebase
-        let db, messaging;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            
-            // Enable offline persistence
-            db.enablePersistence()
-                .then(() => {
-                    console.log('✅ Firestore offline persistence enabled');
-                })
-                .catch((err) => {
-                    if (err.code == 'failed-precondition') {
-                        console.log('⚠️ Multiple tabs open, persistence can only be enabled in one tab at a time.');
-                    } else if (err.code == 'unimplemented') {
-                        console.log('⚠️ The current browser does not support persistence.');
-                    }
-                });
-
-            // Initialize messaging if supported
-            if ('serviceWorker' in navigator && 'PushManager' in window) {
-                messaging = firebase.messaging();
-                console.log('✅ Firebase messaging initialized');
-            } else {
-                console.log('⚠️ Push messaging not supported in this browser');
-            }
-
-            console.log('🚀 Firebase initialized successfully');
-            
-            // Test Firestore connection
-            testFirestoreConnection();
-            
-        } catch (error) {
-            console.error('❌ Firebase initialization failed:', error);
-            
-            // Fall back to mock mode
-            console.log('🧪 Falling back to mock mode');
-            initMockFirebase();
-        }
-
-        // Test Firestore connection
-        function testFirestoreConnection() {
-            db.collection('system_status').add({
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'admin_panel_connected',
-                userAgent: navigator.userAgent,
-                source: 'admin_panel'
-            })
-            .then((docRef) => {
-                console.log('✅ Firestore connection test successful. Document ID:', docRef.id);
-                initializeRealTimeSystem();
-            })
-            .catch((error) => {
-                console.error('❌ Firestore connection test failed:', error);
-                initMockFirebase();
-            });
-        }
-
-        // Initialize real-time system with Firebase
-        function initializeRealTimeSystem() {
-            console.log('🔄 Initializing real-time system with Firebase...');
-            
-            // Set up real-time listeners
-            setupFirestoreListeners();
-            
-            // Initialize order flow manager with Firebase
-            window.orderFlowManager = new OrderFlowManager();
-            
-            // Update UI to show Firebase is connected
-            updateConnectionStatus('connected');
-        }
-
-        // Set up Firestore real-time listeners
-        function setupFirestoreListeners() {
-            // Listen to merchants collection
-            db.collection('merchants').onSnapshot((snapshot) => {
-                console.log('📡 Merchants collection updated');
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        console.log('➕ New merchant:', change.doc.data());
-                    } else if (change.type === 'modified') {
-                        console.log('📝 Modified merchant:', change.doc.data());
-                    } else if (change.type === 'removed') {
-                        console.log('🗑️ Removed merchant:', change.doc.data());
-                    }
-                });
-                updateDashboardMetrics('merchants_update', snapshot.docs.length);
-            });
-
-            // Listen to orders collection
-            db.collection('orders').onSnapshot((snapshot) => {
-                console.log('📡 Orders collection updated');
-                const orders = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                updateDashboardMetrics('orders_update', orders);
-            });
-
-            // Listen to drivers collection
-            db.collection('drivers').onSnapshot((snapshot) => {
-                console.log('📡 Drivers collection updated');
-                const onlineDrivers = snapshot.docs.filter(doc => doc.data().status === 'online').length;
-                updateDashboardMetrics('drivers_update', {
-                    total: snapshot.docs.length,
-                    online: onlineDrivers
-                });
-            });
-
-            // Listen to customers collection
-            db.collection('customers').onSnapshot((snapshot) => {
-                console.log('📡 Customers collection updated');
-                updateDashboardMetrics('customers_update', snapshot.docs.length);
-            });
-        }
-
-        // Mock Firebase for fallback
-        function initMockFirebase() {
-            db = {
-                collection: (name) => ({
-                    onSnapshot: (callback) => {
-                        console.log(`🧪 Mock: Listening to ${name} collection`);
-                        // Simulate initial data
-                        setTimeout(() => {
-                            callback({
-                                docs: [],
-                                docChanges: () => []
-                            });
-                        }, 1000);
-                        return () => {}; // Unsubscribe function
-                    },
-                    add: (data) => {
-                        console.log(`🧪 Mock: Adding to ${name}:`, data);
-                        return Promise.resolve({ id: 'mock-' + Date.now() });
-                    },
-                    doc: (id) => ({
-                        update: (data) => {
-                            console.log(`🧪 Mock: Updating ${name}/${id}:`, data);
-                            return Promise.resolve();
-                        },
-                        get: () => {
-                            console.log(`🧪 Mock: Getting ${name}/${id}`);
-                            return Promise.resolve({ 
-                                exists: true,
-                                data: () => ({ id: id, mockData: true })
-                            });
-                        },
-                        set: (data) => {
-                            console.log(`🧪 Mock: Setting ${name}/${id}:`, data);
-                            return Promise.resolve();
-                        }
-                    })
-                }),
-                enablePersistence: () => Promise.resolve()
-            };
-
-            messaging = {
-                send: (data) => {
-                    console.log('🧪 Mock: Sending notification:', data);
-                    return Promise.resolve();
-                }
-            };
-
-            updateConnectionStatus('mock');
-            window.orderFlowManager = new OrderFlowManager();
-        }
-
-        // Update connection status in UI
-        function updateConnectionStatus(status) {
-            const statusElement = document.createElement('div');
-            statusElement.id = 'connection-status';
-            statusElement.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                z-index: 9999;
-            `;
-            
-            if (status === 'connected') {
-                statusElement.innerHTML = '🟢 Firebase Connected';
-                statusElement.style.backgroundColor = '#d4edda';
-                statusElement.style.color = '#155724';
-            } else {
-                statusElement.innerHTML = '🟡 مجهز للعمل';
-                statusElement.style.backgroundColor = '#fff3cd';
-                statusElement.style.color = '#856404';
-            }
-            
-            // Remove existing status if any
-            const existing = document.getElementById('connection-status');
-            if (existing) existing.remove();
-            
-            document.body.appendChild(statusElement);
-        }
-
-        // Centralized Order Management System
-        class OrderFlowManager {
-            constructor() {
-                this.orders = new Map();
-                this.drivers = new Map();
-                this.merchants = new Map();
-                this.customers = new Map();
-                this.initializeRealTimeListeners();
-            }
-
-            // Initialize real-time listeners for all collections
-            initializeRealTimeListeners() {
-                console.log('🔄 Setting up real-time order flow listeners...');
-                
-                // Listen to new orders from customer app
-                db.collection('orders').onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            this.handleNewOrder(change.doc.data());
-                        } else if (change.type === 'modified') {
-                            this.handleOrderUpdate(change.doc.data());
-                        }
-                    });
-                });
-
-                // Listen to merchant responses
-                db.collection('merchant_responses').onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            this.handleMerchantResponse(change.doc.data());
-                        }
-                    });
-                });
-
-                // Listen to driver responses
-                db.collection('driver_responses').onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            this.handleDriverResponse(change.doc.data());
-                        }
-                    });
-                });
-            }
-
-            // Step 1: Customer places order
-            async handleNewOrder(orderData) {
-                console.log('🔔 New order received:', orderData);
-                
-                try {
-                    // Update order status to 'processing'
-                    await db.collection('orders').doc(orderData.id).update({
-                        status: 'processing',
-                        processedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        centralSystemReceived: true
-                    });
-
-                    // Send order to merchant app
-                    await this.sendOrderToMerchant(orderData);
-
-                    // Update dashboard in real-time
-                    this.updateDashboard('new_order', orderData);
-
-                } catch (error) {
-                    console.error('Error processing new order:', error);
-                }
-            }
-
-            // Step 2: Send order to merchant app
-            async sendOrderToMerchant(orderData) {
-                console.log('📱 Sending order to merchant app:', orderData.merchantId);
-
-                try {
-                    // Add order to merchant's queue
-                    await db.collection('merchant_orders').add({
-                        orderId: orderData.id,
-                        merchantId: orderData.merchantId,
-                        customerInfo: orderData.customer,
-                        items: orderData.items,
-                        totalAmount: orderData.total,
-                        status: 'pending_merchant_confirmation',
-                        sentAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        timeoutAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes timeout
-                    });
-
-                    // Send push notification to merchant app
-                    await this.sendPushNotification('merchant', orderData.merchantId, {
-                        title: 'طلب جديد',
-                        body: `طلب جديد من ${orderData.customer.name} - ${orderData.total} ر.س`,
-                        data: {
-                            type: 'new_order',
-                            orderId: orderData.id,
-                            action_required: 'confirm_or_reject'
-                        }
-                    });
-
-                    console.log('✅ Order sent to merchant successfully');
-
-                } catch (error) {
-                    console.error('Error sending order to merchant:', error);
-                }
-            }
-
-            // Step 3: Handle merchant response (confirm/reject)
-            async handleMerchantResponse(responseData) {
-                console.log('🏪 Merchant response received:', responseData);
-
-                try {
-                    if (responseData.action === 'confirm') {
-                        // Update order status
-                        await db.collection('orders').doc(responseData.orderId).update({
-                            status: 'confirmed_by_merchant',
-                            merchantConfirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            estimatedPrepTime: responseData.prepTime || 15
-                        });
-
-                        // Notify customer about confirmation
-                        await this.notifyCustomer(responseData.orderId, 'order_confirmed', {
-                            message: 'تم تأكيد طلبك من التاجر',
-                            estimatedTime: responseData.prepTime
-                        });
-
-                        // Start driver selection process
-                        await this.initiateDriverSelection(responseData.orderId);
-
-                    } else if (responseData.action === 'reject') {
-                        // Update order status
-                        await db.collection('orders').doc(responseData.orderId).update({
-                            status: 'rejected_by_merchant',
-                            merchantRejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            rejectionReason: responseData.reason
-                        });
-
-                        // Notify customer about rejection
-                        await this.notifyCustomer(responseData.orderId, 'order_rejected', {
-                            message: 'عذراً، تم رفض طلبك من التاجر',
-                            reason: responseData.reason
-                        });
-                    }
-
-                    this.updateDashboard('merchant_response', responseData);
-
-                } catch (error) {
-                    console.error('Error handling merchant response:', error);
-                }
-            }
-
-            // Step 4: Optimized driver selection algorithm
-            async initiateDriverSelection(orderId) {
-                console.log('🚚 Starting driver selection for order:', orderId);
-
-                try {
-                    // Get order details
-                    const orderDoc = await db.collection('orders').doc(orderId).get();
-                    const orderData = orderDoc.data();
-
-                    // Get available drivers near merchant location
-                    const nearbyDrivers = await this.findOptimalDrivers(
-                        orderData.merchant.location,
-                        orderData.customer.location
-                    );
-
-                    if (nearbyDrivers.length === 0) {
-                        await this.handleNoDriversAvailable(orderId);
-                        return;
-                    }
-
-                    // Update order status
-                    await db.collection('orders').doc(orderId).update({
-                        status: 'searching_for_driver',
-                        driverSearchStarted: firebase.firestore.FieldValue.serverTimestamp(),
-                        candidateDrivers: nearbyDrivers.map(d => d.id)
-                    });
-
-                    // Send notifications to selected drivers simultaneously
-                    await this.notifyMultipleDrivers(orderId, nearbyDrivers);
-
-                    // Set timeout for driver selection
-                    setTimeout(() => {
-                        this.checkDriverSelectionTimeout(orderId);
-                    }, 5 * 60 * 1000); // 5 minutes timeout
-
-                } catch (error) {
-                    console.error('Error initiating driver selection:', error);
-                }
-            }
-
-            // Advanced driver selection algorithm
-            async findOptimalDrivers(merchantLocation, customerLocation) {
-                try {
-                    // Get all available drivers
-                    const driversSnapshot = await db.collection('drivers')
-                        .where('status', '==', 'available')
-                        .where('isOnline', '==', true)
-                        .get();
-
-                    const drivers = [];
-                    
-                    driversSnapshot.forEach(doc => {
-                        const driver = { id: doc.id, ...doc.data() };
-                        
-                        // Calculate distances
-                        const distanceToMerchant = this.calculateDistance(
-                            driver.currentLocation, 
-                            merchantLocation
-                        );
-                        const distanceToCustomer = this.calculateDistance(
-                            merchantLocation, 
-                            customerLocation
-                        );
-
-                        // Calculate score based on multiple factors
-                        const score = this.calculateDriverScore(driver, distanceToMerchant, distanceToCustomer);
-
-                        drivers.push({
-                            ...driver,
-                            distanceToMerchant,
-                            distanceToCustomer,
-                            totalDistance: distanceToMerchant + distanceToCustomer,
-                            score
-                        });
-                    });
-
-                    // Sort by score (higher is better) and return top 5
-                    return drivers
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 5);
-
-                } catch (error) {
-                    console.error('Error finding optimal drivers:', error);
-                    return [];
-                }
-            }
-
-            // Driver scoring algorithm
-            calculateDriverScore(driver, distanceToMerchant, distanceToCustomer) {
-                let score = 100; // Base score
-
-                // Distance factor (closer is better)
-                score -= (distanceToMerchant * 2); // Distance to merchant is more important
-                score -= distanceToCustomer;
-
-                // Rating factor
-                score += (driver.rating || 4.0) * 10;
-
-                // Completion rate factor
-                score += (driver.completionRate || 0.9) * 20;
-
-                // Response time factor (faster response gets higher score)
-                score += (1 / (driver.averageResponseTime || 60)) * 100;
-
-                // Vehicle type factor
-                if (driver.vehicleType === 'motorcycle') score += 15;
-                if (driver.vehicleType === 'bicycle') score += 10;
-                if (driver.vehicleType === 'car') score += 5;
-
-                return Math.max(0, score);
-            }
-
-            // Send notifications to multiple drivers simultaneously
-            async notifyMultipleDrivers(orderId, drivers) {
-                console.log(`📱 Notifying ${drivers.length} drivers for order:`, orderId);
-
-                const notifications = drivers.map(driver => 
-                    this.sendPushNotification('driver', driver.id, {
-                        title: 'طلب توصيل جديد',
-                        body: `طلب توصيل متاح - المسافة: ${driver.distanceToMerchant.toFixed(1)} كم`,
-                        data: {
-                            type: 'delivery_request',
-                            orderId: orderId,
-                            estimatedDistance: driver.totalDistance,
-                            estimatedEarnings: this.calculateEstimatedEarnings(driver.totalDistance),
-                            action_required: 'accept_or_reject'
-                        }
-                    })
-                );
-
-                try {
-                    await Promise.all(notifications);
-                    console.log('✅ All driver notifications sent successfully');
-                } catch (error) {
-                    console.error('Error sending driver notifications:', error);
-                }
-            }
-
-            // Step 5: Handle driver responses
-            async handleDriverResponse(responseData) {
-                console.log('🚗 Driver response received:', responseData);
-
-                try {
-                    if (responseData.action === 'accept') {
-                        // Check if order is still available
-                        const orderDoc = await db.collection('orders').doc(responseData.orderId).get();
-                        const orderData = orderDoc.data();
-
-                        if (orderData.status !== 'searching_for_driver') {
-                            // Order already assigned to another driver
-                            await this.notifyDriver(responseData.driverId, 'order_no_longer_available');
-                            return;
-                        }
-
-                        // Assign driver to order
-                        await db.collection('orders').doc(responseData.orderId).update({
-                            status: 'driver_assigned',
-                            assignedDriver: responseData.driverId,
-                            driverAssignedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-
-                        // Update driver status
-                        await db.collection('drivers').doc(responseData.driverId).update({
-                            status: 'busy',
-                            currentOrder: responseData.orderId
-                        });
-
-                        // Notify customer about driver assignment
-                        await this.notifyCustomer(responseData.orderId, 'driver_assigned', {
-                            driverInfo: await this.getDriverInfo(responseData.driverId)
-                        });
-
-                        // Cancel notifications for other drivers
-                        await this.cancelOtherDriverNotifications(responseData.orderId, responseData.driverId);
-
-                        console.log('✅ Driver assigned successfully');
-
-                    } else if (responseData.action === 'reject') {
-                        // Log rejection for analytics
-                        await db.collection('driver_rejections').add({
-                            driverId: responseData.driverId,
-                            orderId: responseData.orderId,
-                            reason: responseData.reason,
-                            rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-
-                    this.updateDashboard('driver_response', responseData);
-
-                } catch (error) {
-                    console.error('Error handling driver response:', error);
-                }
-            }
-
-            // Utility functions
-            calculateDistance(point1, point2) {
-                const R = 6371; // Earth's radius in km
-                const dLat = (point2.lat - point1.lat) * Math.PI / 180;
-                const dLon = (point2.lng - point1.lng) * Math.PI / 180;
-                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                return R * c;
-            }
-
-            calculateEstimatedEarnings(distance) {
-                const baseRate = 5; // Base rate in SAR
-                const perKmRate = 2; // Rate per km in SAR
-                return baseRate + (distance * perKmRate);
-            }
-
-            async sendPushNotification(appType, userId, notificationData) {
-                if (!messaging) {
-                    console.log('📱 Messaging not available, logging notification:', notificationData);
-                    return Promise.resolve();
-                }
-
-                const topic = `${appType}_${userId}`;
-                
-                try {
-                    return await messaging.send({
-                        topic: topic,
-                        notification: {
-                            title: notificationData.title,
-                            body: notificationData.body
-                        },
-                        data: notificationData.data,
-                        android: {
-                            priority: 'high',
-                            notification: {
-                                sound: 'default',
-                                priority: 'high'
-                            }
-                        },
-                        apns: {
-                            payload: {
-                                aps: {
-                                    sound: 'default',
-                                    priority: 10
-                                }
-                            }
-                        }
-                    });
-                } catch (error) {
-                    console.error('❌ Error sending notification:', error);
-                    return Promise.resolve();
-                }
-            }
-
-            async handleOrderUpdate(orderData) {
-                console.log('📝 Order updated:', orderData);
-                this.updateDashboard('order_update', orderData);
-            }
-
-            // Real-time dashboard updates
-            updateDashboard(eventType, data) {
-                const event = new CustomEvent('orderSystemUpdate', {
-                    detail: { type: eventType, data: data }
-                });
-                document.dispatchEvent(event);
-            }
-
-            async notifyCustomer(orderId, type, data) {
-                console.log(`📱 Notifying customer for order ${orderId}:`, type, data);
-                // Add to customer notifications collection
-                try {
-                    await db.collection('customer_notifications').add({
-                        orderId: orderId,
-                        type: type,
-                        data: data,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        read: false
-                    });
-                } catch (error) {
-                    console.log('Mock notification sent:', type, data);
-                }
-            }
-
-            async notifyDriver(driverId, type, data) {
-                console.log(`📱 Notifying driver ${driverId}:`, type, data);
-                // Add to driver notifications collection
-                try {
-                    await db.collection('driver_notifications').add({
-                        driverId: driverId,
-                        type: type,
-                        data: data,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        read: false
-                    });
-                } catch (error) {
-                    console.log('Mock notification sent:', type, data);
-                }
-            }
-
-            async getDriverInfo(driverId) {
-                try {
-                    const driverDoc = await db.collection('drivers').doc(driverId).get();
-                    if (driverDoc.exists) {
-                        return driverDoc.data();
-                    } else {
-                        return { id: driverId, name: 'Driver', mockData: true };
-                    }
-                } catch (error) {
-                    console.log('Mock driver info returned');
-                    return { id: driverId, name: 'Driver', mockData: true };
-                }
-            }
-
-            async cancelOtherDriverNotifications(orderId, assignedDriverId) {
-                console.log(`🚫 Canceling notifications for order ${orderId}, assigned to ${assignedDriverId}`);
-                try {
-                    // Update other driver notifications as cancelled
-                    const batch = db.batch();
-                    const notificationsSnapshot = await db.collection('driver_notifications')
-                        .where('data.orderId', '==', orderId)
-                        .where('driverId', '!=', assignedDriverId)
-                        .get();
-                    
-                    notificationsSnapshot.docs.forEach(doc => {
-                        batch.update(doc.ref, { cancelled: true });
-                    });
-                    
-                    await batch.commit();
-                } catch (error) {
-                    console.log('Mock: Other driver notifications cancelled');
-                }
-            }
-
-            async handleNoDriversAvailable(orderId) {
-                console.log(`⚠️ No drivers available for order ${orderId}`);
-                try {
-                    await db.collection('orders').doc(orderId).update({
-                        status: 'no_drivers_available',
-                        noDriversAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // Notify customer about no drivers
-                    await this.notifyCustomer(orderId, 'no_drivers_available', {
-                        message: 'عذراً، لا يوجد سائقون متاحون حالياً. سنبحث عن سائق آخر قريباً.'
-                    });
-                } catch (error) {
-                    console.log('Mock: Order marked as no drivers available');
-                }
-            }
-
-            checkDriverSelectionTimeout(orderId) {
-                console.log(`⏰ Checking driver selection timeout for order ${orderId}`);
-                // Check if order is still searching for driver
-                db.collection('orders').doc(orderId).get()
-                    .then(doc => {
-                        if (doc.exists && doc.data().status === 'searching_for_driver') {
-                            console.log(`⏰ Driver selection timeout for order ${orderId}`);
-                            this.handleNoDriversAvailable(orderId);
-                        }
-                    })
-                    .catch(error => {
-                        console.log('Mock: Driver selection timeout checked');
-                    });
-            }
-        }
-
-        // Update dashboard metrics
-        function updateDashboardMetrics(type, data) {
-            console.log('📊 Updating dashboard metrics:', type, data);
-            
-            // Dispatch event for real-time updates
-            const event = new CustomEvent('orderSystemUpdate', {
-                detail: { type: type, data: data }
-            });
-            document.dispatchEvent(event);
-        }
-
-        // Listen for real-time updates
-        document.addEventListener('orderSystemUpdate', (event) => {
-            const { type, data } = event.detail;
-            console.log('📈 Dashboard update received:', type, data);
-            
-            // Update UI elements based on the update type
-            switch(type) {
-                case 'merchants_update':
-                    console.log('Updating merchant count:', data);
-                    break;
-                case 'orders_update':
-                    console.log('Updating order metrics:', data);
-                    break;
-                case 'drivers_update':
-                    console.log('Updating driver statistics:', data);
-                    break;
-                case 'customers_update':
-                    console.log('Updating customer count:', data);
-                    break;
-                case 'new_order':
-                    console.log('New order received:', data);
-                    break;
-                case 'merchant_response':
-                    console.log('Merchant response:', data);
-                    break;
-                case 'driver_response':
-                    console.log('Driver response:', data);
-                    break;
-            }
-        });
-
-        // Error handling for iframe loading
-        document.getElementById('contentFrame').addEventListener('error', function() {
-            console.log('⚠️ Failed to load page in iframe');
-            this.src = 'data:text/html,<div style="padding:20px;text-align:center;"><h3>الصفحة غير متوفرة</h3><p>لم يتم العثور على الصفحة المطلوبة</p></div>';
         });
 
         console.log('🚀 Centralized Delivery Platform admin panel loaded');

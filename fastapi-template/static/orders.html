@@ -305,8 +305,9 @@
     </style>
 </head>
 <body>
-    <!-- Enhanced Orders Management System Loaded -->
-    <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin: 0; border-radius: 0;">
+    <div class="main-content">
+        <!-- Enhanced Orders Management System Loaded -->
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin: 0; border-radius: 0;">
         ✅ <strong>نظام إدارة الطلبات المحسن تم تحميله بنجاح</strong> - يتضمن البحث والتصفية وإدارة السائقين والتحديث المباشر
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -620,8 +621,63 @@
                 });
             }
 
-            loadOrders() {
-                // Sample order data - in real app, this would come from Firebase
+            async loadOrders() {
+                try {
+                    // Fetch orders from API
+                    const response = await fetch('/api/orders');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    // Transform API data to match expected format
+                    this.orders = data.orders.map(order => ({
+                        id: order.order_number || order.id,
+                        customerId: order.customer_id,
+                        customerName: `عميل #${order.customer_id}`,
+                        customerPhone: '05xxxxxxxx',
+                        merchantId: order.merchant_id,
+                        merchantName: `متجر #${order.merchant_id}`,
+                        driverId: order.driver_id,
+                        driverName: order.driver_id ? `سائق #${order.driver_id}` : null,
+                        status: this.mapApiStatus(order.status),
+                        totalAmount: order.final_amount || order.total_amount,
+                        orderTime: new Date(order.created_at),
+                        estimatedDelivery: new Date(Date.now() + 30 * 60 * 1000), // 30 mins from now
+                        items: [
+                            { name: 'منتج من الطلب', quantity: 1, price: order.total_amount }
+                        ],
+                        deliveryAddress: order.delivery_address || 'عنوان التسليم',
+                        location: { lat: 24.7136, lng: 46.6753 },
+                        priority: 'normal'
+                    }));
+                    
+                    this.filteredOrders = [...this.orders];
+                    this.renderOrders();
+                    console.log(`✅ Loaded ${this.orders.length} orders from API`);
+                    
+                } catch (error) {
+                    console.error('Error loading orders:', error);
+                    // Fallback to sample data if API fails
+                    this.loadSampleOrders();
+                }
+            }
+
+            mapApiStatus(apiStatus) {
+                const statusMap = {
+                    'pending': 'pending',
+                    'confirmed': 'confirmed', 
+                    'preparing': 'preparing',
+                    'ready': 'ready',
+                    'picked_up': 'in_transit',
+                    'delivered': 'delivered',
+                    'cancelled': 'cancelled'
+                };
+                return statusMap[apiStatus] || 'pending';
+            }
+
+            loadSampleOrders() {
+                // Fallback sample data when API is not available
                 this.orders = [
                     {
                         id: 'ORD001',
@@ -1219,5 +1275,9 @@
         // Initialize the order manager
         const orderManager = new OrderManager();
     </script>
+    
+    <!-- Navigation System -->
+    <script src="/navigation.js"></script>
+    </div>
 </body>
 </html>

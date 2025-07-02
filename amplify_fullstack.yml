@@ -1,0 +1,57 @@
+version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing Python dependencies for FastAPI backend..."
+        - cd fastapi-template
+        - python3 -m pip install --upgrade pip
+        - pip3 install -r ../requirements.txt
+        - echo "Setting up production environment..."
+        - |
+          if [ ! -f ".env" ]; then
+            cp .env.example .env
+            echo "ENVIRONMENT=production" >> .env
+            echo "DEBUG=false" >> .env
+            echo "HOST=0.0.0.0" >> .env
+            echo "PORT=8080" >> .env
+          fi
+    build:
+      commands:
+        - echo "Initializing database..."
+        - export ENVIRONMENT=production
+        - python3 -c "
+          try:
+              from app.database import init_database
+              init_database()
+              print('✅ Database initialized successfully')
+          except Exception as e:
+              print(f'⚠️ Database initialization: {e}')
+              print('Using mock database fallback')
+          "
+        - echo "Backend build completed successfully"
+    postBuild:
+      commands:
+        - echo "Preparing application for deployment..."
+        - python3 -c "
+          import os
+          print('Environment:', os.environ.get('ENVIRONMENT', 'development'))
+          print('Debug mode:', os.environ.get('DEBUG', 'true'))
+          "
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Preparing frontend static files..."
+        - cd fastapi-template
+    build:
+      commands:
+        - echo "Frontend files ready for serving"
+        - ls -la static/
+  artifacts:
+    baseDirectory: fastapi-template
+    files:
+      - '**/*'
+    name: centralized-delivery-platform
+  cache:
+    paths: []

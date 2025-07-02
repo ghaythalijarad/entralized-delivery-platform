@@ -36,3 +36,22 @@ class Order(BaseModel):
     total: float
     status: Optional[str] = "pending"
     created_at: Optional[datetime] = None
+
+class DashboardStats(BaseModel):
+    """Dashboard statistics response schema"""
+    total_orders: int
+    today_orders: int
+    active_merchants: int
+    active_drivers: int
+    total_customers: int
+    pending_orders: int
+    revenue_today: float
+    revenue_trend: float
+
+class ActivityItem(BaseModel):
+    """Recent activity item schema"""
+    type: str
+    message: str
+    time: str
+    status: str
+    timestamp: str

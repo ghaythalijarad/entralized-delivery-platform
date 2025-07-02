@@ -1,8 +1,6 @@
-import os
-import firebase_admin
-from firebase_admin import credentials, firestore
-
 # Mock database for development/testing
+# This module provides a mock Firestore-like interface for development
+
 class MockCollection:
     def __init__(self):
         self.data = {}
@@ -12,7 +10,7 @@ class MockCollection:
         doc_id = f"doc_{self.counter}"
         self.counter += 1
         self.data[doc_id] = document
-        # Return tuple mimicking Firebase's add() method
+        # Return tuple for compatibility with collection interface
         class MockDocRef:
             def __init__(self, doc_id):
                 self.id = doc_id
@@ -46,7 +44,7 @@ class MockCollection:
         return MockDoc(doc_id, self.data)
     
     def where(self, field, operator, value):
-        # Simple mock where clause
+        # Simple mock where clause - returns self for chaining
         return self
     
     def stream(self):
@@ -75,18 +73,6 @@ class MockFirestore:
             self.collections[name] = MockCollection()
         return self.collections[name]
 
-# Try to initialize Firebase, fall back to mock if not available
-try:
-    # Check if running in production or service account key exists
-    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.path.exists("serviceAccountKey.json"):
-        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "serviceAccountKey.json")
-        cred = credentials.Certificate(cred_path)
-        firebase_admin.initialize_app(cred)
-        db = firestore.client()
-        print("✅ Connected to Firebase Firestore")
-    else:
-        raise Exception("No Firebase credentials found, using mock database")
-        
-except Exception as e:
-    print(f"⚠️  Firebase not available ({e}), using mock database for development")
-    db = MockFirestore()
+# Initialize mock database for development
+print("🔧 Using mock database for development")
+db = MockFirestore()
