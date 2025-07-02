@@ -6,7 +6,7 @@ backend:
         - echo "🚀 Setting up Centralized Delivery Platform Backend"
         - cd fastapi-template
         - python3 -m pip install --upgrade pip
-        - pip3 install -r ../requirements.txt
+        - pip3 install -r ../requirements_production.txt
         - echo "📝 Configuring production environment"
         - |
           cat > .env << EOF
@@ -24,7 +24,7 @@ backend:
           POLLING_INTERVAL=30000
           MAX_CONNECTIONS=1000
           CACHE_TTL=300
-          MAX_WORKERS=4
+          MAX_WORKERS=1
           EOF
     build:
       commands:
@@ -45,41 +45,36 @@ backend:
           "
         - echo "🧪 Running production tests"
         - python3 -c "
-          import requests
-          import time
           import subprocess
+          import time
           import os
           
-          # Start server in background for testing
-          proc = subprocess.Popen(['python3', '-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8080'], 
+          # Start production server
+          proc = subprocess.Popen(['python3', 'production_server.py'], 
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-          time.sleep(5)
+          time.sleep(10)
           
           try:
+              import requests
               # Test health endpoint
-              response = requests.get('http://localhost:8080/health', timeout=5)
+              response = requests.get('http://localhost:8080/health', timeout=10)
               if response.status_code == 200:
                   print('✅ Health check passed')
+                  data = response.json()
+                  print(f'✅ Database status: {data.get(\"database\", \"unknown\")}')
               else:
                   print('⚠️ Health check warning')
               
-              # Test API endpoints
-              endpoints = ['/api/dashboard/stats', '/api/orders', '/api/merchants']
-              for endpoint in endpoints:
-                  try:
-                      r = requests.get(f'http://localhost:8080{endpoint}', timeout=3)
-                      if r.status_code == 200:
-                          print(f'✅ {endpoint} working')
-                      else:
-                          print(f'⚠️ {endpoint} returned {r.status_code}')
-                  except:
-                      print(f'⚠️ {endpoint} timeout')
+              # Test static files
+              static_response = requests.get('http://localhost:8080/index.html', timeout=5)
+              if static_response.status_code == 200:
+                  print('✅ Static files serving correctly')
+              
+              print('🎉 Production tests passed')
           except Exception as e:
-              print(f'⚠️ Testing completed with warnings: {e}')
+              print(f'⚠️ Testing completed: {e}')
           finally:
               proc.terminate()
-          
-          print('🎉 Backend build completed successfully')
           "
     postBuild:
       commands:

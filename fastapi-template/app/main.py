@@ -5,6 +5,10 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional, List
 import random
+import os
+
+# Import configuration
+from app.config import config
 
 # Import database components
 from app.database import get_db, check_database_connection, init_database
@@ -31,14 +35,18 @@ from app.auth_schemas import (
 # Import fallback mock database for development
 from app.db import db as mock_db
 
-app = FastAPI(title="Centralized Delivery Platform API", version="1.0.0")
+app = FastAPI(
+    title=config.PROJECT_NAME, 
+    version=config.VERSION,
+    debug=config.DEBUG
+)
 
-# Add CORS middleware
+# Add CORS middleware with production-ready settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this for production
+    allow_origins=config.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
