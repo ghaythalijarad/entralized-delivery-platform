@@ -1,27 +1,49 @@
 #!/usr/bin/env python3
 """
-Simplified production startup script for AWS App Runner
+Minimal production startup script for AWS App Runner with detailed debugging
 """
 import os
 import sys
 import uvicorn
 from pathlib import Path
 
-print("🚀 Starting AWS App Runner deployment...")
+print("🚀 AWS App Runner startup - Debugging mode")
+print(f"🐍 Python version: {sys.version}")
+print(f"📂 Current directory: {os.getcwd()}")
+print(f"📝 Environment variables: PORT={os.environ.get('PORT', 'not set')}")
 
 # Set environment variables
 os.environ.setdefault('ENVIRONMENT', 'production')
-os.environ.setdefault('HOST', '0.0.0.0')
+os.environ.setdefault('HOST', '0.0.0.0') 
 os.environ.setdefault('PORT', '8080')
+
+# Check directory structure
+print("📁 Directory structure:")
+for item in os.listdir('.'):
+    print(f"  - {item}")
 
 # Add fastapi-template to path and change directory
 fastapi_dir = Path(__file__).parent / "fastapi-template"
-print(f"📁 FastAPI directory: {fastapi_dir}")
+print(f"📁 FastAPI directory path: {fastapi_dir}")
+print(f"📁 FastAPI directory exists: {fastapi_dir.exists()}")
 
 if fastapi_dir.exists():
+    print("📁 Contents of fastapi-template:")
+    for item in os.listdir(fastapi_dir):
+        print(f"  - {item}")
+    
     sys.path.insert(0, str(fastapi_dir))
     os.chdir(fastapi_dir)
-    print(f"✅ Changed to: {os.getcwd()}")
+    print(f"✅ Changed working directory to: {os.getcwd()}")
+    
+    # Check app directory
+    app_dir = Path("app")
+    if app_dir.exists():
+        print("📁 Contents of app directory:")
+        for item in os.listdir(app_dir):
+            print(f"  - {item}")
+    else:
+        print("❌ app directory not found!")
 else:
     print("❌ FastAPI directory not found!")
     sys.exit(1)
@@ -57,13 +79,51 @@ try:
 except Exception as e:
     print(f"⚠️ Database setup warning: {e}")
 
-# Start the application
+# Try importing FastAPI app with detailed error reporting
+print("🚀 Attempting to import FastAPI application...")
 try:
-    print("🚀 Importing FastAPI app...")
     from app.main import app
-    print("✅ App imported successfully")
+    print("✅ Successfully imported FastAPI app")
+    print(f"📱 App type: {type(app)}")
     
-    print(f"🌐 Starting server on {os.environ.get('HOST')}:{os.environ.get('PORT')}")
+    # Check if app has routes
+    if hasattr(app, 'routes'):
+        print(f"🛣️ Number of routes: {len(app.routes)}")
+        for route in app.routes[:5]:  # Show first 5 routes
+            print(f"  - {route}")
+    
+except ImportError as e:
+    print(f"❌ Import error: {e}")
+    print("🔍 Checking available modules...")
+    
+    # Check what's available in app directory
+    try:
+        import app
+        print(f"✅ app module found at: {app.__file__}")
+        print(f"📂 app module contents: {dir(app)}")
+    except ImportError:
+        print("❌ Cannot import app module")
+    
+    # Check for main.py specifically
+    if os.path.exists("app/main.py"):
+        print("✅ app/main.py file exists")
+        with open("app/main.py", "r") as f:
+            content = f.read()[:500]  # First 500 chars
+            print(f"📄 main.py content preview:\n{content}")
+    else:
+        print("❌ app/main.py file not found")
+    
+    sys.exit(1)
+    
+except Exception as e:
+    print(f"❌ Unexpected error importing app: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+
+# Start the server
+print(f"🌐 Starting uvicorn server on {os.environ.get('HOST')}:{os.environ.get('PORT')}")
+try:
     uvicorn.run(
         app,
         host=os.environ.get('HOST', '0.0.0.0'),
@@ -72,7 +132,7 @@ try:
         log_level="info"
     )
 except Exception as e:
-    print(f"❌ Failed to start application: {e}")
+    print(f"❌ Failed to start uvicorn server: {e}")
     import traceback
     traceback.print_exc()
     sys.exit(1)
