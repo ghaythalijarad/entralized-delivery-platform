@@ -18,10 +18,21 @@ os.environ.setdefault('PORT', '8080')
 # Add fastapi-template to Python path and change to that directory
 fastapi_dir = Path(__file__).parent / "fastapi-template"
 if fastapi_dir.exists():
+    # Add both the fastapi-template directory and its parent to Python path
     sys.path.insert(0, str(fastapi_dir))
+    sys.path.insert(0, str(fastapi_dir.parent))
     os.chdir(fastapi_dir)
     print(f"✅ Changed to: {os.getcwd()}")
     print(f"✅ Added {fastapi_dir} to Python path")
+    print(f"✅ Python path: {sys.path[:3]}")
+    
+    # Debug: List contents of app directory
+    app_dir = fastapi_dir / "app"
+    if app_dir.exists():
+        print(f"📁 App directory contents: {list(app_dir.iterdir())}")
+    else:
+        print("❌ App directory not found!")
+        sys.exit(1)
 else:
     print("❌ FastAPI directory not found!")
     sys.exit(1)
