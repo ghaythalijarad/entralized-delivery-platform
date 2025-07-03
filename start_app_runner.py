@@ -7,34 +7,34 @@ import sys
 import uvicorn
 from pathlib import Path
 
-print("🚀 Starting Centralized Delivery Platform")
-print(f"Python version: {sys.version}")
-print(f"Current directory: {os.getcwd()}")
+print("🚀 Starting AWS App Runner deployment...")
 
-# Add the fastapi-template directory to Python path
-fastapi_dir = Path(__file__).parent / "fastapi-template"
-sys.path.insert(0, str(fastapi_dir))
-
-# Change to the fastapi-template directory
-os.chdir(fastapi_dir)
-print(f"Changed to directory: {os.getcwd()}")
-
-# Set production environment
+# Set environment variables
 os.environ.setdefault('ENVIRONMENT', 'production')
 os.environ.setdefault('HOST', '0.0.0.0')
 os.environ.setdefault('PORT', '8080')
 
-# Initialize database with error handling
+# Add fastapi-template to path and change directory
+fastapi_dir = Path(__file__).parent / "fastapi-template"
+print(f"📁 FastAPI directory: {fastapi_dir}")
+
+if fastapi_dir.exists():
+    sys.path.insert(0, str(fastapi_dir))
+    os.chdir(fastapi_dir)
+    print(f"✅ Changed to: {os.getcwd()}")
+else:
+    print("❌ FastAPI directory not found!")
+    sys.exit(1)
+
+# Simple database setup
 try:
-    print("📦 Importing database modules...")
+    print("🗄️ Setting up database...")
     from app.database import engine
     from app.models import Base
-    
-    print("🗄️ Creating database tables...")
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created")
+    print("✅ Database initialized")
     
-    # Create admin user with better error handling
+    # Try to create admin user (optional)
     try:
         from app.database import get_db
         from app.auth import create_user, UserCreate, UserRole, get_user_by_username
@@ -43,39 +43,36 @@ try:
         if not get_user_by_username(db, 'admin'):
             admin = UserCreate(
                 username='admin',
-                email='admin@delivery-platform.com', 
+                email='admin@platform.com',
                 password='admin123',
                 role=UserRole.ADMIN,
-                full_name='System Administrator'
+                full_name='Administrator'
             )
             create_user(db, admin)
             print("✅ Admin user created")
-        else:
-            print("✅ Admin user already exists")
         db.close()
     except Exception as e:
-        print(f"⚠️ Admin user creation error (continuing anyway): {e}")
+        print(f"⚠️ Admin user setup warning: {e}")
         
 except Exception as e:
-    print(f"❌ Database setup error: {e}")
-    print("Continuing with app startup...")
+    print(f"⚠️ Database setup warning: {e}")
 
-# Import and start the app
+# Start the application
 try:
-    print("📱 Importing FastAPI app...")
+    print("🚀 Importing FastAPI app...")
     from app.main import app
-    print("✅ FastAPI app imported successfully")
-except Exception as e:
-    print(f"❌ Failed to import app: {e}")
-    sys.exit(1)
-
-if __name__ == "__main__":
-    print(f"🌐 Starting server on {os.environ.get('HOST', '0.0.0.0')}:{os.environ.get('PORT', '8080')}")
+    print("✅ App imported successfully")
+    
+    print(f"🌐 Starting server on {os.environ.get('HOST')}:{os.environ.get('PORT')}")
     uvicorn.run(
         app,
         host=os.environ.get('HOST', '0.0.0.0'),
         port=int(os.environ.get('PORT', 8080)),
         workers=1,
-        access_log=True,
         log_level="info"
     )
+except Exception as e:
+    print(f"❌ Failed to start application: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
