@@ -15,6 +15,12 @@ class DatabaseConfig:
         self.setup_database_url()
     
     def setup_database_url(self):
+        # Check for explicit DATABASE_URL first
+        explicit_url = os.getenv('DATABASE_URL')
+        if explicit_url:
+            self.DATABASE_URL = explicit_url
+            return
+            
         if self.environment == 'production':
             # Amazon RDS PostgreSQL configuration
             self.DATABASE_URL = (
