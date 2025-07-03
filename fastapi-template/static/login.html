@@ -158,6 +158,50 @@
             color: #333;
         }
 
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle .toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle .toggle-btn:hover {
+            color: #333;
+        }
+
+        .form-validation {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .caps-lock-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
         @media (max-width: 480px) {
             .login-container {
                 padding: 24px;
@@ -185,9 +229,20 @@
                 <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             
-            <div class="form-group" style="text-align: right;">
+            <div class="form-group password-toggle" style="text-align: right;">
                 <label for="password">كلمة المرور</label>
                 <input type="password" id="password" name="password" required autocomplete="current-password">
+                <button type="button" class="toggle-btn" id="togglePassword">
+                    👁️
+                </button>
+            </div>
+            
+            <div class="form-validation" id="passwordValidation">
+                يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، بما في ذلك حرف كبير، حرف صغير، ورقم.
+            </div>
+            
+            <div class="caps-lock-warning" id="capsLockWarning">
+                تحذير: يبدو أن مفتاح "الكابيتال لوك" مفعل. تأكد من أن كلمة المرور مكتوبة بشكل صحيح.
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">
@@ -218,7 +273,12 @@
          document.getElementById('loginForm').addEventListener('submit', async (e) => {
              e.preventDefault();
              
-             const username = document.getElementById('username').value;
+             // Validate form before submitting
+             if (!validateForm()) {
+                 return;
+             }
+             
+             const username = document.getElementById('username').value.trim();
              const password = document.getElementById('password').value;
              const loginBtn = document.getElementById('loginBtn');
              const loading = document.getElementById('loading');
@@ -254,11 +314,15 @@
                         window.location.href = '/';
                      }, 1000);
                  } else {
-                    showAlert(data.message || 'فشل تسجيل الدخول', 'error');
+                    // Show specific error message from backend
+                    const errorMessage = data.message === 'Invalid username or password' 
+                        ? 'اسم المستخدم أو كلمة المرور غير صحيحة' 
+                        : data.message || 'فشل تسجيل الدخول';
+                    showAlert(errorMessage, 'error');
                  }
              } catch (error) {
                  console.error('Login error:', error);
-                showAlert('خطأ في الشبكة. الرجاء المحاولة مرة أخرى.', 'error');
+                showAlert('خطأ في الاتصال بالخادم. تأكد من أن الخادم يعمل والرجاء المحاولة مرة أخرى.', 'error');
              } finally {
                  // Reset button state
                  loginBtn.disabled = false;
@@ -282,6 +346,137 @@
         // Show default credentials reminder
         window.addEventListener('load', () => {
             showAlert('استخدم بيانات التجربة أدناه لتسجيل الدخول. قم بتغيير كلمة المرور بعد أول تسجيل دخول!', 'info');
+        });
+
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const passwordType = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', passwordType);
+            
+            // Change icon
+            this.textContent = passwordType === 'password' ? '👁️' : '🙈';
+        });
+
+        // Enhanced form validation
+        function validateForm() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            let isValid = true;
+
+            // Username validation
+            if (!username) {
+                showFormError('username', 'اسم المستخدم مطلوب');
+                isValid = false;
+            } else {
+                hideFormError('username');
+            }
+
+            // Password validation
+            if (!password) {
+                showFormError('password', 'كلمة المرور مطلوبة');
+                isValid = false;
+            } else if (password.length < 3) {
+                showFormError('password', 'كلمة المرور قصيرة جداً');
+                isValid = false;
+            } else {
+                hideFormError('password');
+            }
+
+            return isValid;
+        }
+
+        function showFormError(fieldName, message) {
+            const field = document.getElementById(fieldName);
+            const errorDiv = document.getElementById(fieldName + 'Error') || createErrorDiv(fieldName);
+            field.style.borderColor = '#dc3545';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideFormError(fieldName) {
+            const field = document.getElementById(fieldName);
+            const errorDiv = document.getElementById(fieldName + 'Error');
+            field.style.borderColor = '#e1e5e9';
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        function createErrorDiv(fieldName) {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = fieldName + 'Error';
+            errorDiv.className = 'form-validation';
+            errorDiv.style.display = 'none';
+            const field = document.getElementById(fieldName);
+            field.parentNode.appendChild(errorDiv);
+            return errorDiv;
+        }
+
+        // Caps lock detection
+        document.getElementById('password').addEventListener('keypress', function(event) {
+            const capsLockWarning = document.getElementById('capsLockWarning');
+            const isCapsLock = event.getModifierState && event.getModifierState('CapsLock');
+            capsLockWarning.style.display = isCapsLock ? 'block' : 'none';
+        });
+
+        // Real-time validation feedback
+        document.getElementById('username').addEventListener('input', function() {
+            if (this.value.trim()) {
+                hideFormError('username');
+            }
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            if (this.value) {
+                hideFormError('password');
+            }
+        });
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
+                event.preventDefault();
+                const form = document.getElementById('loginForm');
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', () => {
+            const passwordInput = document.getElementById('password');
+            const passwordType = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', passwordType);
+            
+            this.classList.toggle('active');
+        });
+
+        // Password validation and caps lock detection
+        const passwordInput = document.getElementById('password');
+        const passwordValidation = document.getElementById('passwordValidation');
+        const capsLockWarning = document.getElementById('capsLockWarning');
+
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const isValidLength = password.length >= 8;
+
+            // Show or hide validation message
+            passwordValidation.style.display = (hasUpperCase && hasLowerCase && hasNumbers && isValidLength) ? 'none' : 'block';
+
+            // Check if caps lock is on
+            const isCapsLock = password.toUpperCase() === password && password.toLowerCase() !== password;
+            capsLockWarning.style.display = isCapsLock ? 'block' : 'none';
+        });
+
+        passwordInput.addEventListener('focus', () => {
+            passwordValidation.style.display = 'block';
+        });
+
+        passwordInput.addEventListener('blur', () => {
+            passwordValidation.style.display = 'none';
         });
     </script>
 </body>

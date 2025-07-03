@@ -28,9 +28,41 @@ def setup_production_environment():
     print(f"Port: {os.environ.get('PORT', '8080')}")
     print("=" * 60)
 
+def setup_database():
+    """Initialize database and create admin user"""
+    try:
+        from app.database import engine
+        from app.models import Base
+        
+        # Create tables
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created")
+        
+        # Create admin user
+        from app.database import get_db
+        from app.auth import create_user, UserCreate, UserRole, get_user_by_username
+        
+        db = next(get_db())
+        if not get_user_by_username(db, 'admin'):
+            admin = UserCreate(
+                username='admin',
+                email='admin@delivery-platform.com', 
+                password='admin123',
+                role=UserRole.ADMIN,
+                full_name='System Administrator'
+            )
+            create_user(db, admin)
+            print("✅ Admin user created")
+        else:
+            print("✅ Admin user already exists")
+        db.close()
+    except Exception as e:
+        print(f"Database setup error: {e}")
+
 def main():
     """Main startup function"""
     setup_production_environment()
+    setup_database()
     
     # Import after environment setup
     from app.main import app
