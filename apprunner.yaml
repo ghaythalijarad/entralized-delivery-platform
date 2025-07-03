@@ -2,21 +2,36 @@ version: 1
 runtime: python3
 build:
   commands:
-    - echo "🚀 Building FastAPI Production Application"
-    - echo "📦 Installing dependencies"
-    - pip install -r requirements.txt
-    - echo "✅ Production build complete"
+    - echo "Building app..."
+    - pip install fastapi uvicorn sqlalchemy python-dotenv passlib python-jose python-multipart
+    - echo "Build complete"
 run:
   runtime-version: python3.11
   commands:
-    - python start_app_runner.py
+    - cd fastapi-template && python -c "
+import os
+os.environ['DATABASE_URL'] = 'sqlite:///./delivery_platform.db'
+os.environ['SECRET_KEY'] = 'prod-key-123'
+
+# Setup database
+from app.database import engine
+from app.models import Base
+Base.metadata.create_all(bind=engine)
+
+# Create admin user
+from app.database import get_db
+from app.auth import create_user, UserCreate, UserRole, get_user_by_username
+db = next(get_db())
+if not get_user_by_username(db, 'admin'):
+    admin = UserCreate(username='admin', email='admin@test.com', password='admin123', role=UserRole.ADMIN, full_name='Admin')
+    create_user(db, admin)
+db.close()
+
+# Start server
+import uvicorn
+from app.main import app
+uvicorn.run(app, host='0.0.0.0', port=8080)
+"
   network:
     port: 8080
     env: PORT
-  env:
-    - name: ENVIRONMENT
-      value: production
-    - name: DATABASE_URL
-      value: sqlite:///./delivery_platform.db
-    - name: SECRET_KEY
-      value: prod-4a7d8c9e2f1b5a8c3d6e9f2a5b8c1d4e7a0b3c6d9e2f5a8b1c4d7e0a3b6c9d2e5f8a1b4c7d0
