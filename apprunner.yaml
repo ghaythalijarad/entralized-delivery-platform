@@ -1,0 +1,17 @@
+version: 1
+runtime: python3
+build:
+  commands:
+    - pip install fastapi uvicorn sqlalchemy python-dotenv passlib python-jose python-multipart
+run:
+  runtime-version: python3.11
+  commands:
+    - python start_app_runner.py
+  network:
+    port: 8080
+    env: PORT
+  env:
+    - name: DATABASE_URL
+      value: sqlite:///delivery_platform.db
+    - name: SECRET_KEY
+      value: production-secret-key-2025
