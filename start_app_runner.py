@@ -70,17 +70,17 @@ except Exception as e:
 
 # Import and start the FastAPI app
 try:
-    print("🚀 Importing FastAPI app...")
-    from app.main import app
-    print("✅ App imported successfully")
-    
-    print(f"🌐 Starting server on {os.environ.get('HOST')}:{os.environ.get('PORT')}")
-    uvicorn.run(
-        app,
-        host=os.environ.get('HOST', '0.0.0.0'),
-        port=int(os.environ.get('PORT', 8080)),
-        log_level="info"
-    )
+    print("🚀 Starting uvicorn server...")
+    import subprocess
+    cmd = [
+        sys.executable, "-m", "uvicorn", 
+        "app.main:app",
+        "--host", os.environ.get('HOST', '0.0.0.0'),
+        "--port", os.environ.get('PORT', '8080'),
+        "--log-level", "info"
+    ]
+    print(f"🔧 Command: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
     
 except Exception as e:
     print(f"❌ Error: {e}")
