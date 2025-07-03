@@ -14,11 +14,11 @@ cd "/Users/ghaythallaheebi/centralized platform"
 
 # Update index.html
 echo "📝 Updating index.html..."
-sed -i.bak "s|<meta name=\"api-base\" content=\"\">|<meta name=\"api-base\" content=\"$BACKEND_URL\">|g" fastapi-template/static/index.html
+sed -i.bak "s|<meta name=\"api-base\" content=\"[^\"]*\">|<meta name=\"api-base\" content=\"$BACKEND_URL\">|g" fastapi-template/static/index.html
 
 # Update login.html
 echo "📝 Updating login.html..."
-sed -i.bak "s|<meta name=\"api-base\" content=\"\">|<meta name=\"api-base\" content=\"$BACKEND_URL\">|g" fastapi-template/static/login.html
+sed -i.bak "s|<meta name=\"api-base\" content=\"[^\"]*\">|<meta name=\"api-base\" content=\"$BACKEND_URL\">|g" fastapi-template/static/login.htmln.html
 
 echo "✅ Frontend updated with production API URL"
 
