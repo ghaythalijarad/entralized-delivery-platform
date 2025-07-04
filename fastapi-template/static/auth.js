@@ -8,7 +8,7 @@ class AuthManager {
         // Determine API base URL from meta tag or default to origin
         const meta = document.querySelector('meta[name="api-base"]');
         this.API_BASE = (meta && meta.content) ? meta.content : window.location.origin;
-        this.TOKEN_KEY = 'authToken';
+        this.TOKEN_KEY = 'accessToken';
         this.USER_KEY = 'userInfo';
     }
 
@@ -93,52 +93,120 @@ class AuthManager {
     }
 
     // Get user role and permissions
-    getUserRole() {
+    getUserGroups() {
         const user = this.getUser();
-        return user ? user.role : null;
+        return user ? user.groups : [];
+    }
+
+    // Check if user is authenticated
+    isAuthenticated() {
+        const token = this.getToken();
+        if (!token) return false;
+
+        // Check if token is expired (basic check)
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const isExpired = payload.exp * 1000 < Date.now();
+            if (isExpired) {
+                this.logout();
+                return false;
+            }
+            return true;
+        } catch (e) {
+            this.logout();
+            return false;
+        }
+    }
+
+    // Store authentication data
+    setAuth(token, user) {
+        localStorage.setItem(this.TOKEN_KEY, token);
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    }
+
+    // Clear authentication data
+    logout() {
+        localStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(this.USER_KEY);
+    }
+
+    // Get authorization headers for API calls
+    getAuthHeaders() {
+        const token = this.getToken();
+        return token ? {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        };
+    }
+
+    // Make authenticated API request
+    async apiRequest(endpoint, options = {}) {
+        const url = endpoint.startsWith('http') ? endpoint : `${this.API_BASE}${endpoint}`;
+        
+        const config = {
+            headers: this.getAuthHeaders(),
+            ...options
+        };
+
+        try {
+            const response = await fetch(url, config);
+            
+            // Handle authentication errors
+            if (response.status === 401) {
+                this.logout();
+                window.location.href = '/static/login.html';
+                return null;
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
+    // Get user role and permissions
+    getUserGroups() {
+        const user = this.getUser();
+        return user ? user.groups : [];
     }
 
     // Check if user has specific role
     hasRole(role) {
-        const userRole = this.getUserRole();
-        if (!userRole) return false;
-        
-        const roleHierarchy = {
-            'admin': ['admin', 'manager', 'viewer'],
-            'manager': ['manager', 'viewer'],
-            'viewer': ['viewer']
-        };
-
-        return roleHierarchy[userRole]?.includes(role) || false;
+        const groups = this.getUserGroups();
+        return groups.includes(role);
     }
 
     // Check if user can perform action
     canPerform(action) {
-        const role = this.getUserRole();
-        if (!role) return false;
+        const groups = this.getUserGroups();
+        if (!groups) return false;
 
-        const permissions = {
-            'admin': [
-                'users:create', 'users:read', 'users:update', 'users:delete',
-                'orders:read', 'orders:update',
-                'merchants:read', 'merchants:update',
-                'drivers:read', 'drivers:update',
-                'customers:read', 'analytics:read',
-                'settings:read', 'settings:update'
+        // Define permissions per Cognito group
+        const permissionsMap = {
+            Admins: [
+                'users:create','users:read','users:update','users:delete',
+                'orders:read','orders:update',
+                'merchants:read','merchants:update',
+                'drivers:read','drivers:update',
+                'customers:read','analytics:read',
+                'settings:read','settings:update'
             ],
-            'manager': [
-                'users:read', 'orders:read', 'orders:update',
-                'merchants:read', 'merchants:update',
-                'drivers:read', 'drivers:update',
-                'customers:read', 'analytics:read'
+            Managers: [
+                'users:read','orders:read','orders:update',
+                'merchants:read','merchants:update',
+                'drivers:read','drivers:update',
+                'customers:read','analytics:read'
             ],
-            'viewer': [
-                'orders:read', 'merchants:read',
-                'drivers:read', 'customers:read', 'analytics:read'
+            Viewers: [
+                'orders:read','merchants:read',
+                'drivers:read','customers:read','analytics:read'
             ]
         };
-
-        return permissions[role]?.includes(action) || false;
+        // Check across groups
+        return groups.some(g => permissionsMap[g]?.includes(action));
     }
 
     // Initialize authentication check for protected pages

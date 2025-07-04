@@ -28,14 +28,15 @@ from app.auth import (
     get_user_by_username, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.auth_schemas import (
-    UserLogin, UserCreate, UserResponse, Token, LoginResponse,
-    UserListResponse, CreateUserResponse, UserUpdate, PasswordChange,
-    UserRole, has_permission
+    UserLogin, UserCreate, UserResponse, UserListResponse, CreateUserResponse, UserUpdate, PasswordChange
 )
+from app.auth_schemas import CognitoLoginResponse, CognitoToken, CognitoUserResponse
 
 # Import fallback mock database for development
 from app.db import db as mock_db
 from mangum import Mangum
+from app.cognito import initiate_auth, get_user_groups, list_users, admin_add_user_to_group, admin_remove_user_from_group, db as cognito_client
+from pydantic import BaseModel
 
 app = FastAPI(
     title=config.PROJECT_NAME, 
@@ -89,105 +90,41 @@ async def health_check():
 # AUTHENTICATION ENDPOINTS
 # ==========================================
 
-@app.post("/auth/login", response_model=LoginResponse)
+@app.post("/auth/login", response_model=CognitoLoginResponse)
 async def login(user_credentials: UserLogin):
-    """Login endpoint - authenticate user and return JWT token"""
+    """Authenticate via AWS Cognito and return tokens with user groups"""
     try:
-        # For testing when database is not available, use mock authentication
-        if not check_database_connection():
-            # Mock authentication for testing
-            if user_credentials.username == "admin" and user_credentials.password == "admin123":
-                # Create mock user response
-                from app.auth_schemas import UserResponse
-                mock_user = UserResponse(
-                    id=1,
-                    username="admin",
-                    email="admin@delivery-platform.com",
-                    role="admin",
-                    full_name="System Administrator"
-                )
-                
-                # Create access token
-                access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                access_token = create_access_token(
-                    data={"sub": user_credentials.username}, expires_delta=access_token_expires
-                )
-                
-                token = Token(
-                    access_token=access_token,
-                    token_type="bearer",
-                    expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                    user=mock_user
-                )
-                
-                return LoginResponse(
-                    success=True,
-                    message="Login successful (mock mode)",
-                    token=token
-                )
-            else:
-                return LoginResponse(
-                    success=False,
-                    message="Invalid username or password"
-                )
-        
-        # Normal database authentication
-        db = next(get_db())
-        try:
-            user = authenticate_user(db, user_credentials.username, user_credentials.password)
-            if not user:
-                return LoginResponse(
-                    success=False,
-                    message="Invalid username or password"
-                )
-            
-            if not user.is_active:
-                return LoginResponse(
-                    success=False,
-                    message="Account is disabled"
-                )
-            
-            # Create access token
-            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-            access_token = create_access_token(
-                data={"sub": user.username}, expires_delta=access_token_expires
-            )
-            
-            # Update last login
-            user.last_login = datetime.utcnow()
-            db.commit()
-            
-            # Return token and user info
-            user_response = UserResponse.from_orm(user)
-            token = Token(
-                access_token=access_token,
-                token_type="bearer",
-                expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                user=user_response
-            )
-            
-            return LoginResponse(
-                success=True,
-                message="Login successful",
-                token=token
-            )
-        finally:
-            db.close()
-        
+        auth_result = initiate_auth(user_credentials.username, user_credentials.password)
+        id_token = auth_result["IdToken"]
+        access_token = auth_result["AccessToken"]
+        refresh_token = auth_result.get("RefreshToken")
+        expires_in = auth_result["ExpiresIn"]
+        token_type = auth_result["TokenType"]
+        groups = get_user_groups(user_credentials.username)
+        user = CognitoUserResponse(username=user_credentials.username, groups=groups)
+        token = CognitoToken(
+            access_token=access_token,
+            id_token=id_token,
+            refresh_token=refresh_token,
+            expires_in=expires_in,
+            token_type=token_type,
+            user=user
+        )
+        return CognitoLoginResponse(success=True, message="Login successful", token=token)
+    except cognito_client.exceptions.NotAuthorizedException:
+        return CognitoLoginResponse(success=False, message="Invalid username or password")
     except Exception as e:
-        traceback.print_exc()
-        print(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @app.post("/auth/logout")
 async def logout(current_user: User = Depends(get_current_active_user)):
     """Logout endpoint - invalidate current session"""
     return {"message": "Logout successful"}
 
-@app.get("/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
-    """Get current user information"""
-    return UserResponse.from_orm(current_user)
+@app.get("/auth/me", response_model=CognitoUserResponse)
+async def get_current_user_info(current_user: CognitoUserResponse = Depends(get_current_user_cognito)):
+    """Get current Cognito user info"""
+    return current_user
 
 @app.post("/auth/change-password")
 async def change_password(
@@ -1324,6 +1261,46 @@ async def update_merchant_status(
         raise
     except Exception as e:
         raise HTTPException(500, f"Error updating merchant status: {str(e)}")
+
+# ==========================================
+# COGNITO USER/ROLE MANAGEMENT
+# ==========================================
+
+@app.get("/admin/cognito/users")
+async def list_cognito_users(
+    current_user = Depends(require_cognito_admin)
+):
+    """List all Cognito users with their groups (Admins only)"""
+    raw_users = list_users()
+    users = []
+    for u in raw_users:
+        username = u.get('Username')
+        groups = get_user_groups(username)
+        users.append({
+            'username': username,
+            'groups': groups
+        })
+    return {"users": users}
+
+@app.post("/admin/cognito/users/{username}/groups/{group_name}")
+async def add_user_group(
+    username: str,
+    group_name: str,
+    current_user = Depends(require_cognito_admin)
+):
+    """Grant a Cognito group to a user (Admins only)"""
+    admin_add_user_to_group(username, group_name)
+    return {"message": f"Added {username} to {group_name}"}
+
+@app.delete("/admin/cognito/users/{username}/groups/{group_name}")
+async def remove_user_group(
+    username: str,
+    group_name: str,
+    current_user = Depends(require_cognito_admin)
+):
+    """Revoke a Cognito group from a user (Admins only)"""
+    admin_remove_user_from_group(username, group_name)
+    return {"message": f"Removed {username} from {group_name}"}
 
 # -- Search and Filter Endpoints --
 @app.get("/search")

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Arabic Encoding Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            text-align: right;
+        }
+        .test-card {
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        .test-result {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-card card">
+            <div class="card-header">
+                <h2>اختبار تشفير النص العربي</h2>
+                <p>Arabic Text Encoding Test</p>
+            </div>
+            <div class="card-body">
+                <div class="test-result info">
+                    <strong>اختبار النص العربي:</strong> لوحة التحكم - منصة التوصيل المركزية
+                </div>
+                
+                <div class="test-result info">
+                    <strong>Arabic Text Test:</strong> لوحة التحكم - منصة التوصيل المركزية
+                </div>
+                
+                <div id="encodingTest" class="test-result">
+                    <strong>Encoding Test:</strong> Loading...
+                </div>
+                
+                <div id="apiTest" class="test-result">
+                    <strong>API Test:</strong> Loading...
+                </div>
+                
+                <div class="mt-4">
+                    <h4>Expected vs Actual:</h4>
+                    <p><strong>Expected:</strong> لوحة التحكم</p>
+                    <p><strong>Current Display:</strong> <span id="currentDisplay">لوحة التحكم</span></p>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-primary" onclick="testLogin()">اختبار تسجيل الدخول</button>
+                    <button class="btn btn-secondary" onclick="testDashboard()">اختبار لوحة التحكم</button>
+                </div>
+                
+                <div id="testResults" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test encoding
+        function testEncoding() {
+            const testText = "لوحة التحكم";
+            const encodedText = "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…";
+            
+            const encodingTest = document.getElementById('encodingTest');
+            if (testText === encodedText) {
+                encodingTest.innerHTML = '<strong>Encoding Test:</strong> ❌ Text is still encoded';
+                encodingTest.className = 'test-result error';
+            } else {
+                encodingTest.innerHTML = '<strong>Encoding Test:</strong> ✅ Text is properly decoded';
+                encodingTest.className = 'test-result success';
+            }
+        }
+
+        // Test API endpoint
+        async function testAPI() {
+            const apiTest = document.getElementById('apiTest');
+            try {
+                const response = await fetch('https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/health');
+                const contentType = response.headers.get('content-type');
+                
+                if (response.ok) {
+                    apiTest.innerHTML = `<strong>API Test:</strong> ✅ API is working (Content-Type: ${contentType})`;
+                    apiTest.className = 'test-result success';
+                } else {
+                    apiTest.innerHTML = `<strong>API Test:</strong> ❌ API error: ${response.status}`;
+                    apiTest.className = 'test-result error';
+                }
+            } catch (error) {
+                apiTest.innerHTML = `<strong>API Test:</strong> ❌ API error: ${error.message}`;
+                apiTest.className = 'test-result error';
+            }
+        }
+
+        // Test login
+        async function testLogin() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="test-result info">Testing login...</div>';
+            
+            try {
+                const response = await fetch('https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultsDiv.innerHTML = '<div class="test-result success">✅ Login successful! Token received.</div>';
+                    localStorage.setItem('authToken', data.token.access_token);
+                } else {
+                    resultsDiv.innerHTML = `<div class="test-result error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-result error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        // Test dashboard
+        async function testDashboard() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="test-result info">Testing dashboard...</div>';
+            
+            try {
+                const response = await fetch('https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/dashboard');
+                const contentType = response.headers.get('content-type');
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const hasArabic = html.includes('لوحة التحكم');
+                    const hasEncoded = html.includes('Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…');
+                    
+                    let result = `<div class="test-result">
+                        <strong>Dashboard Test:</strong><br>
+                        Content-Type: ${contentType}<br>
+                        Has Arabic: ${hasArabic ? '✅' : '❌'}<br>
+                        Has Encoded: ${hasEncoded ? '❌' : '✅'}<br>
+                    </div>`;
+                    
+                    if (contentType.includes('utf-8') && hasArabic && !hasEncoded) {
+                        result = result.replace('test-result', 'test-result success');
+                    } else {
+                        result = result.replace('test-result', 'test-result error');
+                    }
+                    
+                    resultsDiv.innerHTML = result;
+                } else {
+                    resultsDiv.innerHTML = `<div class="test-result error">❌ Dashboard error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-result error">❌ Dashboard error: ${error.message}</div>`;
+            }
+        }
+
+        // Run tests on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            testEncoding();
+            testAPI();
+        });
+    </script>
+</body>
+</html>

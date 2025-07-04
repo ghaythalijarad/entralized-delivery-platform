@@ -43,6 +43,11 @@ class ProductionConfig:
     # Logging
     LOG_LEVEL = "INFO"
     
+    # AWS Cognito Configuration
+    COGNITO_REGION = os.getenv("COGNITO_REGION", "us-east-1")
+    COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "your-user-pool-id")
+    COGNITO_APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID", "your-app-client-id")
+    
 class DevelopmentConfig:
     ENVIRONMENT = "development"
     DEBUG = True

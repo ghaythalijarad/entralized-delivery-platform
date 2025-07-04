@@ -4,7 +4,7 @@ Authentication Schemas for API requests and responses
 
 from pydantic import BaseModel, EmailStr, validator
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from enum import Enum
 
 # Import UserRole from models to avoid conflicts
@@ -78,6 +78,24 @@ class LoginResponse(BaseModel):
     success: bool
     message: str
     token: Optional[Token] = None
+
+# Cognito Authentication Responses
+class CognitoUserResponse(BaseModel):
+    username: str
+    groups: List[str]
+
+class CognitoToken(BaseModel):
+    access_token: str
+    id_token: str
+    refresh_token: Optional[str]
+    expires_in: int
+    token_type: str
+    user: CognitoUserResponse
+
+class CognitoLoginResponse(BaseModel):
+    success: bool
+    message: str
+    token: Optional[CognitoToken] = None
 
 # User Management
 class UserListResponse(BaseModel):

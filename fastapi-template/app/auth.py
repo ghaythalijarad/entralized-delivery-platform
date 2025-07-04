@@ -16,6 +16,7 @@ from enum import Enum
 
 from .database import get_db
 from .models import User, UserRole
+from .cognito import verify_jwt, get_user_groups
 
 # Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production-2025")
@@ -55,6 +56,10 @@ class UserResponse(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+class CognitoUser(BaseModel):
+    username: str
+    groups: list[str]
+
 # Password utilities
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
@@ -77,14 +82,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def verify_token(token: str) -> Optional[dict]:
-    """Verify and decode a JWT token"""
+    """Verify and decode a Cognito JWT token"""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            return None
-        return payload
-    except JWTError:
+        return verify_jwt(token)
+    except Exception:
         return None
 
 # Database user operations
@@ -169,6 +170,21 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def get_current_user_cognito(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> CognitoUser:
+    """Get current user from Cognito token"""
+    token = credentials.credentials
+    payload = verify_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials"
+        )
+    username = payload.get("cognito:username") or payload.get("sub")
+    groups = get_user_groups(username)
+    return CognitoUser(username=username, groups=groups)
+
 # Role-based access control
 def require_role(required_roles: List[UserRole]):
     """Decorator to require specific roles"""
@@ -181,10 +197,24 @@ def require_role(required_roles: List[UserRole]):
         return current_user
     return role_checker
 
-# Convenience dependencies
+# Group-based access control
+def require_group(required_groups: list[str]):
+    """Decorator to require specific groups"""
+    def checker(user: CognitoUser = Depends(get_current_user_cognito)):
+        if not any(g in user.groups for g in required_groups):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return user
+    return checker
+
+# Convenience for common roles and groups
 require_admin = require_role([UserRole.ADMIN])
 require_admin_or_manager = require_role([UserRole.ADMIN, UserRole.MANAGER])
 require_any_role = require_role([UserRole.ADMIN, UserRole.MANAGER, UserRole.VIEWER])
+require_cognito_admin = require_group(["Admins"])
+require_cognito_manager = require_group(["Managers"])
 
 def create_default_admin_user(db: Session):
     """Create default admin user if no users exist"""

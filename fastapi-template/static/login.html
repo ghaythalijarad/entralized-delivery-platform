@@ -214,7 +214,8 @@
     </style>
     <!-- Demo credentials info -->
     <!-- API base URL override: set this meta tag to your API server's URL in production -->
-    <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/">
+    <meta name="api-base" content="/static/">
+    <script src="/static/auth.js"></script>
     <!-- WebSocket URL for real-time notifications -->
     <meta name="websocket-url" content="wss://36jblgxwki.execute-api.us-east-1.amazonaws.com/production">
 </head>
@@ -298,7 +299,7 @@
              loading.style.display = 'block';
              
              try {
-                 const response = await fetch(`${API_BASE}auth/login`, {
+                 const response = await fetch(`${API_BASE}/auth/login`, {
                      method: 'POST',
                      headers: {
                          'Content-Type': 'application/json',
@@ -313,7 +314,7 @@
                  
                  if (data.success && data.token) {
                      // Store authentication token
-                     localStorage.setItem('authToken', data.token.access_token);
+                     localStorage.setItem('accessToken', data.token.access_token);
                      localStorage.setItem('userInfo', JSON.stringify(data.token.user));
                      
                     showAlert('تم تسجيل الدخول بنجاح! جارٍ التحويل...', 'success');

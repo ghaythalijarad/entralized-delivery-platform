@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amplify Deployment Test - Success!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        .status {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .url-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .test-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .test-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .architecture {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        <h1>AWS Amplify Deployment Success!</h1>
+        
+        <div class="status">
+            ✅ Centralized Delivery Platform is LIVE and Operational!
+        </div>
+
+        <div class="architecture">
+            <h3>🏗️ Architecture Overview:</h3>
+            <strong>Frontend:</strong> AWS Amplify + CloudFront CDN<br>
+            <strong>Backend:</strong> AWS Lambda + API Gateway<br>
+            <strong>Database:</strong> AWS RDS PostgreSQL<br>
+            <strong>Security:</strong> JWT Authentication + HTTPS
+        </div>
+
+        <h3>🌐 Your Live URLs:</h3>
+        
+        <div class="url-box">
+            <strong>Frontend (Amplify):</strong><br>
+            https://main.d1l2ynfxs4bd2p.amplifyapp.com/
+        </div>
+        
+        <div class="url-box">
+            <strong>Backend (Lambda):</strong><br>
+            https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/
+        </div>
+
+        <h3>🧪 Test Your Application:</h3>
+        
+        <button class="test-btn" onclick="testFrontend()">Test Frontend</button>
+        <button class="test-btn" onclick="testBackend()">Test Backend</button>
+        <button class="test-btn" onclick="testLogin()">Test Login Flow</button>
+        <button class="test-btn" onclick="testAll()">Test Everything</button>
+
+        <div class="results" id="results" style="display: none;">
+            <h4>🔍 Test Results:</h4>
+            <div id="testOutput"></div>
+        </div>
+
+        <div class="status" style="background: #fff3cd; color: #856404;">
+            <strong>Demo Credentials:</strong> admin / admin123
+        </div>
+    </div>
+
+    <script>
+        const FRONTEND_URL = 'https://main.d1l2ynfxs4bd2p.amplifyapp.com';
+        const BACKEND_URL = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+
+        function showResults() {
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function addResult(test, status, message) {
+            const output = document.getElementById('testOutput');
+            const div = document.createElement('div');
+            div.className = `test-item test-${status}`;
+            div.innerHTML = `<strong>${test}:</strong> ${message}`;
+            output.appendChild(div);
+        }
+
+        async function testFrontend() {
+            showResults();
+            addResult('Frontend Test', 'info', 'Testing Amplify frontend...');
+            
+            try {
+                const response = await fetch(`${FRONTEND_URL}/login.html`, { method: 'HEAD' });
+                if (response.ok) {
+                    addResult('Amplify Frontend', 'pass', `✅ Login page accessible (${response.status})`);
+                } else {
+                    addResult('Amplify Frontend', 'fail', `❌ Failed (${response.status})`);
+                }
+            } catch (error) {
+                addResult('Amplify Frontend', 'fail', `❌ Error: ${error.message}`);
+            }
+
+            try {
+                const response = await fetch(`${FRONTEND_URL}/index.html`, { method: 'HEAD' });
+                if (response.ok) {
+                    addResult('Dashboard Page', 'pass', `✅ Dashboard accessible (${response.status})`);
+                } else {
+                    addResult('Dashboard Page', 'fail', `❌ Failed (${response.status})`);
+                }
+            } catch (error) {
+                addResult('Dashboard Page', 'fail', `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testBackend() {
+            showResults();
+            addResult('Backend Test', 'info', 'Testing Lambda backend...');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Lambda Health', 'pass', `✅ Backend healthy - DB: ${data.database}`);
+                } else {
+                    addResult('Lambda Health', 'fail', `❌ Failed (${response.status})`);
+                }
+            } catch (error) {
+                addResult('Lambda Health', 'fail', `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            showResults();
+            addResult('Login Test', 'info', 'Testing authentication flow...');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.token) {
+                        addResult('Authentication', 'pass', '✅ Login successful - JWT token received');
+                        addResult('User Data', 'pass', `✅ User: ${data.token.user.username} (${data.token.user.role})`);
+                    } else {
+                        addResult('Authentication', 'fail', '❌ Login failed - Invalid response');
+                    }
+                } else {
+                    addResult('Authentication', 'fail', `❌ Login failed (${response.status})`);
+                }
+            } catch (error) {
+                addResult('Authentication', 'fail', `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testAll() {
+            document.getElementById('testOutput').innerHTML = '';
+            showResults();
+            
+            addResult('Complete Test', 'info', '🚀 Running comprehensive tests...');
+            
+            await testFrontend();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testBackend();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testLogin();
+            
+            addResult('Test Suite', 'pass', '✅ All tests completed!');
+        }
+
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testAll, 1000);
+        });
+    </script>
+</body>
+</html>

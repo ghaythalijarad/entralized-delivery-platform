@@ -10,5 +10,6 @@ fastapi-mail
 alembic
 requests
 mangum
+boto3
 
 # Mock database
