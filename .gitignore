@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*build/
+*develop-eggs/
+*dist/
+*downloads/
+*eggs/
+*.egg-info/
+*env/
+*venv/
+delivery_env/
+.env
+
+# AWS SAM
+.aws-sam/
+
+# macOS
+.DS_Store
+
+# Database
+delivery_platform.db
+*.sqlite3
+
+# Backup files
+*.bak
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Deployment artifacts from other platforms
+Dockerfile
+apprunner.yaml
+Procfile
+amplify.yml
+amplify_simple.yml
+amplify_static.yml
+amplify_static_only.yml
+
+# Logs
+*.log
+
+# Local configs
+samconfig.toml
+
+# Shell scripts and temporary files
+*.sh
+*.md
+test_login_flow.html
+apprunner-config.json
+requirements_production.txt
+root_start.py
+run_server.py
+runtime.txt
+simple_start.py

@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+Resources:
+  FastApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.11
+      BuildProperties:
+        DisableGlobalScript: true
+    Properties:
+      CodeUri: fastapi-template/
+      Architectures: [x86_64]
+      PackageType: Zip
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Handler: lambda_function.handler
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          DATABASE_URL: sqlite:///delivery_platform.db
+          SECRET_KEY: production-secret-key-2025
+      Events:
+        ProxyHttpApi:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 5  # keep a small pool warm to eliminate cold starts
+
+  # WebSocket API for real-time notifications
+  CentralDeliveryWebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: CentralDeliveryWebSocketApi
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+      Description: "WebSocket API for real-time order notifications"
+
+  CentralDeliveryWebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref CentralDeliveryWebSocketApi
+      StageName: Prod
+      AutoDeploy: true
+
+  # Connection manager function (handles connect, disconnect, default)
+  ConnectionManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: fastapi-template/
+      Handler: websocket.connect_disconnect.handler
+      Runtime: python3.11
+      MemorySize: 128
+      Timeout: 10
+      Environment:
+        Variables:
+          CONN_TABLE: !Ref ConnectionTable
+          WS_ENDPOINT: !Sub "https://${CentralDeliveryWebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+      Events:
+        ConnectRoute:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: $connect
+        DisconnectRoute:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: $disconnect
+        DefaultRoute:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: $default
+
+  # Notification function (handles custom message routes)
+  NotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: fastapi-template/
+      Handler: websocket.notification.handler
+      Runtime: python3.11
+      MemorySize: 256
+      Timeout: 20
+      Environment:
+        Variables:
+          CONN_TABLE: !Ref ConnectionTable
+          WS_ENDPOINT: !Sub "https://${CentralDeliveryWebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+      Events:
+        OrderPlaced:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: orderPlaced
+        OrderAccepted:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: orderAccepted
+        TrackUpdate:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: trackUpdate
+        OrderCancelled:
+          Type: WebSocketApi
+          Properties:
+            ApiId: !Ref CentralDeliveryWebSocketApi
+            Route: orderCancelled
+
+  # Permissions for WebSocket invoke
+  ConnectionManagerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ConnectionManagerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/$connect
+  ConnectionManagerDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ConnectionManagerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/$disconnect
+  ConnectionManagerDefaultPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ConnectionManagerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/$default
+  NotificationInvokePermissionOrderPlaced:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt NotificationFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/orderPlaced
+  NotificationInvokePermissionOrderAccepted:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt NotificationFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/orderAccepted
+  NotificationInvokePermissionTrackUpdate:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt NotificationFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/trackUpdate
+  NotificationInvokePermissionOrderCancelled:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt NotificationFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CentralDeliveryWebSocketApi}/*/orderCancelled
+
+  # DynamoDB table for tracking active connections
+  ConnectionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: pk
+        Type: String
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API endpoint URL
+    Value: !Sub 'https://${FastApiFunctionHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
