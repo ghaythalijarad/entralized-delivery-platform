@@ -376,12 +376,10 @@
                             الإعدادات
                         </a>
                     </li>
-                    <li class="nav-item" data-role="Admins">
-                        <a class="nav-link" href="#" onclick="loadSection('user-management.html')">
-                            <span class="material-icons-outlined me-2">manage_accounts</span>
-                            إدارة المستخدمين
-                        </a>
-                    </li>
+                    <a class="nav-link" data-role="Admins" href="#" onclick="loadSection('user-management.html')">
+                        <span class="material-icons-outlined me-2">manage_accounts</span>
+                        إدارة المستخدمين
+                    </a>
                     <li class="nav-item" style="margin-top: 2rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
                         <a class="nav-link text-muted" href="#" onclick="logout()" style="color: #dc3545 !important;">
                             <span class="material-icons-outlined me-2">logout</span>
@@ -441,6 +439,10 @@
             <span class="material-icons-outlined">settings</span>
             الإعدادات
         </a>
+        <a class="nav-link" data-role="Admins" href="#" onclick="loadSection('user-management.html')">
+            <span class="material-icons-outlined">manage_accounts</span>
+            إدارة المستخدمين
+        </a>
         <a class="nav-link" href="#" onclick="logout()" style="color: #dc3545;">
             <span class="material-icons-outlined">logout</span>
             تسجيل الخروج
@@ -458,13 +460,16 @@
                 return;
             }
             
-            // Display user info
+            // Display user info and apply RBAC
             const user = auth.getUser();
             if (user) {
                 const displayName = document.getElementById('userDisplayName');
                 if(displayName) {
                     displayName.textContent = user.full_name || user.username;
                 }
+                applyRoleBasedVisibility(); // Apply RBAC
+            } else {
+                applyRoleBasedVisibility(); // Hide all gated content if no user
             }
             
             console.log('🚀 Admin panel loaded');
@@ -499,6 +504,26 @@
                 }
             });
         });
+
+        // Apply role-based visibility based on Cognito groups
+        function applyRoleBasedVisibility() {
+            const user = auth.getUser();
+            const userGroups = user ? user.groups || [] : [];
+
+            document.querySelectorAll('[data-role]').forEach(el => {
+                const requiredRoles = el.getAttribute('data-role').split(',').map(r => r.trim());
+                const hasRole = requiredRoles.some(role => userGroups.includes(role));
+
+                if (!hasRole) {
+                    el.style.display = 'none';
+                } else {
+                    // Ensure the element is visible if the role matches
+                    // This handles elements that might be hidden by default
+                    // Note: may need adjustment if using classes like 'd-none'
+                    el.style.display = ''; 
+                }
+            });
+        }
 
         // Logout function
         function logout() {
