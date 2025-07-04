@@ -22,6 +22,16 @@
     <meta name="websocket-url" content="wss://36jblgxwki.execute-api.us-east-1.amazonaws.com/production">
     <!-- Authentication -->
     <script src="auth.js"></script>
+    <script>
+        // Global error handling for debugging
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error, e.filename, e.lineno);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled Promise Rejection:', e.reason);
+        });
+    </script>
     <style>
         body {
             background: #f4f6fb;
@@ -450,8 +460,11 @@
     </div>
 
     <script>
-        // Initialize authentication manager (fallback to global if available)
-        const auth = window.authManager || new AuthManager();
+        // Initialize authentication manager (create global instance)
+        if (!window.authManager) {
+            window.authManager = new AuthManager();
+        }
+        const auth = window.authManager;
         
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -527,24 +540,92 @@
         }
 
         // Logout function
-        function logout() {
+        async function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
                 console.log('Logout initiated...');
-                try {
-                    if (auth && typeof auth.logout === 'function') {
-                        auth.logout();
-                    } else {
-                        // Fallback logout
-                        localStorage.removeItem('accessToken');
-                        localStorage.removeItem('userInfo');
-                        window.location.href = '/static/login.html';
+                
+                // Show loading indicator
+                const logoutBtns = document.querySelectorAll('.logout-btn');
+                logoutBtns.forEach(btn => {
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.6';
+                    const icon = btn.querySelector('.material-icons-outlined');
+                    if (icon) {
+                        icon.textContent = 'hourglass_empty';
                     }
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    // Fallback logout
+                });
+                
+                try {
+                    // Try using auth manager first if available
+                    if (window.authManager && typeof window.authManager.logout === 'function') {
+                        console.log('Using auth manager logout...');
+                        await window.authManager.logout();
+                        return; // auth manager handles redirect
+                    }
+                    
+                    // Fallback to direct API call
+                    console.log('Using direct logout API call...');
+                    const token = localStorage.getItem('accessToken');
+                    
+                    if (token) {
+                        try {
+                            const response = await fetch('https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/auth/logout', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                credentials: 'include'
+                            });
+                            
+                            if (response.ok) {
+                                console.log('Server logout successful');
+                            } else {
+                                console.warn('Server logout returned:', response.status, response.statusText);
+                            }
+                        } catch (serverError) {
+                            console.error('Server logout failed:', serverError);
+                            // Continue with local cleanup even if server logout fails
+                        }
+                    }
+                    
+                    // Clear all authentication data
+                    console.log('Clearing local storage...');
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('userInfo');
-                    window.location.href = '/static/login.html';
+                    localStorage.removeItem('authToken'); // Legacy cleanup
+                    localStorage.removeItem('refreshToken'); // Just in case
+                    
+                    // Clear any auth cookies that might be accessible
+                    document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    
+                    console.log('Local storage and cookies cleared');
+                    
+                    // Force redirect to login
+                    console.log('Redirecting to login...');
+                    window.location.replace('/login.html');
+                    
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    
+                    // Force fallback logout
+                    console.log('Forcing fallback logout...');
+                    try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        
+                        // Clear all cookies
+                        document.cookie.split(";").forEach(function(c) { 
+                            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                        });
+                        
+                        window.location.replace('/login.html');
+                    } catch (fallbackError) {
+                        console.error('Even fallback logout failed:', fallbackError);
+                        alert('تعذر تسجيل الخروج. سيتم إعادة تحميل الصفحة.');
+                        window.location.reload();
+                    }
                 }
             }
         }

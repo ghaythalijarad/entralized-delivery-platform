@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Login/Logout Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.danger { background: #dc3545; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px;
+        }
+        .log-info { color: #007bff; }
+        .log-success { color: #28a745; font-weight: bold; }
+        .log-error { color: #dc3545; font-weight: bold; }
+        .log-warning { color: #ffc107; font-weight: bold; }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Login/Logout Flow Test</h1>
+        <p>Test the complete login and logout flow on your live Amplify deployment.</p>
+
+        <!-- URLs -->
+        <div class="test-section">
+            <h3>🌐 Live URLs</h3>
+            <p><strong>Frontend:</strong> <a href="https://main.d1l2ynfxs4bd2p.amplifyapp.com" target="_blank">https://main.d1l2ynfxs4bd2p.amplifyapp.com</a></p>
+            <p><strong>Backend:</strong> <a href="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/health" target="_blank">https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/health</a></p>
+            <p><strong>Credentials:</strong> admin / AdminPass123!</p>
+        </div>
+
+        <!-- Automated Tests -->
+        <div class="test-section">
+            <h3>🔍 Automated Tests</h3>
+            <button class="btn" onclick="testBackendHealth()">Test Backend</button>
+            <button class="btn" onclick="testFrontendAccess()">Test Frontend</button>
+            <button class="btn success" onclick="testCompleteFlow()">Test Complete Flow</button>
+            <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
+            <div id="testResults" class="log"></div>
+        </div>
+
+        <!-- Manual Test Steps -->
+        <div class="test-section">
+            <h3>📝 Manual Test Steps</h3>
+            <ol>
+                <li><strong>Access App:</strong> Go to <a href="https://main.d1l2ynfxs4bd2p.amplifyapp.com" target="_blank">your live app</a></li>
+                <li><strong>Should Redirect:</strong> Should automatically redirect to login page</li>
+                <li><strong>Login:</strong> Use admin / AdminPass123!</li>
+                <li><strong>Dashboard:</strong> Should redirect to dashboard after login</li>
+                <li><strong>Logout:</strong> Click logout button, confirm dialog</li>
+                <li><strong>Redirect:</strong> Should redirect back to login page</li>
+            </ol>
+        </div>
+
+        <!-- Token Inspector -->
+        <div class="test-section">
+            <h3>🔐 Token Inspector</h3>
+            <button class="btn" onclick="inspectTokens()">Inspect Current Tokens</button>
+            <div id="tokenInfo" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const FRONTEND_URL = 'https://main.d1l2ynfxs4bd2p.amplifyapp.com';
+        const BACKEND_URL = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+        
+        // Logging function
+        function log(message, type = 'info', containerId = 'testResults') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        // Test backend health
+        async function testBackendHealth() {
+            log('🔍 Testing backend health...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Backend healthy - Status: ${data.status}, DB: ${data.database}`, 'success');
+                } else {
+                    log(`❌ Backend health check failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Backend connection error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test frontend access
+        async function testFrontendAccess() {
+            log('🌐 Testing frontend access...', 'info');
+            
+            try {
+                const response = await fetch(`${FRONTEND_URL}/login.html`, { method: 'HEAD' });
+                if (response.ok) {
+                    log('✅ Frontend accessible - Login page found', 'success');
+                } else {
+                    log(`❌ Frontend access failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Frontend connection error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test complete flow
+        async function testCompleteFlow() {
+            log('🧪 Starting complete login/logout flow test...', 'info');
+            
+            try {
+                // Step 1: Clear existing data
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('userInfo');
+                log('🧹 Cleared existing tokens', 'info');
+                
+                // Step 2: Test login
+                log('🔐 Testing login...', 'info');
+                const loginResponse = await fetch(`${BACKEND_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        username: 'admin', 
+                        password: 'AdminPass123!' 
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status}`);
+                }
+                
+                const loginData = await loginResponse.json();
+                if (!loginData.success || !loginData.token) {
+                    throw new Error('Login response invalid');
+                }
+                
+                // Store tokens
+                localStorage.setItem('accessToken', loginData.token.access_token);
+                localStorage.setItem('userInfo', JSON.stringify(loginData.token.user));
+                
+                log('✅ Login successful - Tokens stored', 'success');
+                log(`👤 User: ${loginData.token.user.username}`, 'info');
+                
+                // Step 3: Test logout
+                log('🚪 Testing logout...', 'info');
+                const logoutResponse = await fetch(`${BACKEND_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (logoutResponse.ok) {
+                    log('✅ Server logout successful', 'success');
+                    
+                    // Clear local storage
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('userInfo');
+                    log('✅ Local session data cleared', 'success');
+                    
+                    log('🎉 Complete flow test successful!', 'success');
+                } else {
+                    log('❌ Logout failed', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Flow test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear all data
+        function clearAllData() {
+            localStorage.clear();
+            log('🧹 All localStorage data cleared', 'info');
+            
+            // Clear log
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('tokenInfo').innerHTML = '';
+        }
+
+        // Inspect tokens
+        function inspectTokens() {
+            const container = document.getElementById('tokenInfo');
+            container.innerHTML = '';
+            
+            log('🔐 Inspecting current tokens...', 'info', 'tokenInfo');
+            
+            const accessToken = localStorage.getItem('accessToken');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (accessToken) {
+                log(`✅ Access Token: ${accessToken.substring(0, 30)}...`, 'success', 'tokenInfo');
+                
+                try {
+                    const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                    const expiry = new Date(payload.exp * 1000);
+                    log(`⏰ Expires: ${expiry.toLocaleString()}`, 'info', 'tokenInfo');
+                } catch (e) {
+                    log('⚠️ Could not decode token payload', 'warning', 'tokenInfo');
+                }
+            } else {
+                log('❌ No access token found', 'error', 'tokenInfo');
+            }
+            
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                log(`👤 User: ${user.username} (${user.groups?.join(', ') || 'No groups'})`, 'info', 'tokenInfo');
+            } else {
+                log('❌ No user info found', 'error', 'tokenInfo');
+            }
+            
+            // Check cookies (won't show HttpOnly ones)
+            const cookies = document.cookie;
+            if (cookies) {
+                log(`🍪 Visible cookies: ${cookies}`, 'info', 'tokenInfo');
+            } else {
+                log('🍪 No visible cookies (HttpOnly cookies are secure)', 'info', 'tokenInfo');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🚀 Login/Logout Flow Test loaded', 'info');
+            log('Ready to test your live application!', 'info');
+            
+            // Auto-run backend test
+            setTimeout(testBackendHealth, 1000);
+        });
+    </script>
+</body>
+</html>
