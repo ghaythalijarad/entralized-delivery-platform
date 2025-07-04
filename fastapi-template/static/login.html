@@ -263,16 +263,21 @@
     </div>
 
     <script>
-        // Determine API base URL from meta tag or default to origin
-        const metaApi = document.querySelector('meta[name="api-base"]');
-        const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
-         
-        // Check if already logged in and redirect to dashboard
-        if (localStorage.getItem('authToken')) {
-            console.log('User already authenticated, redirecting to dashboard...');
-            window.location.href = '/dashboard';
-            return;
-        }
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Determine API base URL from meta tag or default to origin
+            const metaApi = document.querySelector('meta[name="api-base"]');
+            const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
+            
+            console.log('Meta API element:', metaApi);
+            console.log('API_BASE:', API_BASE);
+            
+            // Check if already logged in and redirect to dashboard
+            if (localStorage.getItem('authToken')) {
+                console.log('User already authenticated, redirecting to dashboard...');
+                window.location.href = '/dashboard';
+                return;
+            }
 
          document.getElementById('loginForm').addEventListener('submit', async (e) => {
              e.preventDefault();
@@ -480,6 +485,8 @@
         passwordInput.addEventListener('blur', () => {
             passwordValidation.style.display = 'none';
         });
+
+        }); // End of DOMContentLoaded
     </script>
 </body>
 </html>
