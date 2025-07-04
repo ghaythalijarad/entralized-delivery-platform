@@ -145,11 +145,10 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
         )
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Login error: {e}")
-        return LoginResponse(
-            success=False,
-            message="Login failed"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/auth/logout")
 async def logout(current_user: User = Depends(get_current_active_user)):
