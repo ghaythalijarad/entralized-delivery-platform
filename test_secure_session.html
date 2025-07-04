@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Session Handling Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { border-color: #4CAF50; background: #e8f5e9; }
+        .error { border-color: #f44336; background: #ffebee; }
+        .warning { border-color: #ff9800; background: #fff3e0; }
+        .btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #1565c0; }
+        .btn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        input {
+            width: 200px;
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Secure Session Handling Test</h1>
+        <p>Test the new AWS Cognito secure session implementation with HttpOnly cookies.</p>
+
+        <!-- Test 1: Environment Configuration -->
+        <div class="test-section" id="config-test">
+            <h3>📋 Test 1: Configuration Check</h3>
+            <p>Checking API endpoint and configuration...</p>
+            <button class="btn" onclick="testConfiguration()">Test Configuration</button>
+            <div id="config-result"></div>
+        </div>
+
+        <!-- Test 2: Login with Secure Cookies -->
+        <div class="test-section" id="login-test">
+            <h3>🔐 Test 2: Secure Login</h3>
+            <p>Test login with the new secure session handling.</p>
+            <div>
+                <input type="text" id="username" placeholder="Username" value="admin">
+                <input type="password" id="password" placeholder="Password" value="AdminPass123!">
+                <button class="btn" onclick="testLogin()">Login</button>
+                <button class="btn" onclick="testLogout()">Logout</button>
+            </div>
+            <div id="login-result"></div>
+        </div>
+
+        <!-- Test 3: Cookie Inspection -->
+        <div class="test-section" id="cookie-test">
+            <h3>🍪 Test 3: Cookie Security</h3>
+            <p>Check if refresh token is properly stored in HttpOnly cookie.</p>
+            <button class="btn" onclick="inspectCookies()">Inspect Cookies</button>
+            <div id="cookie-result"></div>
+        </div>
+
+        <!-- Test 4: Token Refresh -->
+        <div class="test-section" id="refresh-test">
+            <h3>🔄 Test 4: Token Refresh</h3>
+            <p>Test automatic token refresh functionality.</p>
+            <button class="btn" onclick="testTokenRefresh()">Test Refresh</button>
+            <div id="refresh-result"></div>
+        </div>
+
+        <!-- Test 5: Protected API Call -->
+        <div class="test-section" id="api-test">
+            <h3>🛡️ Test 5: Protected API Call</h3>
+            <p>Test making authenticated API calls.</p>
+            <button class="btn" onclick="testProtectedAPI()">Test API Call</button>
+            <div id="api-result"></div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="test-section">
+            <h3>🐛 Debug Log</h3>
+            <div class="log" id="debug-log"></div>
+            <button class="btn" onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000';
+        
+        // Debug logging
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logEl.textContent += logEntry;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').textContent = '';
+        }
+
+        function setTestResult(testId, message, success = true) {
+            const resultEl = document.getElementById(testId + '-result');
+            const testEl = document.getElementById(testId);
+            
+            resultEl.innerHTML = `<p>${message}</p>`;
+            testEl.className = 'test-section ' + (success ? 'success' : 'error');
+        }
+
+        // Test 1: Configuration Check
+        async function testConfiguration() {
+            log('Testing API configuration...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setTestResult('config', `✅ API is running! Status: ${data.status}`, true);
+                    log('API health check passed');
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
+            } catch (error) {
+                setTestResult('config', `❌ API not accessible: ${error.message}`, false);
+                log(`API health check failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Secure Login
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            log(`Attempting login with username: ${username}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Important: Include cookies
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Store access token in localStorage (for testing)
+                    if (data.token && data.token.access_token) {
+                        localStorage.setItem('accessToken', data.token.access_token);
+                        localStorage.setItem('userInfo', JSON.stringify(data.token.user));
+                    }
+
+                    setTestResult('login', `✅ Login successful! User: ${data.token.user.username}, Groups: ${data.token.user.groups.join(', ')}`, true);
+                    log('Login successful, access token stored');
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                setTestResult('login', `❌ Login failed: ${error.message}`, false);
+                log(`Login failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2b: Secure Logout
+        async function testLogout() {
+            log('Attempting logout...');
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('userInfo');
+                    setTestResult('login', `✅ Logout successful! Refresh token cookie cleared.`, true);
+                    log('Logout successful');
+                } else {
+                    throw new Error(`Logout failed: ${response.status}`);
+                }
+            } catch (error) {
+                setTestResult('login', `❌ Logout failed: ${error.message}`, false);
+                log(`Logout failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 3: Cookie Inspection
+        function inspectCookies() {
+            log('Inspecting cookies...');
+            
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const refreshTokenCookie = cookies.find(c => c.startsWith('refreshToken='));
+            
+            if (refreshTokenCookie) {
+                setTestResult('cookie', `❌ Security Issue: refreshToken cookie is accessible via JavaScript! This should be HttpOnly.`, false);
+                log('SECURITY WARNING: refreshToken cookie is not HttpOnly', 'error');
+            } else {
+                // Check if we can see any cookies at all
+                if (cookies.length > 1 || (cookies.length === 1 && cookies[0] !== '')) {
+                    setTestResult('cookie', `✅ Refresh token is properly secured! Cannot access via JavaScript (HttpOnly). Visible cookies: ${cookies.join(', ')}`, true);
+                    log('Refresh token properly secured with HttpOnly flag');
+                } else {
+                    setTestResult('cookie', `⚠️ No cookies found. Make sure you're logged in first.`, false);
+                    log('No cookies found - user may not be logged in', 'warning');
+                }
+            }
+        }
+
+        // Test 4: Token Refresh
+        async function testTokenRefresh() {
+            log('Testing token refresh...');
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.access_token) {
+                        localStorage.setItem('accessToken', data.access_token);
+                        setTestResult('refresh', `✅ Token refresh successful! New token obtained.`, true);
+                        log('Token refresh successful');
+                    } else {
+                        throw new Error('Invalid refresh response');
+                    }
+                } else {
+                    throw new Error(`Refresh failed: ${response.status}`);
+                }
+            } catch (error) {
+                setTestResult('refresh', `❌ Token refresh failed: ${error.message}. Make sure you're logged in.`, false);
+                log(`Token refresh failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 5: Protected API Call
+        async function testProtectedAPI() {
+            log('Testing protected API call...');
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    throw new Error('No access token found. Please login first.');
+                }
+
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setTestResult('api', `✅ Protected API call successful! User: ${data.username}, Groups: ${data.groups.join(', ')}`, true);
+                    log('Protected API call successful');
+                } else if (response.status === 401) {
+                    // Try to refresh token automatically
+                    log('Got 401, attempting automatic token refresh...');
+                    await testTokenRefresh();
+                    
+                    // Retry the API call
+                    const newToken = localStorage.getItem('accessToken');
+                    const retryResponse = await fetch(`${API_BASE}/auth/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${newToken}`,
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (retryResponse.ok) {
+                        const retryData = await retryResponse.json();
+                        setTestResult('api', `✅ API call successful after auto-refresh! User: ${retryData.username}`, true);
+                        log('API call successful after automatic token refresh');
+                    } else {
+                        throw new Error(`API call failed even after refresh: ${retryResponse.status}`);
+                    }
+                } else {
+                    throw new Error(`API call failed: ${response.status}`);
+                }
+            } catch (error) {
+                setTestResult('api', `❌ Protected API call failed: ${error.message}`, false);
+                log(`Protected API call failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Secure Session Handling Test initialized');
+            log('Make sure your FastAPI server is running on http://localhost:8000');
+        });
+    </script>
+</body>
+</html>

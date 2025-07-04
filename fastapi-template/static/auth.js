@@ -10,6 +10,7 @@ class AuthManager {
         this.API_BASE = (meta && meta.content) ? meta.content : window.location.origin;
         this.TOKEN_KEY = 'accessToken';
         this.USER_KEY = 'userInfo';
+        this.isRefreshing = false; // Flag to prevent multiple refresh attempts
     }
 
     // Get stored auth token
@@ -33,12 +34,12 @@ class AuthManager {
             const payload = JSON.parse(atob(token.split('.')[1]));
             const isExpired = payload.exp * 1000 < Date.now();
             if (isExpired) {
-                this.logout();
+                // Don't logout immediately, try to refresh first
                 return false;
             }
             return true;
         } catch (e) {
-            this.logout();
+            this.clearAuth();
             return false;
         }
     }
@@ -50,84 +51,21 @@ class AuthManager {
     }
 
     // Clear authentication data
-    logout() {
+    clearAuth() {
         localStorage.removeItem(this.TOKEN_KEY);
         localStorage.removeItem(this.USER_KEY);
     }
 
-    // Get authorization headers for API calls
-    getAuthHeaders() {
-        const token = this.getToken();
-        return token ? {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        } : {
-            'Content-Type': 'application/json'
-        };
-    }
-
-    // Make authenticated API request
-    async apiRequest(endpoint, options = {}) {
-        const url = endpoint.startsWith('http') ? endpoint : `${this.API_BASE}${endpoint}`;
-        
-        const config = {
-            headers: this.getAuthHeaders(),
-            ...options
-        };
-
+    // Logout: invalidate session on server and clear local data
+    async logout() {
         try {
-            const response = await fetch(url, config);
-            
-            // Handle authentication errors
-            if (response.status === 401) {
-                this.logout();
-                window.location.href = '/static/login.html';
-                return null;
-            }
-
-            return response;
+            await this.apiRequest('/auth/logout', { method: 'POST' });
         } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
+            console.error('Logout failed:', error);
+        } finally {
+            this.clearAuth();
+            window.location.href = '/static/login.html';
         }
-    }
-
-    // Get user role and permissions
-    getUserGroups() {
-        const user = this.getUser();
-        return user ? user.groups : [];
-    }
-
-    // Check if user is authenticated
-    isAuthenticated() {
-        const token = this.getToken();
-        if (!token) return false;
-
-        // Check if token is expired (basic check)
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const isExpired = payload.exp * 1000 < Date.now();
-            if (isExpired) {
-                this.logout();
-                return false;
-            }
-            return true;
-        } catch (e) {
-            this.logout();
-            return false;
-        }
-    }
-
-    // Store authentication data
-    setAuth(token, user) {
-        localStorage.setItem(this.TOKEN_KEY, token);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    }
-
-    // Clear authentication data
-    logout() {
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.USER_KEY);
     }
 
     // Get authorization headers for API calls
@@ -141,22 +79,66 @@ class AuthManager {
         };
     }
 
-    // Make authenticated API request
+    // Attempt to refresh the access token
+    async refreshToken() {
+        if (this.isRefreshing) {
+            return false; // Prevent concurrent refresh attempts
+        }
+        this.isRefreshing = true;
+
+        try {
+            const response = await fetch(`${this.API_BASE}/auth/refresh`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Credentials must be included to send cookies
+                credentials: 'include' 
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuth(data.access_token, this.getUser()); // Update token
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            console.error('Token refresh error:', error);
+            return false;
+        } finally {
+            this.isRefreshing = false;
+        }
+    }
+
+    // Make authenticated API request with auto-refresh
     async apiRequest(endpoint, options = {}) {
         const url = endpoint.startsWith('http') ? endpoint : `${this.API_BASE}${endpoint}`;
         
-        const config = {
+        let config = {
             headers: this.getAuthHeaders(),
-            ...options
+            ...options,
+            credentials: 'include' // Send cookies with all requests
         };
 
         try {
-            const response = await fetch(url, config);
+            let response = await fetch(url, config);
             
-            // Handle authentication errors
+            // If token expired, try to refresh and retry the request
+            if (response.status === 401 && endpoint !== '/auth/refresh') {
+                const refreshed = await this.refreshToken();
+                if (refreshed) {
+                    // Retry the original request with the new token
+                    config.headers = this.getAuthHeaders();
+                    response = await fetch(url, config);
+                } else {
+                    // If refresh fails, log out
+                    this.logout();
+                    return null;
+                }
+            }
+
+            // Final check for auth failure
             if (response.status === 401) {
                 this.logout();
-                window.location.href = '/static/login.html';
                 return null;
             }
 
@@ -212,8 +194,12 @@ class AuthManager {
     // Initialize authentication check for protected pages
     initAuthCheck() {
         if (!this.isAuthenticated()) {
-            window.location.href = '/static/login.html';
-            return false;
+            // Try a silent refresh on page load if token is missing or seems expired
+            this.refreshToken().then(refreshed => {
+                if (!refreshed) {
+                    window.location.href = '/static/login.html';
+                }
+            });
         }
         return true;
     }
@@ -226,11 +212,9 @@ class AuthManager {
         // Update user display elements
         const userNameElements = document.querySelectorAll('.user-name');
         const userRoleElements = document.querySelectorAll('.user-role');
-        const userEmailElements = document.querySelectorAll('.user-email');
 
-        userNameElements.forEach(el => el.textContent = user.full_name || user.username);
-        userRoleElements.forEach(el => el.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1));
-        userEmailElements.forEach(el => el.textContent = user.email);
+        userNameElements.forEach(el => el.textContent = user.username);
+        userRoleElements.forEach(el => el.textContent = (user.groups || []).join(', '));
 
         // Show/hide elements based on role
         this.updateUIBasedOnRole();
@@ -238,16 +222,14 @@ class AuthManager {
 
     // Update UI elements based on user role
     updateUIBasedOnRole() {
-        const role = this.getUserRole();
-        
         // Hide admin-only elements for non-admins
-        document.querySelectorAll('[data-role="admin"]').forEach(el => {
-            el.style.display = this.hasRole('admin') ? '' : 'none';
+        document.querySelectorAll('[data-role="Admins"]').forEach(el => {
+            el.style.display = this.hasRole('Admins') ? '' : 'none';
         });
 
         // Hide manager+ elements for viewers
-        document.querySelectorAll('[data-role="manager"]').forEach(el => {
-            el.style.display = this.hasRole('manager') ? '' : 'none';
+        document.querySelectorAll('[data-role="Managers"]').forEach(el => {
+            el.style.display = (this.hasRole('Admins') || this.hasRole('Managers')) ? '' : 'none';
         });
 
         // Update action buttons based on permissions
@@ -265,7 +247,6 @@ class AuthManager {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.logout();
-                window.location.href = '/static/login.html';
             });
         });
     }

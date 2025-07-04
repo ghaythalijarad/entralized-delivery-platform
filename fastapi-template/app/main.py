@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Response, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -25,18 +25,24 @@ from app.auth import (
     create_access_token, authenticate_user, get_current_active_user, 
     require_admin, require_admin_or_manager, require_any_role,
     create_default_admin_user, get_password_hash, create_user,
-    get_user_by_username, ACCESS_TOKEN_EXPIRE_MINUTES
+    get_user_by_username, ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_current_user_cognito, require_cognito_admin, CognitoUser
 )
 from app.auth_schemas import (
     UserLogin, UserCreate, UserResponse, UserListResponse, CreateUserResponse, UserUpdate, PasswordChange
 )
 from app.auth_schemas import CognitoLoginResponse, CognitoToken, CognitoUserResponse
 
+# Import Cognito functions
+from app.cognito import (
+    initiate_auth, get_user_groups, list_users, admin_add_user_to_group, 
+    admin_remove_user_from_group, db as cognito_client, refresh_token as cognito_refresh,
+    global_sign_out
+)
+
 # Import fallback mock database for development
 from app.db import db as mock_db
 from mangum import Mangum
-from app.cognito import initiate_auth, get_user_groups, list_users, admin_add_user_to_group, admin_remove_user_from_group, db as cognito_client
-from pydantic import BaseModel
 
 app = FastAPI(
     title=config.PROJECT_NAME, 
@@ -90,36 +96,91 @@ async def health_check():
 # AUTHENTICATION ENDPOINTS
 # ==========================================
 
-@app.post("/auth/login", response_model=CognitoLoginResponse)
-async def login(user_credentials: UserLogin):
-    """Authenticate via AWS Cognito and return tokens with user groups"""
+@app.post("/auth/login")
+async def login(user_credentials: UserLogin, response: Response):
+    """Authenticate via AWS Cognito, set refresh token in HttpOnly cookie, and return tokens"""
     try:
         auth_result = initiate_auth(user_credentials.username, user_credentials.password)
+        
+        # Extract tokens
         id_token = auth_result["IdToken"]
         access_token = auth_result["AccessToken"]
         refresh_token = auth_result.get("RefreshToken")
         expires_in = auth_result["ExpiresIn"]
         token_type = auth_result["TokenType"]
+        
+        # Get user groups
         groups = get_user_groups(user_credentials.username)
         user = CognitoUserResponse(username=user_credentials.username, groups=groups)
+        
+        # Create token response model (excluding refresh token)
         token = CognitoToken(
             access_token=access_token,
             id_token=id_token,
-            refresh_token=refresh_token,
+            refresh_token=None,  # Refresh token is now in a cookie
             expires_in=expires_in,
             token_type=token_type,
             user=user
         )
+        
+        # Set refresh token in a secure HttpOnly cookie
+        if refresh_token:
+            response.set_cookie(
+                key="refreshToken",
+                value=refresh_token,
+                httponly=True,
+                secure=not config.DEBUG,  # Use secure cookies in production
+                samesite="strict",
+                max_age=2592000  # 30 days
+            )
+        
         return CognitoLoginResponse(success=True, message="Login successful", token=token)
+        
     except cognito_client.exceptions.NotAuthorizedException:
-        return CognitoLoginResponse(success=False, message="Invalid username or password")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+@app.post("/auth/refresh")
+async def refresh(request: Request):
+    """Refresh the access token using the refresh token from the cookie"""
+    refresh_token = request.cookies.get("refreshToken")
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not found")
+
+    try:
+        new_tokens = cognito_refresh(refresh_token)
+        return {
+            "success": True,
+            "access_token": new_tokens["AccessToken"],
+            "id_token": new_tokens["IdToken"],
+            "token_type": new_tokens["TokenType"],
+            "expires_in": new_tokens["ExpiresIn"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid refresh token: {e}")
+
 @app.post("/auth/logout")
-async def logout(current_user: User = Depends(get_current_active_user)):
-    """Logout endpoint - invalidate current session"""
-    return {"message": "Logout successful"}
+async def logout(response: Response, request: Request):
+    """Logout by invalidating tokens and clearing the refresh token cookie"""
+    try:
+        # Extract access token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        access_token = auth_header.split(" ")[1]
+        
+        # Invalidate all tokens for the user in Cognito
+        global_sign_out(access_token)
+        
+    except Exception as e:
+        # Even if sign-out fails, clear the cookie to log the user out on the client
+        print(f"Error during Cognito global sign-out: {e}")
+    
+    # Clear the refresh token cookie
+    response.delete_cookie("refreshToken")
+    return {"success": True, "message": "Logout successful"}
 
 @app.get("/auth/me", response_model=CognitoUserResponse)
 async def get_current_user_info(current_user: CognitoUserResponse = Depends(get_current_user_cognito)):

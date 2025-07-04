@@ -73,3 +73,37 @@ def admin_remove_user_from_group(username: str, group_name: str):
         Username=username,
         GroupName=group_name
     )
+
+
+def refresh_token(refresh_token: str) -> dict:
+    """
+    Refresh the Cognito session using a refresh token.
+    """
+    try:
+        resp = db.initiate_auth(
+            AuthFlow='REFRESH_TOKEN_AUTH',
+            AuthParameters={'REFRESH_TOKEN': refresh_token},
+            ClientId=config.COGNITO_APP_CLIENT_ID
+        )
+        return resp['AuthenticationResult']
+    except db.exceptions.NotAuthorizedException:
+        # This is a generic error, but in this context, it means the refresh token is invalid
+        # (e.g., expired, revoked, or malformed).
+        return None
+    except Exception:
+        # Other potential exceptions (e.g., network issues)
+        return None
+
+
+def global_sign_out(access_token: str):
+    """
+    Signs out users from all devices.
+    It invalidates all refresh tokens issued to a user.
+    The user's current access and Id tokens remain valid until their expiry.
+    """
+    try:
+        db.global_sign_out(AccessToken=access_token)
+    except db.exceptions.NotAuthorizedException:
+        # This can happen if the access token is already expired.
+        # We can ignore it as the user is effectively logged out.
+        pass
