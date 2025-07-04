@@ -41,12 +41,13 @@ app = FastAPI(
     debug=config.DEBUG
 )
 
-# Add CORS middleware with production-ready settings
+# Allow CORS for all origins (adjust in production)
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -79,12 +80,21 @@ async def startup_event():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    db_status = check_database_connection()
-    return {
-        "status": "healthy" if db_status else "degraded",
-        "database": "connected" if db_status else "disconnected",
-        "timestamp": datetime.now().isoformat()
-    }
+    try:
+        db_status = check_database_connection()
+        return {
+            "status": "healthy" if db_status else "degraded",
+            "database": "connected" if db_status else "disconnected",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        # Gracefully handle errors
+        return {
+            "status": "degraded",
+            "database": "error",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
 
 
 # ==========================================
