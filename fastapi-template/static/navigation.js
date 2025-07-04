@@ -56,10 +56,10 @@ class NavigationManager {
                         <span class="material-icons-outlined">account_circle</span>
                         <span class="nav-text">المسؤول</span>
                     </div>
-                    <div class="nav-item">
+                    <a href="#" class="nav-item logout-btn" style="color: #dc3545;">
                         <span class="material-icons-outlined">logout</span>
                         <span class="nav-text">تسجيل الخروج</span>
-                    </div>
+                    </a>
                 </div>
             </nav>
 

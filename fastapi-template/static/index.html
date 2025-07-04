@@ -381,7 +381,7 @@
                         إدارة المستخدمين
                     </a>
                     <li class="nav-item" style="margin-top: 2rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
-                        <a class="nav-link text-muted" href="#" onclick="logout()" style="color: #dc3545 !important;">
+                        <a class="nav-link text-muted logout-btn" href="#" onclick="logout()" style="color: #dc3545 !important;">
                             <span class="material-icons-outlined me-2">logout</span>
                             تسجيل الخروج
                         </a>
@@ -443,15 +443,15 @@
             <span class="material-icons-outlined">manage_accounts</span>
             إدارة المستخدمين
         </a>
-        <a class="nav-link" href="#" onclick="logout()" style="color: #dc3545;">
+        <a class="nav-link logout-btn" href="#" onclick="logout()" style="color: #dc3545;">
             <span class="material-icons-outlined">logout</span>
             تسجيل الخروج
         </a>
     </div>
 
     <script>
-        // Initialize authentication manager
-        const auth = new AuthManager();
+        // Use the global authentication manager
+        const auth = window.authManager;
         
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -528,8 +528,7 @@
         // Logout function
         function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
-                auth.logout();
-                window.location.href = 'login.html'; // Simplified path
+                auth.logout(); // This already handles redirection
             }
         }
 
