@@ -1396,8 +1396,32 @@ for path in static_paths:
         break
 
 if static_dir:
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    print(f"📁 Static files mounted from: {static_dir}")
+    print(f"📁 Static files directory found: {static_dir}")
+    
+    # Custom static file handler with proper UTF-8 encoding for HTML files
+    @app.get("/static/{file_path:path}")
+    async def serve_static_with_utf8(file_path: str):
+        """Serve static files with proper UTF-8 encoding for HTML files"""
+        from fastapi.responses import FileResponse
+        import mimetypes
+        
+        file_full_path = os.path.join(static_dir, file_path)
+        
+        if not os.path.exists(file_full_path):
+            raise HTTPException(404, "File not found")
+        
+        # Determine content type
+        content_type, _ = mimetypes.guess_type(file_full_path)
+        
+        # For HTML files, ensure UTF-8 encoding is specified
+        if file_path.endswith('.html') or content_type == 'text/html':
+            return FileResponse(
+                file_full_path,
+                media_type="text/html; charset=utf-8",
+                headers={"Content-Type": "text/html; charset=utf-8"}
+            )
+        else:
+            return FileResponse(file_full_path, media_type=content_type)
 else:
     print("⚠️  Static files directory not found")
 
@@ -1417,7 +1441,11 @@ async def root():
     for static_dir in static_paths:
         login_file = os.path.join(static_dir, "login.html")
         if os.path.exists(login_file):
-            return FileResponse(login_file)
+            return FileResponse(
+                login_file, 
+                media_type="text/html; charset=utf-8",
+                headers={"Content-Type": "text/html; charset=utf-8"}
+            )
     
     return {"message": "Welcome to Centralized Delivery Platform API", "note": "Login page not found in static directory"}
 
@@ -1436,7 +1464,11 @@ async def dashboard():
     for static_dir in static_paths:
         index_file = os.path.join(static_dir, "index.html")
         if os.path.exists(index_file):
-            return FileResponse(index_file)
+            return FileResponse(
+                index_file, 
+                media_type="text/html; charset=utf-8",
+                headers={"Content-Type": "text/html; charset=utf-8"}
+            )
     
     raise HTTPException(404, "Dashboard not found")
 
@@ -1456,7 +1488,11 @@ async def login_page():
     for static_dir in static_paths:
         login_file = os.path.join(static_dir, "login.html")
         if os.path.exists(login_file):
-            return FileResponse(login_file)
+            return FileResponse(
+                login_file, 
+                media_type="text/html; charset=utf-8",
+                headers={"Content-Type": "text/html; charset=utf-8"}
+            )
     
     raise HTTPException(404, "Login page not found")
 
