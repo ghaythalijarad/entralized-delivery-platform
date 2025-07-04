@@ -59,6 +59,8 @@ class UserResponse(BaseModel):
     email: str
     role: str
     full_name: str
+    is_active: bool = True
+    created_at: Optional[datetime] = None
     is_active: bool
     created_at: datetime
     last_login: Optional[datetime] = None

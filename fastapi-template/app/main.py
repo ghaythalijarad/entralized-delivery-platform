@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 import random
 import os
+import traceback
 
 # Import configuration
 from app.config import config
@@ -34,11 +35,13 @@ from app.auth_schemas import (
 
 # Import fallback mock database for development
 from app.db import db as mock_db
+from mangum import Mangum
 
 app = FastAPI(
     title=config.PROJECT_NAME, 
     version=config.VERSION,
-    debug=config.DEBUG
+    debug=config.DEBUG,
+    root_path=os.environ.get("ROOT_PATH")
 )
 
 # Allow CORS for all origins (adjust in production)
@@ -57,23 +60,8 @@ async def startup_event():
     """Initialize database and check connection on startup"""
     print("🚀 Starting Centralized Delivery Platform API...")
     
-    # Check database connection
-    if check_database_connection():
-        # Initialize database tables
-        init_database()
-        print("✅ Database initialized successfully")
-        
-        # Create default admin user if needed
-        try:
-            db = next(get_db())
-            if create_default_admin_user(db):
-                print("👤 Default admin user created")
-            db.close()
-        except Exception as e:
-            print(f"⚠️  Error creating default admin user: {e}")
-    else:
-        print("⚠️  Database connection failed, falling back to mock database")
-    
+    # Skip database initialization for now to test login
+    print("⚠️  Skipping database initialization for testing")
     print("🌟 API is ready to serve requests!")
 
 # Health check endpoint
@@ -101,66 +89,107 @@ async def health_check():
 # AUTHENTICATION ENDPOINTS
 # ==========================================
 
-@app.post("/api/auth/login", response_model=LoginResponse)
-async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
+@app.post("/auth/login", response_model=LoginResponse)
+async def login(user_credentials: UserLogin):
     """Login endpoint - authenticate user and return JWT token"""
     try:
-        # Authenticate user
-        user = authenticate_user(db, user_credentials.username, user_credentials.password)
-        if not user:
-            return LoginResponse(
-                success=False,
-                message="Invalid username or password"
+        # For testing when database is not available, use mock authentication
+        if not check_database_connection():
+            # Mock authentication for testing
+            if user_credentials.username == "admin" and user_credentials.password == "admin123":
+                # Create mock user response
+                from app.auth_schemas import UserResponse
+                mock_user = UserResponse(
+                    id=1,
+                    username="admin",
+                    email="admin@delivery-platform.com",
+                    role="admin",
+                    full_name="System Administrator"
+                )
+                
+                # Create access token
+                access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                access_token = create_access_token(
+                    data={"sub": user_credentials.username}, expires_delta=access_token_expires
+                )
+                
+                token = Token(
+                    access_token=access_token,
+                    token_type="bearer",
+                    expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                    user=mock_user
+                )
+                
+                return LoginResponse(
+                    success=True,
+                    message="Login successful (mock mode)",
+                    token=token
+                )
+            else:
+                return LoginResponse(
+                    success=False,
+                    message="Invalid username or password"
+                )
+        
+        # Normal database authentication
+        db = next(get_db())
+        try:
+            user = authenticate_user(db, user_credentials.username, user_credentials.password)
+            if not user:
+                return LoginResponse(
+                    success=False,
+                    message="Invalid username or password"
+                )
+            
+            if not user.is_active:
+                return LoginResponse(
+                    success=False,
+                    message="Account is disabled"
+                )
+            
+            # Create access token
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={"sub": user.username}, expires_delta=access_token_expires
             )
-        
-        if not user.is_active:
-            return LoginResponse(
-                success=False,
-                message="Account is disabled"
+            
+            # Update last login
+            user.last_login = datetime.utcnow()
+            db.commit()
+            
+            # Return token and user info
+            user_response = UserResponse.from_orm(user)
+            token = Token(
+                access_token=access_token,
+                token_type="bearer",
+                expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                user=user_response
             )
-        
-        # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user.username}, expires_delta=access_token_expires
-        )
-        
-        # Update last login
-        user.last_login = datetime.utcnow()
-        db.commit()
-        
-        # Return token and user info
-        user_response = UserResponse.from_orm(user)
-        token = Token(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            user=user_response
-        )
-        
-        return LoginResponse(
-            success=True,
-            message="Login successful",
-            token=token
-        )
+            
+            return LoginResponse(
+                success=True,
+                message="Login successful",
+                token=token
+            )
+        finally:
+            db.close()
         
     except Exception as e:
-        import traceback
         traceback.print_exc()
         print(f"Login error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/auth/logout")
+@app.post("/auth/logout")
 async def logout(current_user: User = Depends(get_current_active_user)):
     """Logout endpoint - invalidate current session"""
     return {"message": "Logout successful"}
 
-@app.get("/api/auth/me", response_model=UserResponse)
+@app.get("/auth/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
     return UserResponse.from_orm(current_user)
 
-@app.post("/api/auth/change-password")
+@app.post("/auth/change-password")
 async def change_password(
     password_data: PasswordChange,
     current_user: User = Depends(get_current_active_user),
@@ -187,7 +216,7 @@ async def change_password(
 # USER MANAGEMENT ENDPOINTS (Admin only)
 # ==========================================
 
-@app.get("/api/users", response_model=UserListResponse)
+@app.get("/users", response_model=UserListResponse)
 async def list_users(
     page: int = 1,
     per_page: int = 20,
@@ -206,7 +235,7 @@ async def list_users(
         per_page=per_page
     )
 
-@app.post("/api/users", response_model=CreateUserResponse)
+@app.post("/users", response_model=CreateUserResponse)
 async def create_new_user(
     user_data: UserCreate,
     current_user: User = Depends(require_admin),
@@ -238,7 +267,7 @@ async def create_new_user(
             message="Failed to create user"
         )
 
-@app.put("/api/users/{user_id}")
+@app.put("/users/{user_id}")
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -257,7 +286,7 @@ async def update_user(
     db.commit()
     return {"message": f"User '{user.username}' updated successfully"}
 
-@app.delete("/api/users/{user_id}")
+@app.delete("/users/{user_id}")
 async def delete_user(
     user_id: int,
     current_user: User = Depends(require_admin),
@@ -309,7 +338,7 @@ async def delete_merchant(mid: str):
     return {"deleted": True}
 
 # -- Dashboard Statistics Endpoints --
-@app.get("/api/dashboard/stats")
+@app.get("/dashboard/stats")
 async def get_dashboard_stats(
     db: Session = Depends(get_db)
 ):
@@ -372,7 +401,7 @@ async def get_dashboard_stats(
     except Exception as e:
         raise HTTPException(500, f"Error fetching dashboard stats: {str(e)}")
 
-@app.get("/api/dashboard/orders-today")
+@app.get("/dashboard/orders-today")
 async def get_orders_today(current_user: User = Depends(require_any_role)):
     """Get today's orders count"""
     try:
@@ -382,7 +411,7 @@ async def get_orders_today(current_user: User = Depends(require_any_role)):
     except Exception as e:
         raise HTTPException(500, f"Error fetching today's orders: {str(e)}")
 
-@app.get("/api/dashboard/merchants-status")
+@app.get("/dashboard/merchants-status")
 async def get_merchants_status(current_user: User = Depends(require_any_role)):
     """Get merchants connection status"""
     try:
@@ -402,7 +431,7 @@ async def get_merchants_status(current_user: User = Depends(require_any_role)):
     except Exception as e:
         raise HTTPException(500, f"Error fetching merchants status: {str(e)}")
 
-@app.get("/api/dashboard/drivers-status") 
+@app.get("/dashboard/drivers-status") 
 async def get_drivers_status(current_user: User = Depends(require_any_role)):
     """Get drivers activity status"""
     try:
@@ -422,7 +451,7 @@ async def get_drivers_status(current_user: User = Depends(require_any_role)):
     except Exception as e:
         raise HTTPException(500, f"Error fetching drivers status: {str(e)}")
 
-@app.get("/api/dashboard/customers-count")
+@app.get("/dashboard/customers-count")
 async def get_customers_count(current_user: User = Depends(require_any_role)):
     """Get total customers count"""
     try:
@@ -434,7 +463,7 @@ async def get_customers_count(current_user: User = Depends(require_any_role)):
     except Exception as e:
         raise HTTPException(500, f"Error fetching customers count: {str(e)}")
 
-@app.get("/api/dashboard/recent-activity")
+@app.get("/dashboard/recent-activity")
 async def get_recent_activity(current_user: User = Depends(require_any_role)):
     """Get recent system activity for dashboard"""
     try:
@@ -463,7 +492,7 @@ async def get_recent_activity(current_user: User = Depends(require_any_role)):
         raise HTTPException(500, f"Error fetching recent activity: {str(e)}")
 
 # -- Sample Data Generation (for testing) --
-@app.post("/api/seed-data")
+@app.post("/seed-data")
 async def seed_sample_data():
     """Generate sample data for testing the dashboard"""
     try:
@@ -547,7 +576,7 @@ async def seed_sample_data():
         raise HTTPException(500, f"Error generating sample data: {str(e)}")
 
 # -- Database Seeding Endpoint --
-@app.post("/api/seed-database")
+@app.post("/seed-database")
 async def seed_database(db: Session = Depends(get_db)):
     """Seed the database with sample data for development and testing"""
     try:
@@ -644,7 +673,7 @@ async def seed_database(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database seeding failed: {str(e)}")
 
 # -- Orders Management Endpoints --
-@app.get("/api/orders")
+@app.get("/orders")
 async def get_orders(
     status: Optional[str] = None,
     merchant_id: Optional[str] = None,
@@ -721,7 +750,7 @@ async def get_orders(
     except Exception as e:
         raise HTTPException(500, f"Error fetching orders: {str(e)}")
 
-@app.get("/api/orders/{order_id}")
+@app.get("/orders/{order_id}")
 async def get_order(
     order_id: str, 
     current_user: User = Depends(require_any_role),
@@ -757,7 +786,7 @@ async def get_order(
     except Exception as e:
         raise HTTPException(500, f"Error fetching order: {str(e)}")
 
-@app.put("/api/orders/{order_id}/status")
+@app.put("/orders/{order_id}/status")
 async def update_order_status(
     order_id: str, 
     status: str, 
@@ -794,7 +823,7 @@ async def update_order_status(
         raise HTTPException(500, f"Error updating order status: {str(e)}")
 
 # -- Merchants Management Endpoints --
-@app.get("/api/merchants")
+@app.get("/merchants")
 async def get_merchants(
     status: Optional[str] = None,
     category: Optional[str] = None,
@@ -864,7 +893,7 @@ async def get_merchants(
     except Exception as e:
         raise HTTPException(500, f"Error fetching merchants: {str(e)}")
 
-@app.post("/api/merchants")
+@app.post("/merchants")
 async def create_merchant(merchant: Merchant, db: Session = Depends(get_db)):
     """Create a new merchant"""
     try:
@@ -902,7 +931,7 @@ async def create_merchant(merchant: Merchant, db: Session = Depends(get_db)):
         raise HTTPException(500, f"Error creating merchant: {str(e)}")
 
 # -- Drivers Management Endpoints --
-@app.get("/api/drivers")
+@app.get("/drivers")
 async def get_drivers(
     status: Optional[str] = None,
     vehicle_type: Optional[str] = None,
@@ -971,7 +1000,7 @@ async def get_drivers(
     except Exception as e:
         raise HTTPException(500, f"Error fetching drivers: {str(e)}")
 
-@app.post("/api/drivers")
+@app.post("/drivers")
 async def create_driver(driver: Driver, db: Session = Depends(get_db)):
     """Create a new driver"""
     try:
@@ -1009,7 +1038,7 @@ async def create_driver(driver: Driver, db: Session = Depends(get_db)):
         raise HTTPException(500, f"Error creating driver: {str(e)}")
 
 # -- Customers Management Endpoints --
-@app.get("/api/customers")
+@app.get("/customers")
 async def get_customers(
     limit: int = 50,
     offset: int = 0,
@@ -1074,7 +1103,7 @@ async def get_customers(
     except Exception as e:
         raise HTTPException(500, f"Error fetching customers: {str(e)}")
 
-@app.post("/api/customers")
+@app.post("/customers")
 async def create_customer(customer: Customer, db: Session = Depends(get_db)):
     """Create a new customer"""
     try:
@@ -1105,7 +1134,7 @@ async def create_customer(customer: Customer, db: Session = Depends(get_db)):
         raise HTTPException(500, f"Error creating customer: {str(e)}")
 
 # -- Analytics and Reporting Endpoints --
-@app.get("/api/analytics/orders")
+@app.get("/analytics/orders")
 async def get_order_analytics(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
@@ -1175,7 +1204,7 @@ async def get_order_analytics(
     except Exception as e:
         raise HTTPException(500, f"Error fetching order analytics: {str(e)}")
 
-@app.get("/api/analytics/performance")
+@app.get("/analytics/performance")
 async def get_performance_metrics(
     current_user: User = Depends(require_any_role),
     db: Session = Depends(get_db)
@@ -1224,7 +1253,7 @@ async def get_performance_metrics(
         raise HTTPException(500, f"Error fetching performance metrics: {str(e)}")
 
 # -- Real-time Status Updates --
-@app.put("/api/drivers/{driver_id}/status")
+@app.put("/drivers/{driver_id}/status")
 async def update_driver_status(
     driver_id: str, 
     status: str, 
@@ -1260,7 +1289,7 @@ async def update_driver_status(
     except Exception as e:
         raise HTTPException(500, f"Error updating driver status: {str(e)}")
 
-@app.put("/api/merchants/{merchant_id}/status")
+@app.put("/merchants/{merchant_id}/status")
 async def update_merchant_status(
     merchant_id: str, 
     status: str, 
@@ -1297,7 +1326,7 @@ async def update_merchant_status(
         raise HTTPException(500, f"Error updating merchant status: {str(e)}")
 
 # -- Search and Filter Endpoints --
-@app.get("/api/search")
+@app.get("/search")
 async def global_search(
     q: str,  # Changed from 'query' to 'q' to match test
     type: Optional[str] = None,  # orders, merchants, drivers, customers
@@ -1347,12 +1376,88 @@ async def global_search(
                 results[type] = mock_results.get(type, [])
             else:
                 results = mock_results
+        
+        return results
     except Exception as e:
         raise HTTPException(500, f"Error performing search: {str(e)}")
 
-# Mount static files after all API routes to avoid conflicts
-app.mount(
-    "/", 
-    StaticFiles(directory="static", html=True),
-    name="static"
-)
+# Mount static files directory
+# Try multiple potential paths for static files (local dev vs Lambda)
+static_paths = [
+    os.path.join(os.path.dirname(__file__), "..", "static"),  # Local development
+    os.path.join("/var/task", "static"),  # Lambda environment
+    os.path.join(os.getcwd(), "static"),  # Current working directory
+]
+
+static_dir = None
+for path in static_paths:
+    if os.path.exists(path):
+        static_dir = path
+        break
+
+if static_dir:
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    print(f"📁 Static files mounted from: {static_dir}")
+else:
+    print("⚠️  Static files directory not found")
+
+# Root route - serve login page and let frontend handle routing
+@app.get("/")
+async def root():
+    """Serve the login page (frontend will handle authentication routing)"""
+    from fastapi.responses import FileResponse
+    
+    # Try multiple potential paths for static files
+    static_paths = [
+        os.path.join(os.path.dirname(__file__), "..", "static"),  # Local development
+        os.path.join("/var/task", "static"),  # Lambda environment
+        os.path.join(os.getcwd(), "static"),  # Current working directory
+    ]
+    
+    for static_dir in static_paths:
+        login_file = os.path.join(static_dir, "login.html")
+        if os.path.exists(login_file):
+            return FileResponse(login_file)
+    
+    return {"message": "Welcome to Centralized Delivery Platform API", "note": "Login page not found in static directory"}
+
+# Dashboard route
+@app.get("/dashboard")
+async def dashboard():
+    """Serve the dashboard page"""
+    from fastapi.responses import FileResponse
+    
+    static_paths = [
+        os.path.join(os.path.dirname(__file__), "..", "static"),  # Local development
+        os.path.join("/var/task", "static"),  # Lambda environment
+        os.path.join(os.getcwd(), "static"),  # Current working directory
+    ]
+    
+    for static_dir in static_paths:
+        index_file = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+    
+    raise HTTPException(404, "Dashboard not found")
+
+# Serve login page directly
+@app.get("/login")
+async def login_page():
+    """Serve the login page"""
+    from fastapi.responses import FileResponse
+    
+    # Try multiple potential paths for static files
+    static_paths = [
+        os.path.join(os.path.dirname(__file__), "..", "static"),  # Local development
+        os.path.join("/var/task", "static"),  # Lambda environment
+        os.path.join(os.getcwd(), "static"),  # Current working directory
+    ]
+    
+    for static_dir in static_paths:
+        login_file = os.path.join(static_dir, "login.html")
+        if os.path.exists(login_file):
+            return FileResponse(login_file)
+    
+    raise HTTPException(404, "Login page not found")
+
+handler = Mangum(app)

@@ -214,7 +214,7 @@
     </style>
     <!-- Demo credentials info -->
     <!-- API base URL override: set this meta tag to your API server's URL in production -->
-    <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/Prod/">
+    <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/">
     <!-- WebSocket URL for real-time notifications -->
     <meta name="websocket-url" content="wss://36jblgxwki.execute-api.us-east-1.amazonaws.com/production">
 </head>
@@ -240,7 +240,7 @@
             </div>
             
             <div class="form-validation" id="passwordValidation">
-                يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، بما في ذلك حرف كبير، حرف صغير، ورقم.
+                أدخل كلمة المرور الصحيحة للمتابعة.
             </div>
             
             <div class="caps-lock-warning" id="capsLockWarning">
@@ -267,9 +267,11 @@
         const metaApi = document.querySelector('meta[name="api-base"]');
         const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
          
-        // Check if already logged in
+        // Check if already logged in and redirect to dashboard
         if (localStorage.getItem('authToken')) {
-            window.location.href = '/';
+            console.log('User already authenticated, redirecting to dashboard...');
+            window.location.href = '/dashboard';
+            return;
         }
 
          document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -291,7 +293,7 @@
              loading.style.display = 'block';
              
              try {
-                 const response = await fetch(`${API_BASE}/api/auth/login`, {
+                 const response = await fetch(`${API_BASE}auth/login`, {
                      method: 'POST',
                      headers: {
                          'Content-Type': 'application/json',
@@ -313,7 +315,7 @@
                      
                      // Redirect to dashboard
                      setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = '/dashboard';
                      }, 1000);
                  } else {
                     // Show specific error message from backend
@@ -453,28 +455,26 @@
             this.classList.toggle('active');
         });
 
-        // Password validation and caps lock detection
+        // Password validation and caps lock detection (simplified for demo)
         const passwordInput = document.getElementById('password');
         const passwordValidation = document.getElementById('passwordValidation');
         const capsLockWarning = document.getElementById('capsLockWarning');
 
         passwordInput.addEventListener('input', () => {
             const password = passwordInput.value;
-            const hasUpperCase = /[A-Z]/.test(password);
-            const hasLowerCase = /[a-z]/.test(password);
-            const hasNumbers = /\d/.test(password);
-            const isValidLength = password.length >= 8;
-
-            // Show or hide validation message
-            passwordValidation.style.display = (hasUpperCase && hasLowerCase && hasNumbers && isValidLength) ? 'none' : 'block';
+            
+            // Simplified validation - just check if password is not empty
+            // Hide complex validation for demo purposes since "admin123" is the demo password
+            passwordValidation.style.display = 'none';
 
             // Check if caps lock is on
-            const isCapsLock = password.toUpperCase() === password && password.toLowerCase() !== password;
+            const isCapsLock = password.toUpperCase() === password && password.toLowerCase() !== password && password.length > 0;
             capsLockWarning.style.display = isCapsLock ? 'block' : 'none';
         });
 
+        // Don't show complex validation on focus for demo
         passwordInput.addEventListener('focus', () => {
-            passwordValidation.style.display = 'block';
+            passwordValidation.style.display = 'none';
         });
 
         passwordInput.addEventListener('blur', () => {

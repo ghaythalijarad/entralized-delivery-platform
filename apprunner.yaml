@@ -1,3 +1,6 @@
+# DEPRECATED: AWS App Runner is no longer used.
+# This configuration file is kept for reference only and should not be deployed.
+
 version: 1.0
 runtime: docker
 build:

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Login Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .loading {
+            display: none;
+            margin: 10px 0;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .link-test {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #495057;
+        }
+        .link-test:hover {
+            background: #dee2e6;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-green { background: #28a745; }
+        .status-red { background: #dc3545; }
+        .status-yellow { background: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 Centralized Delivery Platform - Complete Test Suite</h1>
+        <p>This page tests the complete login functionality deployed on AWS Lambda + API Gateway.</p>
+        
+        <div class="test-result info">
+            <strong>API Endpoint:</strong> https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/
+        </div>
+        
+        <div class="test-result info">
+            <strong>Test Credentials:</strong> admin / admin123
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔗 Quick Navigation Links</h2>
+        <a href="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/" class="link-test" target="_blank">
+            <span class="status-indicator status-green"></span>Root Page (/) - Smart Router
+        </a>
+        <a href="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/login" class="link-test" target="_blank">
+            <span class="status-indicator status-green"></span>Login Page (/login)
+        </a>
+        <a href="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/dashboard" class="link-test" target="_blank">
+            <span class="status-indicator status-green"></span>Dashboard Page (/dashboard)
+        </a>
+        <a href="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/health" class="link-test" target="_blank">
+            <span class="status-indicator status-green"></span>Health Check (/health)
+        </a>
+    </div>
+
+    <div class="test-container">
+        <h2>🧪 Automated API Tests</h2>
+        <div id="testResults"></div>
+        <div class="loading" id="testLoading"></div>
+        <button class="btn" onclick="runAllTests()">Run All Tests</button>
+        <button class="btn" onclick="testLogin()">Test Login Only</button>
+        <button class="btn btn-danger" onclick="clearAuth()">Clear Auth Token</button>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Test Results Summary</h2>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+        let testResults = [];
+
+        function addResult(test, status, message) {
+            testResults.push({ test, status, message });
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const resultsDiv = document.getElementById('testResults');
+            const summaryDiv = document.getElementById('summary');
+            
+            resultsDiv.innerHTML = '';
+            
+            testResults.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `test-result ${result.status}`;
+                div.innerHTML = `
+                    <strong>${result.test}:</strong> ${result.message}
+                `;
+                resultsDiv.appendChild(div);
+            });
+
+            // Update summary
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.status === 'success').length;
+            const failed = testResults.filter(r => r.status === 'error').length;
+            
+            summaryDiv.innerHTML = `
+                <div class="test-result ${passed === total ? 'success' : 'error'}">
+                    <strong>Summary:</strong> ${passed}/${total} tests passed
+                    ${failed > 0 ? `(${failed} failed)` : ''}
+                </div>
+            `;
+        }
+
+        async function testHealthCheck() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('Health Check', 'success', `API is ${data.status}, Database: ${data.database}`);
+                } else {
+                    addResult('Health Check', 'error', `Failed with status ${response.status}`);
+                }
+            } catch (error) {
+                addResult('Health Check', 'error', `Network error: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success && data.token) {
+                    localStorage.setItem('authToken', data.token.access_token);
+                    addResult('Login Test', 'success', 'Login successful, token saved');
+                    return true;
+                } else {
+                    addResult('Login Test', 'error', `Login failed: ${data.message || 'Unknown error'}`);
+                    return false;
+                }
+            } catch (error) {
+                addResult('Login Test', 'error', `Network error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testStaticFiles() {
+            const endpoints = [
+                { path: '/', name: 'Root Page' },
+                { path: '/login', name: 'Login Page' },
+                { path: '/dashboard', name: 'Dashboard Page' }
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint.path}`);
+                    
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('text/html')) {
+                            addResult(`${endpoint.name} Static File`, 'success', 'HTML page served successfully');
+                        } else {
+                            addResult(`${endpoint.name} Static File`, 'error', 'Not serving HTML content');
+                        }
+                    } else {
+                        addResult(`${endpoint.name} Static File`, 'error', `Failed with status ${response.status}`);
+                    }
+                } catch (error) {
+                    addResult(`${endpoint.name} Static File`, 'error', `Network error: ${error.message}`);
+                }
+            }
+        }
+
+        async function runAllTests() {
+            testResults = [];
+            document.getElementById('testLoading').style.display = 'block';
+            
+            addResult('Test Suite Started', 'info', 'Running comprehensive tests...');
+            
+            await testHealthCheck();
+            await testLogin();
+            await testStaticFiles();
+            
+            document.getElementById('testLoading').style.display = 'none';
+            addResult('Test Suite Completed', 'info', 'All tests finished');
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            addResult('Clear Auth', 'info', 'Authentication tokens cleared');
+        }
+
+        // Initial load
+        updateDisplay();
+    </script>
+</body>
+</html>
