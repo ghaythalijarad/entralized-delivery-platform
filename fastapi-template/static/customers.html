@@ -14,10 +14,21 @@
         /* Mobile-first responsive design */
         body {
             background: #f4f6fb;
-            font-family: 'Segoe UI'        function openBulkNotifications() {
-            alert('فتح نافذة الإشعار الجماعي...');
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-    </script>
+        /* Filter chips styling */
+        .filter-chip {
+            cursor: pointer;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            background: #e9ecef;
+            margin-right: 0.5rem;
+        }
+        .filter-chip.active {
+            background: #1976d2;
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
     <!-- Customers Page Container -->
