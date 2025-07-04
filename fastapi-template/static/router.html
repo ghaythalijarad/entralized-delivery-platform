@@ -79,7 +79,7 @@
         // Check authentication and redirect accordingly
         function checkAuthAndRedirect() {
             try {
-                const authToken = localStorage.getItem('authToken');
+                const authToken = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
                 
                 if (authToken && authToken.trim() !== '') {
                     // User is authenticated, redirect to dashboard

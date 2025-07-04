@@ -450,13 +450,14 @@
     </div>
 
     <script>
-        // Use the global authentication manager
-        const auth = window.authManager;
+        // Initialize authentication manager (fallback to global if available)
+        const auth = window.authManager || new AuthManager();
         
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
-            if (!auth.isAuthenticated()) {
-                window.location.href = 'login.html'; // Simplified path
+            // Ensure auth manager is initialized
+            if (!auth || !auth.isAuthenticated()) {
+                window.location.href = '/static/login.html';
                 return;
             }
             
@@ -528,7 +529,23 @@
         // Logout function
         function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
-                auth.logout(); // This already handles redirection
+                console.log('Logout initiated...');
+                try {
+                    if (auth && typeof auth.logout === 'function') {
+                        auth.logout();
+                    } else {
+                        // Fallback logout
+                        localStorage.removeItem('accessToken');
+                        localStorage.removeItem('userInfo');
+                        window.location.href = '/static/login.html';
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // Fallback logout
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('userInfo');
+                    window.location.href = '/static/login.html';
+                }
             }
         }
 
