@@ -48,3 +48,16 @@ root_start.py
 run_server.py
 runtime.txt
 simple_start.py
+
+# Ignore root-level clutter
+/*.html
+/*.js
+/*.py
+/*.sh
+/*.md
+/*.yaml
+/*.yml
+
+# Allow necessary root files
+!/README.md
+!/amplify.yml
