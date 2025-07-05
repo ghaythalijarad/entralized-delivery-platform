@@ -54,7 +54,13 @@ class BilingualManager {
                 loginFailed: { ar: 'فشل في تسجيل الدخول', en: 'Login failed' },
                 connectionError: { ar: 'خطأ في الاتصال بالخادم', en: 'Server connection error' },
                 loggingIn: { ar: 'جاري تسجيل الدخول...', en: 'Logging in...' },
-                serverInfo: { ar: 'معلومات الخادم:', en: 'Server Information:' }
+                serverInfo: { ar: 'معلومات الخادم:', en: 'Server Information:' },
+                username_label: { ar: 'اسم المستخدم', en: 'Username' },
+                username_placeholder: { ar: 'أدخل اسم المستخدم', en: 'Enter your username' },
+                password_label: { ar: 'كلمة المرور', en: 'Password' },
+                password_placeholder: { ar: 'أدخل كلمة المرور', en: 'Enter your password' },
+                forgot_password: { ar: 'نسيت كلمة المرور؟', en: 'Forgot your password?' },
+                aws_native_optimized: { ar: 'محسن بـ AWS', en: 'AWS Native Optimized' }
             },
             
             // Dashboard

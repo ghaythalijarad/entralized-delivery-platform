@@ -161,6 +161,11 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        /* Password container styling */
+        .password-container {
+            position: relative;
+        }
+
         .password-toggle {
             position: absolute;
             right: 15px;
@@ -171,6 +176,9 @@
             cursor: pointer;
             color: #666;
             font-size: 18px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
 
         body[dir="rtl"] .password-toggle {
@@ -178,31 +186,37 @@
             left: 15px;
         }
 
-        .user-type-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 10px;
+        .password-toggle:hover {
+            background: #f0f0f0;
         }
 
-        .user-type-btn {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 10px;
+        /* Password container styling */
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
             cursor: pointer;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
             color: #666;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
 
-        .user-type-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-            transform: translateY(-2px);
+        body[dir="rtl"] .password-toggle {
+            right: auto;
+            left: 15px;
+        }
+
+        .password-toggle:hover {
+            background: #f0f0f0;
         }
 
         .login-btn {
@@ -343,15 +357,6 @@
                 margin: 20px;
                 padding: 30px;
             }
-            
-            .user-type-selector {
-                grid-template-columns: 1fr;
-            }
-            
-            .register-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
         }
 
         /* Performance Indicators */
@@ -418,24 +423,24 @@
         <!-- Logo Section -->
         <div class="logo-section">
             <div class="logo">🎛️</div>
-            <h1 class="app-title" data-translate="app_title">Admin Control Center</h1>
-            <p class="app-subtitle" data-translate="login_subtitle">Centralized Management Hub for Delivery Ecosystem</p>
+            <h1 class="app-title" data-translate="app_title">Control Center</h1>
+            <p class="app-subtitle" data-translate="login_subtitle">Delivery Management Platform</p>
         </div>
 
         <!-- Error/Success Messages -->
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
 
-        <!-- Login Form -->
+        <!-- Simple Login Form -->
         <form id="loginForm" class="form-section">
             <div class="form-group">
-                <label class="form-label" for="email" data-translate="email_label">Email Address</label>
-                <input type="email" id="email" class="form-input" data-translate-placeholder="email_placeholder" placeholder="Enter your email" required>
+                <label class="form-label" for="username" data-translate="username_label">Username</label>
+                <input type="text" id="username" class="form-input" data-translate-placeholder="username_placeholder" placeholder="Enter your username" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="password" data-translate="password_label">Password</label>
-                <div style="position: relative;">
+                <div class="password-container">
                     <input type="password" id="password" class="form-input" data-translate-placeholder="password_placeholder" placeholder="Enter your password" required>
                     <button type="button" class="password-toggle" onclick="togglePassword()">👁️</button>
                 </div>
@@ -443,24 +448,13 @@
 
             <button type="submit" class="login-btn" id="loginButton">
                 <div class="loading-spinner" id="loadingSpinner"></div>
-                <span data-translate="login_button">Admin Sign In</span>
+                <span data-translate="login_button">Sign In</span>
             </button>
         </form>
 
         <!-- Forgot Password -->
         <div class="forgot-password">
             <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>
-        </div>
-
-        <!-- Admin Access Note -->
-        <div class="admin-access-info">
-            <div class="access-header">
-                <span class="access-icon">🔐</span>
-                <span data-translate="admin_only">Administrator Access Only</span>
-            </div>
-            <p class="access-description" data-translate="admin_access_description">
-                This portal is restricted to authorized administrators only.
-            </p>
         </div>
     </div>
 
@@ -487,22 +481,12 @@
         Amplify.configure(awsConfig);
 
         // Global variables
-        let currentUserType = 'customer';
         let performanceStart = Date.now();
 
         // Initialize bilingual support
         document.addEventListener('DOMContentLoaded', function() {
             initializeBilingual();
             measurePerformance();
-        });
-
-        // User type selection
-        document.querySelectorAll('.user-type-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.user-type-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentUserType = this.dataset.type;
-            });
         });
 
         // Password toggle
@@ -519,11 +503,11 @@
             }
         }
 
-        // Enhanced login with AppSync GraphQL
+        // Enhanced login with AppSync GraphQL - Credential-based access
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const loginButton = document.getElementById('loginButton');
             const spinner = document.getElementById('loadingSpinner');
@@ -534,89 +518,70 @@
             try {
                 const startTime = Date.now();
                 
-                // Sign in with Cognito
-                const user = await Auth.signIn(email, password);
+                // Sign in with Cognito using username
+                const user = await Auth.signIn(username, password);
                 
-                // Get user attributes
+                // Get user attributes and determine access level from backend
                 const userInfo = await Auth.currentAuthenticatedUser();
                 const attributes = userInfo.attributes;
-                
-                // Verify user type matches selection
-                const userType = attributes['custom:user_type'] || 'customer';
-                if (userType !== currentUserType) {
-                    throw new Error(`Invalid user type. Expected ${currentUserType}, got ${userType}`);
-                }
                 
                 // Get JWT token for GraphQL requests
                 const session = await Auth.currentSession();
                 const token = session.getIdToken().getJwtToken();
                 
-                // GraphQL query to get user profile
+                // GraphQL query to get user profile and access level
                 const getCurrentUserQuery = `
                     query GetCurrentUser {
                         getCurrentUser {
                             userId
+                            username
                             email
                             firstName
                             lastName
-                            userType
+                            accessLevel
+                            permissions
                             isActive
                             lastLoginAt
                         }
                     }
                 `;
                 
-                // Execute GraphQL query
+                // Execute GraphQL query to determine user's access level
                 const result = await API.graphql({
                     query: getCurrentUserQuery,
                     authMode: 'AMAZON_COGNITO_USER_POOLS'
                 });
                 
+                const userData = result.data.getCurrentUser;
                 const responseTime = Date.now() - startTime;
                 
-                showSuccess(`Login successful! Response time: ${responseTime}ms (AWS Native Performance)`);
+                showSuccess(`Welcome ${userData.firstName}! Access Level: ${userData.accessLevel} (${responseTime}ms)`);
                 
-                // Store user session
+                // Store user session with access level
                 sessionStorage.setItem('userSession', JSON.stringify({
-                    user: result.data.getCurrentUser,
+                    user: userData,
                     token: token,
-                    userType: currentUserType,
+                    accessLevel: userData.accessLevel,
+                    permissions: userData.permissions,
                     loginTime: new Date().toISOString(),
                     responseTime: responseTime
                 }));
                 
-                // Redirect based on user type
+                // Redirect to dashboard - access control handled by dashboard
                 setTimeout(() => {
-                    switch(currentUserType) {
-                        case 'admin':
-                            window.location.href = 'dashboard.html';
-                            break;
-                        case 'customer':
-                            window.location.href = 'customer-dashboard.html';
-                            break;
-                        case 'driver':
-                            window.location.href = 'driver-dashboard.html';
-                            break;
-                        case 'merchant':
-                            window.location.href = 'merchant-dashboard.html';
-                            break;
-                        default:
-                            window.location.href = 'dashboard.html';
-                    }
+                    window.location.href = 'dashboard-aws-native.html';
                 }, 1500);
                 
             } catch (error) {
                 console.error('Login error:', error);
-                let errorMessage = 'Login failed. Please try again.';
+                let errorMessage = 'Login failed. Please check your credentials.';
                 
                 if (error.code === 'UserNotConfirmedException') {
                     errorMessage = 'Please verify your email address first.';
                 } else if (error.code === 'NotAuthorizedException') {
-                    errorMessage = 'Invalid email or password.';
+                    errorMessage = 'Invalid username or password.';
                 } else if (error.code === 'UserNotFoundException') {
-                    errorMessage = 'User not found. Please check your email.';
-                } else if (error.message.includes('user type')) {
-                    errorMessage = error.message;
+                    errorMessage = 'User not found. Please check your username.';
                 }
                 
                 showError(errorMessage);
@@ -627,30 +592,19 @@
 
         // Forgot password
         async function forgotPassword() {
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
             
-            if (!email) {
-                showError('Please enter your email address first.');
+            if (!username) {
+                showError('Please enter your username first.');
                 return;
             }
             
             try {
-                await Auth.forgotPassword(email);
-                showSuccess('Password reset instructions sent to your email.');
+                await Auth.forgotPassword(username);
+                showSuccess('Password reset instructions sent to your registered email.');
             } catch (error) {
                 showError('Failed to send reset instructions. Please try again.');
             }
-        }
-
-        // Registration handlers
-        function registerUser(type) {
-            const registrationUrls = {
-                customer: 'register-customer.html',
-                driver: 'register-driver.html',
-                merchant: 'register-merchant.html'
-            };
-            
-            window.location.href = registrationUrls[type] || 'register.html';
         }
 
         // Utility functions
