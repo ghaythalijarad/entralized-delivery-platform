@@ -16,10 +16,10 @@ def create_admin_user():
     
     client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
     
-    username = "admin"
+    username = "admin@centralized.com"
     temporary_password = "TempPass123!"
     permanent_password = "AdminPass123!"
-    email = "admin@example.com"
+    email = "admin@centralized.com"
     
     try:
         # Create user
