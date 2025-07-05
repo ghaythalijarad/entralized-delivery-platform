@@ -21,17 +21,49 @@ Built with **AWS-native architecture** for optimal performance and cost efficien
 - **Real-time**: GraphQL subscriptions for live order tracking
 - **Languages**: Bilingual support (Arabic RTL + English LTR)
 
+## 📁 Project Structure
+
+```
+centralized-platform/
+├── 📄 README.md                     # This file
+├── 🏗️ src/                          # Source code
+│   ├── 📱 pages/                    # HTML pages
+│   │   ├── index.html               # Main entry point
+│   │   ├── login-aws-native.html    # Lightning-fast login
+│   │   ├── dashboard-aws-native.html # Real-time dashboard
+│   │   └── user-management.html     # User administration
+│   ├── 🧩 components/               # Reusable components
+│   └── 🔧 utils/                    # JavaScript utilities
+│       ├── bilingual.js             # Bilingual support
+│       └── bilingual-extensions.js  # Language extensions
+├── ⚙️ config/                       # Configuration files
+│   └── aws/                         # AWS configurations
+│       ├── amplify.yml              # Amplify build config
+│       ├── aws-native-infrastructure.yaml # CloudFormation
+│       └── graphql-schema.graphql   # GraphQL schema
+├── 🚀 scripts/                      # Deployment scripts
+│   └── deployment/                  # Deployment automation
+│       ├── deploy-aws-native.sh     # One-command deployment
+│       └── cleanup-fastapi-legacy.sh # Legacy cleanup
+├── 📚 docs/                         # Documentation
+│   ├── QUICK_START_AWS_NATIVE.md    # Quick start guide
+│   ├── architecture/                # Architecture docs
+│   └── deployment/                  # Deployment guides
+├── 📦 assets/                       # Static assets
+└── 🔄 backup/                       # Legacy backups
+```
+
 ### 🚀 Quick Start
 
 1. **Deploy AWS Infrastructure**:
    ```bash
-   ./deploy-aws-native.sh
+   ./scripts/deployment/deploy-aws-native.sh
    ```
 
 2. **Test Locally**:
    ```bash
    python3 -m http.server 8080
-   open http://localhost:8080/login-aws-native.html
+   open http://localhost:8080/src/pages/login-aws-native.html
    ```
 
 3. **Deploy to Production**:
@@ -39,25 +71,17 @@ Built with **AWS-native architecture** for optimal performance and cost efficien
    git add . && git commit -m "Deploy AWS Native" && git push
    ```
 
-### 📁 Key Files
-
-- `login-aws-native.html` - Lightning-fast login with Cognito
-- `dashboard-aws-native.html` - Real-time dashboard with live updates
-- `aws-native-infrastructure.yaml` - CloudFormation template
-- `graphql-schema.graphql` - Complete GraphQL schema
-- `deploy-aws-native.sh` - One-command deployment
-
 ### 🌍 Features
 
-✅ **Sub-100ms API responses**
-✅ **Real-time order tracking**
-✅ **Live driver location updates**
-✅ **Instant customer notifications**
-✅ **Bilingual interface (Arabic/English)**
-✅ **Mobile-responsive design**
-✅ **Enterprise authentication**
-✅ **Auto-scaling infrastructure**
-✅ **Cost-optimized architecture**
+✅ **Sub-100ms API responses**  
+✅ **Real-time order tracking**  
+✅ **Live driver location updates**  
+✅ **Instant customer notifications**  
+✅ **Bilingual interface (Arabic/English)**  
+✅ **Mobile-responsive design**  
+✅ **Enterprise authentication**  
+✅ **Auto-scaling infrastructure**  
+✅ **Cost-optimized architecture**  
 
 ### 📊 Cost Comparison (100K orders/month)
 
@@ -75,13 +99,20 @@ Built with **AWS-native architecture** for optimal performance and cost efficien
 - **Merchant dashboard** with real-time order management
 - **Admin analytics** with live performance metrics
 
-### 🔐 Security
+### 🔐 Security & Access Control
 
+#### Role-Based Access Control (RBAC)
+- **👤 Customers**: Order placement, tracking, profile management
+- **🚗 Drivers**: Order acceptance, delivery updates, earnings
+- **🏪 Merchants**: Order management, menu updates, analytics
+- **👨‍💼 Admins**: Full system access, user management, system configuration
+
+#### Authentication & Security
 - **AWS Cognito** authentication with MFA support
 - **Field-level authorization** in GraphQL
-- **User groups** (Customers, Drivers, Merchants, Admins)
 - **JWT token management** with automatic refresh
 - **Session security** with proper logout handling
+- **Role-based UI rendering** for each user type
 
 ### 📱 Supported Platforms
 
@@ -89,6 +120,31 @@ Built with **AWS-native architecture** for optimal performance and cost efficien
 - **Mobile responsive** design
 - **Progressive Web App** capabilities
 - **Offline support** for critical functions
+
+### 🛠️ Development
+
+#### Local Development
+```bash
+# Start local server
+python3 -m http.server 8080
+
+# Open in browser
+open http://localhost:8080/src/pages/
+```
+
+#### File Organization
+- **`src/pages/`**: All HTML pages with role-based access
+- **`src/utils/`**: JavaScript utilities and helpers
+- **`src/components/`**: Reusable UI components
+- **`config/aws/`**: AWS service configurations
+- **`scripts/deployment/`**: Automated deployment scripts
+- **`docs/`**: Comprehensive documentation
+
+### 📖 Documentation
+
+- **`docs/QUICK_START_AWS_NATIVE.md`**: Quick start guide
+- **`docs/architecture/`**: Architecture and design decisions
+- **`docs/deployment/`**: Deployment guides and best practices
 
 ---
 
