@@ -1,28 +1,15 @@
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - echo "Setting up organized project structure"
-        - echo "Source files in src/, config in config/, docs in docs/"
-        - echo "Recursive listing of the entire project structure"
-        - ls -laR
     build:
       commands:
-        - echo "Creating a distribution directory"
-        - mkdir dist
-        - echo "Copying HTML pages from src/pages to dist"
-        - cp src/pages/*.html dist/
-        - echo "Copying JavaScript utilities from src/utils to dist"
-        - cp src/utils/*.js dist/
-        - echo "Listing contents of dist directory"
-        - ls -la dist
-        - echo "Clean build completed"
-    postBuild:
-      commands:
-        - echo "Post-build: Organized file structure deployed"
+        - 'mkdir dist'
+        - 'cp src/pages/*.html dist/'
+        - 'cp src/utils/*.js dist/'
+        - 'echo "Build artifacts successfully copied to dist directory"'
+        - 'ls -la dist'
   artifacts:
-    baseDirectory: dist
+    baseDirectory: 'dist'
     files:
       - '**/*'
   cache:
