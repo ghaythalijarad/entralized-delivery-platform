@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centralized Delivery Platform - Login</title>
+    <title>Admin Control Center - Delivery Management Hub</title>
     
     <!-- AWS Amplify SDK -->
     <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
@@ -125,6 +125,31 @@
             color: #666;
             font-size: 14px;
             opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .badge-icon {
+            font-size: 14px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .form-section {
@@ -373,6 +398,115 @@
             right: auto;
             left: 20px;
         }
+
+        /* Admin System Panel */
+        .admin-system-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #dee2e6;
+        }
+
+        .system-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .system-icon {
+            font-size: 16px;
+        }
+
+        .system-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        body[dir="rtl"] .stat-item:hover {
+            transform: translateX(-5px);
+        }
+
+        .stat-icon {
+            font-size: 14px;
+        }
+
+        /* Admin Access Info */
+        .admin-access-info {
+            background: linear-gradient(135deg, #fff5f5, #fed7d7);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #feb2b2;
+        }
+
+        .access-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #c53030;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .access-icon {
+            font-size: 16px;
+        }
+
+        .access-description {
+            color: #742a2a;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .access-features {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #feb2b2;
+            font-size: 11px;
+            color: #742a2a;
+            font-weight: 500;
+        }
+
+        .feature-icon {
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -388,14 +522,40 @@
 
         <!-- Logo Section -->
         <div class="logo-section">
-            <div class="logo">🚚</div>
-            <h1 class="app-title" data-translate="app_title">Centralized Delivery Platform</h1>
-            <p class="app-subtitle" data-translate="login_subtitle">Fast, Reliable, Real-time Delivery Management</p>
+            <div class="logo">🎛️</div>
+            <h1 class="app-title" data-translate="app_title">Admin Control Center</h1>
+            <p class="app-subtitle" data-translate="login_subtitle">Centralized Management Hub for Delivery Ecosystem</p>
+            <div class="admin-badge">
+                <span class="badge-icon">👑</span>
+                <span data-translate="admin_access">Administrator Access</span>
+            </div>
         </div>
 
         <!-- Error/Success Messages -->
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
+
+        <!-- Admin System Info Panel -->
+        <div class="admin-system-panel">
+            <div class="system-header">
+                <span class="system-icon">⚡</span>
+                <span data-translate="system_management">System Management Portal</span>
+            </div>
+            <div class="system-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">👥</span>
+                    <span data-translate="manage_all_users">Manage All Users</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🚚</span>
+                    <span data-translate="control_deliveries">Control Deliveries</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">📊</span>
+                    <span data-translate="monitor_analytics">Monitor Analytics</span>
+                </div>
+            </div>
+        </div>
 
         <!-- Login Form -->
         <form id="loginForm" class="form-section">
@@ -424,7 +584,7 @@
 
             <button type="submit" class="login-btn" id="loginButton">
                 <div class="loading-spinner" id="loadingSpinner"></div>
-                <span data-translate="login_button">Sign In - Ultra Fast</span>
+                <span data-translate="login_button">Admin Sign In</span>
             </button>
         </form>
 
@@ -433,13 +593,29 @@
             <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>
         </div>
 
-        <!-- Registration Section -->
-        <div class="register-section">
-            <p class="register-text" data-translate="new_user_text">New to our platform?</p>
-            <div class="register-buttons">
-                <a href="#" class="register-btn" onclick="registerUser('customer')" data-translate="register_customer">Register as Customer</a>
-                <a href="#" class="register-btn" onclick="registerUser('driver')" data-translate="register_driver">Register as Driver</a>
-                <a href="#" class="register-btn" onclick="registerUser('merchant')" data-translate="register_merchant">Register as Merchant</a>
+        <!-- Admin Access Info -->
+        <div class="admin-access-info">
+            <div class="access-header">
+                <span class="access-icon">🔐</span>
+                <span data-translate="admin_only">Administrator Access Only</span>
+            </div>
+            <p class="access-description" data-translate="admin_access_description">
+                This portal is restricted to authorized administrators only. 
+                Contact your system administrator for access credentials.
+            </p>
+            <div class="access-features">
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <span data-translate="centralized_control">Centralized Control</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📈</span>
+                    <span data-translate="real_time_monitoring">Real-time Monitoring</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🛡️</span>
+                    <span data-translate="secure_management">Secure Management</span>
+                </div>
             </div>
         </div>
     </div>
