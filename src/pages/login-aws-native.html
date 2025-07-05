@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Control Center - Delivery Management Hub</title>
     
-    <!-- AWS Amplify SDK -->
-    <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/auth@latest/dist/aws-amplify-auth.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/api-graphql@latest/dist/aws-amplify-api-graphql.min.js"></script>
+    <!-- Amazon Cognito Identity SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+    <script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+    <script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
     
     <!-- Bilingual Support -->
     <script src="bilingual.js"></script>
@@ -458,35 +458,36 @@
         </div>
     </div>
 
+    <!-- Local Auth Scripts -->
+    <script src="aws-config.js"></script>
+    <script src="auth.js"></script>
+
     <script>
-        // AWS Configuration - Using AppSync GraphQL API
-        const awsConfig = {
-            aws_project_region: 'eu-north-1',
-            aws_cognito_region: 'eu-north-1',
-            aws_user_pools_id: 'eu-north-1_YourPoolId', // Will be updated after deployment
-            aws_user_pools_web_client_id: 'YourClientId', // Will be updated after deployment
-            aws_appsync_graphqlEndpoint: 'https://your-api-id.appsync-api.eu-north-1.amazonaws.com/graphql',
-            aws_appsync_region: 'eu-north-1',
-            aws_appsync_authenticationType: 'AMAZON_COGNITO_USER_POOLS',
-            oauth: {
-                domain: 'your-domain.auth.eu-north-1.amazoncognito.com',
-                scope: ['email', 'openid', 'profile'],
-                redirectSignIn: window.location.origin,
-                redirectSignOut: window.location.origin,
-                responseType: 'code'
-            }
-        };
-
-        // Initialize AWS Amplify
-        Amplify.configure(awsConfig);
-
         // Global variables
         let performanceStart = Date.now();
 
-        // Initialize bilingual support
+        // Initialize bilingual support and login form
         document.addEventListener('DOMContentLoaded', function() {
             initializeBilingual();
             measurePerformance();
+
+            const loginForm = document.getElementById('loginForm');
+            if(loginForm) {
+                loginForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const email = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    
+                    const loginButton = document.getElementById('loginButton');
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    
+                    loginButton.disabled = true;
+                    loadingSpinner.style.display = 'inline-block';
+
+                    // Call the signIn function from auth.js
+                    signIn(email, password);
+                });
+            }
         });
 
         // Password toggle
@@ -503,195 +504,22 @@
             }
         }
 
-        // Enhanced login with AppSync GraphQL - Credential-based access
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginButton = document.getElementById('loginButton');
-            const spinner = document.getElementById('loadingSpinner');
-            
-            setLoading(true);
-            hideMessages();
-            
-            try {
-                const startTime = Date.now();
-                
-                // Sign in with Cognito using username
-                const user = await Auth.signIn(username, password);
-                
-                // Get user attributes and determine access level from backend
-                const userInfo = await Auth.currentAuthenticatedUser();
-                const attributes = userInfo.attributes;
-                
-                // Get JWT token for GraphQL requests
-                const session = await Auth.currentSession();
-                const token = session.getIdToken().getJwtToken();
-                
-                // GraphQL query to get user profile and access level
-                const getCurrentUserQuery = `
-                    query GetCurrentUser {
-                        getCurrentUser {
-                            userId
-                            username
-                            email
-                            firstName
-                            lastName
-                            accessLevel
-                            permissions
-                            isActive
-                            lastLoginAt
-                        }
-                    }
-                `;
-                
-                // Execute GraphQL query to determine user's access level
-                const result = await API.graphql({
-                    query: getCurrentUserQuery,
-                    authMode: 'AMAZON_COGNITO_USER_POOLS'
-                });
-                
-                const userData = result.data.getCurrentUser;
-                const responseTime = Date.now() - startTime;
-                
-                // Role-based welcome message
-                const roleNames = {
-                    'ADMIN': 'System Administrator',
-                    'MANAGER': 'Operations Manager',
-                    'SUPPORT': 'Customer Support', 
-                    'ANALYST': 'Data Analyst',
-                    'VIEWER': 'Viewer'
-                };
-                
-                const roleName = roleNames[userData.accessLevel] || userData.accessLevel;
-                showSuccess(`Welcome ${userData.firstName}! Role: ${roleName} (${responseTime}ms)`);
-                
-                // Store user session with complete role information
-                sessionStorage.setItem('userSession', JSON.stringify({
-                    user: userData,
-                    token: token,
-                    accessLevel: userData.accessLevel,
-                    permissions: userData.permissions,
-                    roleName: roleName,
-                    loginTime: new Date().toISOString(),
-                    responseTime: responseTime
-                }));
-                
-                // Redirect to dashboard - access control handled by dashboard
-                setTimeout(() => {
-                    window.location.href = 'dashboard-aws-native.html';
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                let errorMessage = 'Login failed. Please check your credentials.';
-                
-                if (error.code === 'UserNotConfirmedException') {
-                    errorMessage = 'Please verify your email address first.';
-                } else if (error.code === 'NotAuthorizedException') {
-                    errorMessage = 'Invalid username or password.';
-                } else if (error.code === 'UserNotFoundException') {
-                    errorMessage = 'User not found. Please check your username.';
-                }
-                
-                showError(errorMessage);
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        // Forgot password
-        async function forgotPassword() {
-            const username = document.getElementById('username').value;
-            
-            if (!username) {
-                showError('Please enter your username first.');
-                return;
-            }
-            
-            try {
-                await Auth.forgotPassword(username);
-                showSuccess('Password reset instructions sent to your registered email.');
-            } catch (error) {
-                showError('Failed to send reset instructions. Please try again.');
-            }
+        // Placeholder for forgot password functionality
+        function forgotPassword() {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = 'Forgot password feature is not implemented in this demo.';
+            errorMessage.style.display = 'block';
         }
 
-        // Utility functions
-        function setLoading(loading) {
-            const button = document.getElementById('loginButton');
-            const spinner = document.getElementById('loadingSpinner');
-            
-            if (loading) {
-                button.disabled = true;
-                spinner.style.display = 'inline-block';
-            } else {
-                button.disabled = false;
-                spinner.style.display = 'none';
-            }
-        }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(hideMessages, 5000);
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            setTimeout(hideMessages, 3000);
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-
+        // Performance measurement
         function measurePerformance() {
             const loadTime = Date.now() - performanceStart;
-            console.log(`Page load time: ${loadTime}ms (AWS Native Optimized)`);
-            
-            // Update performance badge
+            console.log(`Page loaded in ${loadTime}ms`);
             const badge = document.querySelector('.performance-badge');
-            if (loadTime < 100) {
-                badge.textContent = `⚡ Ultra Fast (${loadTime}ms)`;
-                badge.style.background = '#2a5';
-            } else if (loadTime < 500) {
-                badge.textContent = `🚀 Fast (${loadTime}ms)`;
-                badge.style.background = '#fa5';
-            } else {
-                badge.textContent = `📈 Optimized (${loadTime}ms)`;
-                badge.style.background = '#667eea';
+            if (badge) {
+                badge.textContent += ` (${loadTime}ms)`;
             }
         }
-
-        // Check if user is already logged in
-        window.addEventListener('load', async () => {
-            try {
-                const user = await Auth.currentAuthenticatedUser();
-                if (user) {
-                    showSuccess('Already logged in. Redirecting...');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                }
-            } catch (error) {
-                // User not logged in, continue with login form
-            }
-        });
-
-        // Performance monitoring
-        window.addEventListener('load', () => {
-            if ('performance' in window) {
-                const navigation = performance.getEntriesByType('navigation')[0];
-                const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-                console.log(`Total page load: ${loadTime}ms`);
-            }
-        });
     </script>
 </body>
 </html>
