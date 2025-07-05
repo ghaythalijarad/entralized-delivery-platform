@@ -88,7 +88,7 @@
                     if (isValidToken) {
                         // User is authenticated, redirect to dashboard
                         console.log('User is authenticated, loading dashboard...');
-                        window.location.replace('/dashboard');
+                        window.location.replace('/main_dashboard.html');
                         return;
                     } else {
                         // Token is invalid, clear storage and redirect to login
@@ -99,7 +99,7 @@
                 
                 // User is not authenticated, redirect to login
                 console.log('User is not authenticated, redirecting to login...');
-                window.location.replace('/login');
+                window.location.replace('/login.html');
                 
             } catch (error) {
                 console.error('Error checking authentication:', error);
@@ -108,7 +108,7 @@
                 // Show error message and fallback to login
                 document.getElementById('errorMessage').style.display = 'block';
                 setTimeout(() => {
-                    window.location.replace('/login');
+                    window.location.replace('/login.html');
                 }, 3000);
             }
         }
