@@ -452,6 +452,19 @@
             </button>
         </form>
 
+        <!-- MFA Form (hidden by default) -->
+        <form id="mfaForm" class="form-section" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="mfaCode" data-translate="mfa_code_label">MFA Code</label>
+                <input type="text" id="mfaCode" class="form-input" data-translate-placeholder="mfa_code_placeholder" placeholder="Enter your MFA code" required>
+            </div>
+
+            <button type="submit" class="login-btn" id="mfaButton">
+                <div class="loading-spinner" id="mfaLoadingSpinner"></div>
+                <span data-translate="mfa_submit_button">Submit Code</span>
+            </button>
+        </form>
+
         <!-- Forgot Password -->
         <div class="forgot-password">
             <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>
@@ -486,6 +499,23 @@
 
                     // Call the signIn function from auth.js
                     signIn(email, password);
+                });
+            }
+
+            const mfaForm = document.getElementById('mfaForm');
+            if(mfaForm) {
+                mfaForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const mfaCode = document.getElementById('mfaCode').value;
+
+                    const mfaButton = document.getElementById('mfaButton');
+                    const mfaLoadingSpinner = document.getElementById('mfaLoadingSpinner');
+
+                    mfaButton.disabled = true;
+                    mfaLoadingSpinner.style.display = 'inline-block';
+
+                    // Call the submitMfaCode function from auth.js
+                    submitMfaCode(mfaCode);
                 });
             }
         });

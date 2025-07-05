@@ -16,6 +16,8 @@ const poolData = {
 
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
+let cognitoUser; // Global variable to hold the user object for MFA
+
 /**
  * Signs in a user with the provided email and password.
  * @param {string} email - The user's email address.
@@ -32,7 +34,7 @@ function signIn(email, password) {
         Username: email,
         Pool: userPool
     };
-    const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
 
     cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: function (result) {
@@ -44,8 +46,48 @@ function signIn(email, password) {
             window.location.href = 'dashboard-aws-native.html';
         },
         onFailure: function (err) {
-            alert(err.message || JSON.stringify(err));
+            const loginButton = document.getElementById('loginButton');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            loginButton.disabled = false;
+            loadingSpinner.style.display = 'none';
+            
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = err.message || JSON.stringify(err);
+            errorMessage.style.display = 'block';
         },
+        mfaRequired: function(codeDeliveryDetails) {
+            // MFA is required to complete sign-in
+            console.log('MFA required', codeDeliveryDetails);
+            
+            // Hide login form, show MFA form
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('mfaForm').style.display = 'block';
+        }
+    });
+}
+
+/**
+ * Submits the MFA code to complete the sign-in process.
+ * @param {string} mfaCode - The MFA code from the user's authenticator app.
+ */
+function submitMfaCode(mfaCode) {
+    cognitoUser.sendMFACode(mfaCode, {
+        onSuccess: function (result) {
+            const accessToken = result.getAccessToken().getJwtToken();
+            localStorage.setItem('aws-native-token', accessToken);
+            console.log('MFA successful, authentication complete.');
+            window.location.href = 'dashboard-aws-native.html';
+        },
+        onFailure: function (err) {
+            const mfaButton = document.getElementById('mfaButton');
+            const mfaLoadingSpinner = document.getElementById('mfaLoadingSpinner');
+            mfaButton.disabled = false;
+            mfaLoadingSpinner.style.display = 'none';
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = err.message || JSON.stringify(err);
+            errorMessage.style.display = 'block';
+        }
     });
 }
 

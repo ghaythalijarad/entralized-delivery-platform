@@ -162,6 +162,7 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub '${Environment}-delivery-users'
+      MfaConfiguration: OPTIONAL
       AutoVerifiedAttributes:
         - email
       Policies:
