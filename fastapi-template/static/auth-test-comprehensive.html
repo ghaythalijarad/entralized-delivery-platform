@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار نظام المصادقة الشامل</title>
+    <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .login-form {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        .status-indicator.unknown {
+            background: #ffc107;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 اختبار نظام المصادقة الشامل</h1>
+            <p>نظام اختبار شامل للتحقق من جميع وظائف المصادقة في النظام</p>
+            <div id="backendStatus"></div>
+        </div>
+
+        <div class="test-grid">
+            <!-- Backend Health Tests -->
+            <div class="test-section">
+                <h3>🏥 اختبار صحة الخادم</h3>
+                <button class="btn" onclick="testBackendHealth()">فحص صحة الخادم</button>
+                <button class="btn" onclick="testDatabaseConnection()">فحص قاعدة البيانات</button>
+                <button class="btn" onclick="testCORSPolicy()">فحص سياسة CORS</button>
+                <div id="healthResults" class="test-result"></div>
+            </div>
+
+            <!-- Authentication Tests -->
+            <div class="test-section">
+                <h3>🔑 اختبار المصادقة</h3>
+                <div class="login-form">
+                    <div class="form-group">
+                        <label>اسم المستخدم:</label>
+                        <input type="text" id="testUsername" value="admin" placeholder="اسم المستخدم">
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور:</label>
+                        <input type="password" id="testPassword" value="admin123" placeholder="كلمة المرور">
+                    </div>
+                </div>
+                <button class="btn" onclick="testLogin()">اختبار تسجيل الدخول</button>
+                <button class="btn" onclick="testInvalidLogin()">اختبار دخول خاطئ</button>
+                <button class="btn danger" onclick="testLogout()">اختبار تسجيل الخروج</button>
+                <div id="authResults" class="test-result"></div>
+            </div>
+
+            <!-- Token Tests -->
+            <div class="test-section">
+                <h3>🎫 اختبار الرموز المميزة</h3>
+                <button class="btn" onclick="testTokenValidation()">فحص صحة الرمز</button>
+                <button class="btn" onclick="testTokenExpiry()">فحص انتهاء الرمز</button>
+                <button class="btn" onclick="testProtectedEndpoint()">اختبار النقطة المحمية</button>
+                <button class="btn" onclick="showCurrentToken()">عرض الرمز الحالي</button>
+                <div id="tokenResults" class="test-result"></div>
+            </div>
+
+            <!-- User Management Tests -->
+            <div class="test-section">
+                <h3>👤 اختبار إدارة المستخدمين</h3>
+                <button class="btn" onclick="testGetCurrentUser()">جلب بيانات المستخدم</button>
+                <button class="btn" onclick="testUserPermissions()">فحص الصلاحيات</button>
+                <button class="btn" onclick="testUsersList()">قائمة المستخدمين</button>
+                <button class="btn" onclick="testPasswordChange()">تغيير كلمة المرور</button>
+                <div id="userResults" class="test-result"></div>
+            </div>
+
+            <!-- Session Management -->
+            <div class="test-section">
+                <h3>🕒 إدارة الجلسات</h3>
+                <button class="btn" onclick="testSessionPersistence()">استمرارية الجلسة</button>
+                <button class="btn" onclick="testSessionTimeout()">انتهاء الجلسة</button>
+                <button class="btn" onclick="testMultipleTabs()">تبويبات متعددة</button>
+                <button class="btn danger" onclick="clearAllSessions()">مسح جميع الجلسات</button>
+                <div id="sessionResults" class="test-result"></div>
+            </div>
+
+            <!-- Security Tests -->
+            <div class="test-section">
+                <h3>🛡️ اختبار الأمان</h3>
+                <button class="btn" onclick="testCSRFProtection()">حماية CSRF</button>
+                <button class="btn" onclick="testSQLInjection()">SQL Injection</button>
+                <button class="btn" onclick="testXSSProtection()">حماية XSS</button>
+                <button class="btn" onclick="testRateLimiting()">حد المعدل</button>
+                <div id="securityResults" class="test-result"></div>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="test-section">
+            <h3>💻 مخرجات وحدة التحكم</h3>
+            <button class="btn" onclick="clearConsole()">مسح المخرجات</button>
+            <button class="btn" onclick="exportResults()">تصدير النتائج</button>
+            <div id="consoleOutput" class="console-output"></div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Get API base URL from meta tag
+        const metaApi = document.querySelector('meta[name="api-base"]');
+        const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
+        
+        let testResults = {};
+        
+        // Utility functions
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            const console = document.getElementById('consoleOutput');
+            const colorMap = {
+                'info': '#ffffff',
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107'
+            };
+            
+            console.innerHTML += `<div style="color: ${colorMap[type]}"><span class="timestamp">[${timestamp}]</span> ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.textContent = message;
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleOutput').innerHTML = '';
+        }
+
+        // Backend Health Tests
+        async function testBackendHealth() {
+            log('🏥 اختبار صحة الخادم...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('healthResults', `✅ الخادم يعمل بشكل طبيعي\n${JSON.stringify(data, null, 2)}`, 'success');
+                    log('✅ الخادم يعمل بشكل طبيعي', 'success');
+                    updateBackendStatus(true);
+                } else {
+                    showResult('healthResults', `❌ خطأ في الخادم: ${response.status}`, 'error');
+                    log(`❌ خطأ في الخادم: ${response.status}`, 'error');
+                    updateBackendStatus(false);
+                }
+            } catch (error) {
+                showResult('healthResults', `❌ فشل الاتصال: ${error.message}`, 'error');
+                log(`❌ فشل الاتصال: ${error.message}`, 'error');
+                updateBackendStatus(false);
+            }
+        }
+
+        async function testDatabaseConnection() {
+            log('💾 اختبار الاتصال بقاعدة البيانات...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.database === 'connected') {
+                    showResult('healthResults', '✅ قاعدة البيانات متصلة', 'success');
+                    log('✅ قاعدة البيانات متصلة', 'success');
+                } else {
+                    showResult('healthResults', '❌ قاعدة البيانات غير متصلة', 'error');
+                    log('❌ قاعدة البيانات غير متصلة', 'error');
+                }
+            } catch (error) {
+                showResult('healthResults', `❌ خطأ في فحص قاعدة البيانات: ${error.message}`, 'error');
+                log(`❌ خطأ في فحص قاعدة البيانات: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORSPolicy() {
+            log('🌐 اختبار سياسة CORS...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Origin': window.location.origin
+                    }
+                });
+                
+                if (response.ok) {
+                    showResult('healthResults', '✅ سياسة CORS تعمل بشكل صحيح', 'success');
+                    log('✅ سياسة CORS تعمل بشكل صحيح', 'success');
+                } else {
+                    showResult('healthResults', '⚠️ مشكلة في سياسة CORS', 'warning');
+                    log('⚠️ مشكلة في سياسة CORS', 'warning');
+                }
+            } catch (error) {
+                showResult('healthResults', `❌ خطأ CORS: ${error.message}`, 'error');
+                log(`❌ خطأ CORS: ${error.message}`, 'error');
+            }
+        }
+
+        // Authentication Tests
+        async function testLogin() {
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            log(`🔑 اختبار تسجيل الدخول للمستخدم: ${username}`, 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    localStorage.setItem('authToken', data.token.access_token);
+                    localStorage.setItem('userInfo', JSON.stringify(data.token.user));
+                    
+                    showResult('authResults', 
+                        `✅ تم تسجيل الدخول بنجاح!\n` +
+                        `المستخدم: ${data.token.user.full_name}\n` +
+                        `الدور: ${data.token.user.role}\n` +
+                        `الرمز: ${data.token.access_token.substring(0, 20)}...`, 
+                        'success'
+                    );
+                    log('✅ تم تسجيل الدخول بنجاح', 'success');
+                } else {
+                    showResult('authResults', `❌ فشل تسجيل الدخول: ${data.message}`, 'error');
+                    log(`❌ فشل تسجيل الدخول: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('authResults', `❌ خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                log(`❌ خطأ في تسجيل الدخول: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInvalidLogin() {
+            log('🔑 اختبار تسجيل دخول خاطئ...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        username: 'wronguser', 
+                        password: 'wrongpass' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showResult('authResults', `✅ تم رفض الدخول الخاطئ بشكل صحيح: ${data.message}`, 'success');
+                    log('✅ تم رفض الدخول الخاطئ بشكل صحيح', 'success');
+                } else {
+                    showResult('authResults', '❌ خطأ أمني: تم قبول دخول خاطئ!', 'error');
+                    log('❌ خطأ أمني: تم قبول دخول خاطئ!', 'error');
+                }
+            } catch (error) {
+                showResult('authResults', `❌ خطأ في اختبار الدخول الخاطئ: ${error.message}`, 'error');
+                log(`❌ خطأ في اختبار الدخول الخاطئ: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogout() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                showResult('authResults', '⚠️ لا يوجد رمز مصادقة للخروج', 'warning');
+                return;
+            }
+            
+            log('🚪 اختبار تسجيل الخروج...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userInfo');
+                    showResult('authResults', '✅ تم تسجيل الخروج بنجاح', 'success');
+                    log('✅ تم تسجيل الخروج بنجاح', 'success');
+                } else {
+                    showResult('authResults', `❌ فشل تسجيل الخروج: ${response.status}`, 'error');
+                    log(`❌ فشل تسجيل الخروج: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('authResults', `❌ خطأ في تسجيل الخروج: ${error.message}`, 'error');
+                log(`❌ خطأ في تسجيل الخروج: ${error.message}`, 'error');
+            }
+        }
+
+        // Token Tests
+        async function testTokenValidation() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                showResult('tokenResults', '⚠️ لا يوجد رمز للفحص', 'warning');
+                return;
+            }
+            
+            log('🎫 فحص صحة الرمز المميز...', 'info');
+            
+            try {
+                // Decode JWT token (basic check)
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const isExpired = payload.exp * 1000 < Date.now();
+                
+                if (isExpired) {
+                    showResult('tokenResults', '❌ الرمز منتهي الصلاحية', 'error');
+                    log('❌ الرمز منتهي الصلاحية', 'error');
+                } else {
+                    const timeLeft = Math.floor((payload.exp * 1000 - Date.now()) / 60000);
+                    showResult('tokenResults', 
+                        `✅ الرمز صالح\n` +
+                        `المستخدم: ${payload.sub}\n` +
+                        `ينتهي خلال: ${timeLeft} دقيقة`, 
+                        'success'
+                    );
+                    log(`✅ الرمز صالح، ينتهي خلال ${timeLeft} دقيقة`, 'success');
+                }
+            } catch (error) {
+                showResult('tokenResults', `❌ رمز غير صالح: ${error.message}`, 'error');
+                log(`❌ رمز غير صالح: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProtectedEndpoint() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                showResult('tokenResults', '⚠️ لا يوجد رمز مصادقة', 'warning');
+                return;
+            }
+            
+            log('🔐 اختبار النقطة المحمية...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    showResult('tokenResults', 
+                        `✅ تم الوصول للنقطة المحمية\n` +
+                        `${JSON.stringify(userData, null, 2)}`, 
+                        'success'
+                    );
+                    log('✅ تم الوصول للنقطة المحمية بنجاح', 'success');
+                } else {
+                    showResult('tokenResults', `❌ رُفض الوصول: ${response.status}`, 'error');
+                    log(`❌ رُفض الوصول للنقطة المحمية: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('tokenResults', `❌ خطأ في الوصول: ${error.message}`, 'error');
+                log(`❌ خطأ في الوصول للنقطة المحمية: ${error.message}`, 'error');
+            }
+        }
+
+        function showCurrentToken() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (!token) {
+                showResult('tokenResults', '⚠️ لا يوجد رمز محفوظ', 'warning');
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userInfo);
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                showResult('tokenResults', 
+                    `🎫 معلومات الرمز الحالي:\n` +
+                    `الطول: ${token.length} حرف\n` +
+                    `المستخدم: ${user.username} (${user.full_name})\n` +
+                    `الدور: ${user.role}\n` +
+                    `انتهاء الصلاحية: ${new Date(payload.exp * 1000).toLocaleString('ar-SA')}\n` +
+                    `الرمز: ${token.substring(0, 50)}...`, 
+                    'info'
+                );
+            } catch (error) {
+                showResult('tokenResults', `❌ خطأ في قراءة الرمز: ${error.message}`, 'error');
+            }
+        }
+
+        // User Management Tests
+        async function testGetCurrentUser() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                showResult('userResults', '⚠️ يجب تسجيل الدخول أولاً', 'warning');
+                return;
+            }
+            
+            log('👤 جلب بيانات المستخدم الحالي...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    showResult('userResults', 
+                        `✅ بيانات المستخدم:\n${JSON.stringify(userData, null, 2)}`, 
+                        'success'
+                    );
+                    log('✅ تم جلب بيانات المستخدم بنجاح', 'success');
+                } else {
+                    showResult('userResults', `❌ فشل جلب البيانات: ${response.status}`, 'error');
+                    log(`❌ فشل جلب بيانات المستخدم: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('userResults', `❌ خطأ: ${error.message}`, 'error');
+                log(`❌ خطأ في جلب بيانات المستخدم: ${error.message}`, 'error');
+            }
+        }
+
+        // Utility Functions
+        function updateBackendStatus(isOnline) {
+            const statusDiv = document.getElementById('backendStatus');
+            const statusClass = isOnline ? 'online' : 'offline';
+            const statusText = isOnline ? 'متصل' : 'غير متصل';
+            
+            statusDiv.innerHTML = `
+                <p>حالة الخادم: <span class="status-indicator ${statusClass}"></span>${statusText}</p>
+                <p>عنوان API: <code>${API_BASE}</code></p>
+            `;
+        }
+
+        function exportResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                apiBase: API_BASE,
+                tests: testResults,
+                console: document.getElementById('consoleOutput').textContent
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `auth_test_results_${new Date().toISOString().slice(0, 19)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('📁 تم تصدير النتائج', 'success');
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🚀 تم تهيئة نظام اختبار المصادقة', 'info');
+            testBackendHealth();
+        });
+    </script>
+</body>
+</html>

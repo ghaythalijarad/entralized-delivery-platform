@@ -121,7 +121,7 @@
 
     <script>
         // Configuration
-        const API_BASE = 'http://localhost:8000';
+        const API_BASE = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
         
         // Debug logging
         function log(message, type = 'info') {
@@ -334,7 +334,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             log('Secure Session Handling Test initialized');
-            log('Make sure your FastAPI server is running on http://localhost:8000');
+            log('Make sure the AWS Lambda API is running and accessible');
         });
     </script>
 </body>

@@ -16,9 +16,9 @@ class ProductionConfig:
     
     # CORS - Configure for your domain
     ALLOWED_ORIGINS = [
-        "https://your-domain.amplifyapp.com",
-        "https://your-custom-domain.com",
-        "http://localhost:3000",  # For development
+        "https://main.d1l2ynfxs4bd2p.amplifyapp.com",
+        "https://*.amplifyapp.com",
+        "*"  # For development - remove in production
     ]
     
     # Database

@@ -26,7 +26,7 @@ class DatabaseConfig:
             self.DATABASE_URL = (
                 f"postgresql://{os.getenv('RDS_USERNAME', 'postgres')}:"
                 f"{os.getenv('RDS_PASSWORD', 'password')}@"
-                f"{os.getenv('RDS_ENDPOINT', 'localhost')}:"
+                f"{os.getenv('RDS_ENDPOINT', 'production-db')}:"
                 f"{os.getenv('RDS_PORT', '5432')}/"
                 f"{os.getenv('RDS_DB_NAME', 'delivery_platform')}"
             )
@@ -37,7 +37,7 @@ class DatabaseConfig:
                 self.DATABASE_URL = (
                     f"postgresql://{os.getenv('LOCAL_DB_USER', 'postgres')}:"
                     f"{os.getenv('LOCAL_DB_PASSWORD', 'password')}@"
-                    f"{os.getenv('LOCAL_DB_HOST', 'localhost')}:"
+                    f"{os.getenv('LOCAL_DB_HOST', 'production-db')}:"
                     f"{os.getenv('LOCAL_DB_PORT', '5432')}/"
                     f"{os.getenv('LOCAL_DB_NAME', 'delivery_platform_dev')}"
                 )
