@@ -39,7 +39,7 @@ class BilingualManager {
                 password: { ar: 'كلمة المرور', en: 'Password' },
                 loginButton: { ar: 'تسجيل دخول المدير', en: 'Admin Sign In' },
                 admin_only: { ar: 'للمديرين فقط', en: 'Administrator Access Only' },
-                admin_access_description: { ar: 'هذه البوابة مخصصة للمديرين المعتمدين فقط. اتصل بمدير النظام للحصول على بيانات الاعتماد.', en: 'This portal is restricted to authorized administrators only. Contact your system administrator for access credentials.' },
+                admin_access_description: { ar: 'هذه البوابة مخصصة للمديرين المعتمدين فقط.', en: 'This portal is restricted to authorized administrators only.' },
                 centralized_control: { ar: 'التحكم المركزي', en: 'Centralized Control' },
                 real_time_monitoring: { ar: 'المراقبة في الوقت الفعلي', en: 'Real-time Monitoring' },
                 secure_management: { ar: 'الإدارة الآمنة', en: 'Secure Management' },
