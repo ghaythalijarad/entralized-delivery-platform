@@ -24,6 +24,8 @@ let cognitoUser; // Global variable to hold the user object for MFA
  * @param {string} password - The user's password.
  */
 function signIn(email, password) {
+    console.log('Attempting to sign in user:', email);
+
     const authenticationData = {
         Username: email,
         Password: password,
@@ -35,9 +37,11 @@ function signIn(email, password) {
         Pool: userPool
     };
     cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    console.log('CognitoUser object created:', cognitoUser);
 
     cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: function (result) {
+            console.log('Authentication successful:', result);
             const accessToken = result.getAccessToken().getJwtToken();
             // Store the token in localStorage for session management
             localStorage.setItem('aws-native-token', accessToken);
@@ -46,6 +50,7 @@ function signIn(email, password) {
             window.location.href = 'dashboard-aws-native.html';
         },
         onFailure: function (err) {
+            console.error('Authentication failed:', err);
             const loginButton = document.getElementById('loginButton');
             const loadingSpinner = document.getElementById('loadingSpinner');
             loginButton.disabled = false;
@@ -56,6 +61,7 @@ function signIn(email, password) {
             errorMessage.style.display = 'block';
         },
         mfaRequired: function(codeDeliveryDetails) {
+            console.log('MFA is required. Details:', codeDeliveryDetails);
             // MFA is required to complete sign-in
             console.log('MFA required', codeDeliveryDetails);
             
@@ -71,14 +77,18 @@ function signIn(email, password) {
  * @param {string} mfaCode - The MFA code from the user's authenticator app.
  */
 function submitMfaCode(mfaCode) {
+    console.log('Submitting MFA code:', mfaCode);
+
     cognitoUser.sendMFACode(mfaCode, {
         onSuccess: function (result) {
+            console.log('MFA submission successful:', result);
             const accessToken = result.getAccessToken().getJwtToken();
             localStorage.setItem('aws-native-token', accessToken);
             console.log('MFA successful, authentication complete.');
             window.location.href = 'dashboard-aws-native.html';
         },
         onFailure: function (err) {
+            console.error('MFA submission failed:', err);
             const mfaButton = document.getElementById('mfaButton');
             const mfaLoadingSpinner = document.getElementById('mfaLoadingSpinner');
             mfaButton.disabled = false;
