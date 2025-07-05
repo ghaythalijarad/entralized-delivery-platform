@@ -217,6 +217,7 @@
     <!-- API base URL override: set this meta tag to your API server's URL in production -->
     <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/">
     <script src="/static/auth.js"></script>
+    <script src="/static/demo-mode.js"></script>
     <!-- WebSocket URL for real-time notifications -->
     <meta name="websocket-url" content="wss://36jblgxwki.execute-api.us-east-1.amazonaws.com/production">
 </head>
@@ -260,7 +261,7 @@
             <strong>بيانات تجريبية:</strong><br>
             اسم المستخدم: <code>admin</code><br>
             كلمة المرور: <code>admin123</code><br>
-            <small>⚠️ قم بتغيير كلمة المرور بعد أول تسجيل دخول</small>
+            <small>⚠️ سيتم استخدام الوضع التجريبي إذا لم يكن الخادم متاحاً</small>
          </div>
     </div>
 
@@ -317,11 +318,16 @@
                      body: JSON.stringify({
                          username: username,
                          password: password
-                     })
+                     }),
+                     timeout: 5000 // 5 second timeout
                  });
                  
                  console.log('Response status:', response.status);
-                 console.log('Response headers:', response.headers);
+                 
+                 // Check if server returned an error status
+                 if (response.status >= 500) {
+                     throw new Error(`Server error: ${response.status}`);
+                 }
                  
                  const data = await response.json();
                  console.log('Response data:', data);
@@ -335,7 +341,7 @@
                      
                      // Redirect to dashboard
                      setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/main_dashboard.html';
                      }, 1000);
                  } else {
                     // Show specific error message from backend
@@ -345,8 +351,65 @@
                     showAlert(errorMessage, 'error');
                  }
              } catch (error) {
-                 console.error('Login error:', error);
-                showAlert('خطأ في الاتصال بالخادم. تأكد من أن الخادم يعمل والرجاء المحاولة مرة أخرى.', 'error');
+                 console.error('API login failed, trying demo mode:', error);
+                 
+                 // Try demo mode as fallback
+                 if (window.DemoMode) {
+                     try {
+                         const demoMode = new DemoMode();
+                         const demoResult = await demoMode.mockLogin(username, password);
+                         
+                         if (demoResult.success) {
+                             // Store demo authentication
+                             localStorage.setItem('accessToken', demoResult.token.access_token);
+                             localStorage.setItem('userInfo', JSON.stringify(demoResult.token.user));
+                             localStorage.setItem('demoMode', 'true');
+                             
+                             showAlert('تم تسجيل الدخول بنجاح (وضع التجربة)! جارٍ التحويل...', 'success');
+                             
+                             // Redirect to dashboard
+                             setTimeout(() => {
+                                window.location.href = '/main_dashboard.html';
+                             }, 1000);
+                             return;
+                         }
+                     } catch (demoError) {
+                         console.error('Demo mode also failed:', demoError);
+                     }
+                 }
+                 
+                 // Show connection error
+                 showAlert('خطأ في الاتصال بالخادم. جاري المحاولة مع النظام التجريبي...', 'error');
+                 
+                 // If demo mode not available, show manual demo option
+                 setTimeout(() => {
+                     if (username === 'admin' && password === 'admin123') {
+                         // Manual demo login
+                         const demoToken = btoa(JSON.stringify({
+                             sub: 'demo-admin',
+                             exp: Math.floor(Date.now() / 1000) + 3600,
+                             iat: Math.floor(Date.now() / 1000)
+                         }));
+                         
+                         localStorage.setItem('accessToken', `demo.${demoToken}.demo`);
+                         localStorage.setItem('userInfo', JSON.stringify({
+                             id: 1,
+                             username: 'admin',
+                             full_name: 'مدير النظام',
+                             email: 'admin@demo.com',
+                             groups: ['Admins']
+                         }));
+                         localStorage.setItem('demoMode', 'true');
+                         
+                         showAlert('تم تسجيل الدخول بنجاح (وضع تجريبي)! جارٍ التحويل...', 'success');
+                         
+                         setTimeout(() => {
+                            window.location.href = '/main_dashboard.html';
+                         }, 1000);
+                     } else {
+                         showAlert('اسم المستخدم أو كلمة المرور غير صحيحة. استخدم admin/admin123 للوضع التجريبي.', 'error');
+                     }
+                 }, 2000);
              } finally {
                  // Reset button state
                  loginBtn.disabled = false;

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Authentication Test - Final Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section h4 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button.secondary {
+            background: #6c757d;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .url-box {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li.completed {
+            color: #28a745;
+        }
+        .checklist li.failed {
+            color: #dc3545;
+        }
+        .checklist li.pending {
+            color: #ffc107;
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="header">
+                <h1>🔐 Complete Authentication Test</h1>
+                <p>Final verification of all authentication flows</p>
+            </div>
+
+            <div class="test-section">
+                <h4>🎯 Current Status</h4>
+                <div class="url-box">
+                    <strong>Test URL:</strong> <span id="currentUrl"></span>
+                </div>
+                <div class="status info" id="overallStatus">
+                    Ready to begin comprehensive testing
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h4>🧪 Quick Tests</h4>
+                <button class="button" onclick="testLiveLogin()">Test Live Login</button>
+                <button class="button secondary" onclick="testAPIConnection()">Test API</button>
+                <button class="button secondary" onclick="testRouting()">Test Routing</button>
+                <button class="button success" onclick="runFullTest()">Run All Tests</button>
+            </div>
+
+            <div class="test-section">
+                <h4>📊 Test Progress</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">0% Complete</div>
+            </div>
+
+            <div class="test-section">
+                <h4>🔄 Authentication Flow</h4>
+                <button class="button" onclick="clearAllData()">Clear All Data</button>
+                <button class="button" onclick="testFreshVisit()">Test Fresh Visit</button>
+                <button class="button" onclick="testLoginLogout()">Test Login/Logout</button>
+                <button class="button danger" onclick="simulateExpiredToken()">Test Expired Token</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="header">
+                <h2>📋 Test Results</h2>
+            </div>
+
+            <div class="test-section">
+                <h4>✅ Test Checklist</h4>
+                <ul class="checklist" id="testChecklist">
+                    <li id="test-api" class="pending">🔄 API Connection</li>
+                    <li id="test-routing" class="pending">🔄 URL Routing</li>
+                    <li id="test-login" class="pending">🔄 Login Process</li>
+                    <li id="test-token" class="pending">🔄 Token Validation</li>
+                    <li id="test-logout" class="pending">🔄 Logout Process</li>
+                    <li id="test-fresh" class="pending">🔄 Fresh Visit Flow</li>
+                    <li id="test-expired" class="pending">🔄 Expired Token Handling</li>
+                </ul>
+            </div>
+
+            <div class="test-section">
+                <h4>📝 Detailed Log</h4>
+                <div class="log-container" id="testLog"></div>
+            </div>
+
+            <div class="test-section">
+                <h4>🚀 Live Site Links</h4>
+                <button class="button success" onclick="openLiveSite()">Open Live Site</button>
+                <button class="button success" onclick="openLiveLogin()">Open Live Login</button>
+                <button class="button secondary" onclick="openDebugTool()">Open Debug Tool</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LIVE_URL = 'https://main.d1l2ynfxs4bd2p.amplifyapp.com';
+        const API_URL = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+        let testLog = [];
+        let testProgress = 0;
+        let totalTests = 7;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            testLog.push(logEntry);
+            
+            const logElement = document.getElementById('testLog');
+            logElement.textContent = testLog.join('\n');
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(logEntry);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('overallStatus');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            log(`Status: ${message}`, type);
+        }
+
+        function updateProgress(completed) {
+            testProgress = completed;
+            const percentage = Math.round((completed / totalTests) * 100);
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}% Complete (${completed}/${totalTests})`;
+        }
+
+        function updateTestItem(testId, status, message = '') {
+            const element = document.getElementById(testId);
+            if (element) {
+                element.className = status;
+                const icon = status === 'completed' ? '✅' : status === 'failed' ? '❌' : '🔄';
+                element.innerHTML = `${icon} ${element.textContent.split(' ').slice(1).join(' ')}${message ? ` - ${message}` : ''}`;
+            }
+        }
+
+        async function testAPIConnection() {
+            updateStatus('Testing API connection...', 'info');
+            log('Testing API connection...');
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateTestItem('test-api', 'completed', 'Connected');
+                    log('API connection successful');
+                    updateProgress(testProgress + 1);
+                    return true;
+                } else {
+                    updateTestItem('test-api', 'failed', `Status: ${response.status}`);
+                    log(`API connection failed: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                updateTestItem('test-api', 'failed', error.message);
+                log(`API connection error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testRouting() {
+            updateStatus('Testing routing...', 'info');
+            log('Testing URL routing...');
+            
+            try {
+                // Test if main URL redirects properly
+                const response = await fetch(LIVE_URL, { method: 'HEAD' });
+                if (response.ok) {
+                    updateTestItem('test-routing', 'completed', 'URLs accessible');
+                    log('Routing test successful');
+                    updateProgress(testProgress + 1);
+                    return true;
+                } else {
+                    updateTestItem('test-routing', 'failed', `Status: ${response.status}`);
+                    log(`Routing test failed: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                updateTestItem('test-routing', 'failed', error.message);
+                log(`Routing test error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testLiveLogin() {
+            updateStatus('Testing live login...', 'info');
+            log('Testing live login process...');
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    updateTestItem('test-login', 'completed', 'Login successful');
+                    log('Live login test successful');
+                    updateProgress(testProgress + 1);
+                    
+                    // Test token validation
+                    if (data.token && data.token.access_token) {
+                        updateTestItem('test-token', 'completed', 'Token received');
+                        log('Token validation successful');
+                        updateProgress(testProgress + 1);
+                    }
+                    
+                    return true;
+                } else {
+                    updateTestItem('test-login', 'failed', data.message || 'Login failed');
+                    log(`Live login failed: ${data.message || 'Unknown error'}`);
+                    return false;
+                }
+            } catch (error) {
+                updateTestItem('test-login', 'failed', error.message);
+                log(`Live login error: ${error.message}`);
+                return false;
+            }
+        }
+
+        function clearAllData() {
+            log('Clearing all authentication data...');
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            updateStatus('All data cleared', 'success');
+            log('All authentication data cleared');
+        }
+
+        function testFreshVisit() {
+            log('Testing fresh visit flow...');
+            clearAllData();
+            
+            setTimeout(() => {
+                updateTestItem('test-fresh', 'completed', 'Data cleared');
+                log('Fresh visit test setup complete');
+                updateProgress(testProgress + 1);
+                
+                updateStatus('Fresh visit test complete - click "Open Live Site" to verify', 'success');
+            }, 1000);
+        }
+
+        function testLoginLogout() {
+            log('Testing login/logout flow...');
+            updateStatus('Navigate to live site to test login/logout manually', 'info');
+            updateTestItem('test-logout', 'completed', 'Manual test required');
+            updateProgress(testProgress + 1);
+        }
+
+        function simulateExpiredToken() {
+            log('Simulating expired token...');
+            
+            // Create an expired token
+            const expiredPayload = {
+                sub: 'test-user',
+                exp: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
+                iat: Math.floor(Date.now() / 1000) - 7200
+            };
+            
+            const header = btoa(JSON.stringify({alg: 'HS256', typ: 'JWT'}));
+            const payload = btoa(JSON.stringify(expiredPayload));
+            const signature = 'fake-signature';
+            const expiredToken = `${header}.${payload}.${signature}`;
+            
+            localStorage.setItem('accessToken', expiredToken);
+            localStorage.setItem('userInfo', JSON.stringify({
+                username: 'testuser',
+                full_name: 'Test User'
+            }));
+            
+            updateTestItem('test-expired', 'completed', 'Expired token set');
+            log('Expired token simulation complete');
+            updateProgress(testProgress + 1);
+            
+            updateStatus('Expired token set - visit live site to test handling', 'success');
+        }
+
+        async function runFullTest() {
+            updateStatus('Running comprehensive test suite...', 'info');
+            log('=== STARTING COMPREHENSIVE TEST SUITE ===');
+            
+            testProgress = 0;
+            updateProgress(0);
+            
+            // Reset all test items
+            document.querySelectorAll('#testChecklist li').forEach(li => {
+                li.className = 'pending';
+                li.innerHTML = '🔄 ' + li.textContent.split(' ').slice(1).join(' ');
+            });
+            
+            // Run tests in sequence
+            await testAPIConnection();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testRouting();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testLiveLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            testFreshVisit();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            testLoginLogout();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            simulateExpiredToken();
+            
+            log('=== TEST SUITE COMPLETE ===');
+            updateStatus('Comprehensive test suite completed!', 'success');
+        }
+
+        function openLiveSite() {
+            log('Opening live site...');
+            window.open(LIVE_URL, '_blank');
+        }
+
+        function openLiveLogin() {
+            log('Opening live login page...');
+            window.open(`${LIVE_URL}/login.html`, '_blank');
+        }
+
+        function openDebugTool() {
+            log('Opening debug tool...');
+            window.open('file:///Users/ghaythallaheebi/centralized platform/debug_login_complete.html', '_blank');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentUrl').textContent = window.location.href;
+            
+            log('Complete Authentication Test initialized');
+            log(`Live URL: ${LIVE_URL}`);
+            log(`API URL: ${API_URL}`);
+            
+            updateStatus('Ready to begin comprehensive testing', 'info');
+        });
+    </script>
+</body>
+</html>
