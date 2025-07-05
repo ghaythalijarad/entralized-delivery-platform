@@ -64,7 +64,14 @@ class AuthManager {
             console.error('Logout failed:', error);
         } finally {
             this.clearAuth();
-            window.location.href = '/static/login.html';
+            // Clear session storage as well
+            sessionStorage.clear();
+            // Clear localStorage completely
+            localStorage.clear();
+            // Use a slight delay to ensure storage is cleared
+            setTimeout(() => {
+                window.location.replace('/');
+            }, 100);
         }
     }
 

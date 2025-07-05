@@ -77,27 +77,86 @@
 
     <script>
         // Check authentication and redirect accordingly
-        function checkAuthAndRedirect() {
+        async function checkAuthAndRedirect() {
             try {
                 const authToken = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
                 
                 if (authToken && authToken.trim() !== '') {
-                    // User is authenticated, redirect to dashboard
-                    console.log('User is authenticated, loading dashboard...');
-                    window.location.replace('/dashboard');
-                } else {
-                    // User is not authenticated, redirect to login
-                    console.log('User is not authenticated, redirecting to login...');
-                    window.location.replace('/login');
+                    // Validate token by checking if it's expired and if user exists
+                    const isValidToken = await validateToken(authToken);
+                    
+                    if (isValidToken) {
+                        // User is authenticated, redirect to dashboard
+                        console.log('User is authenticated, loading dashboard...');
+                        window.location.replace('/dashboard');
+                        return;
+                    } else {
+                        // Token is invalid, clear storage and redirect to login
+                        console.log('Token is invalid, clearing storage and redirecting to login...');
+                        clearAuthData();
+                    }
                 }
+                
+                // User is not authenticated, redirect to login
+                console.log('User is not authenticated, redirecting to login...');
+                window.location.replace('/login');
+                
             } catch (error) {
                 console.error('Error checking authentication:', error);
+                // Clear potentially corrupted auth data
+                clearAuthData();
                 // Show error message and fallback to login
                 document.getElementById('errorMessage').style.display = 'block';
                 setTimeout(() => {
                     window.location.replace('/login');
                 }, 3000);
             }
+        }
+
+        // Validate token by checking expiration and format
+        function validateToken(token) {
+            try {
+                // Check if token format is valid (JWT should have 3 parts)
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    console.log('Invalid token format');
+                    return false;
+                }
+
+                // Decode payload to check expiration
+                const payload = JSON.parse(atob(parts[1]));
+                const currentTime = Math.floor(Date.now() / 1000);
+                
+                if (payload.exp && payload.exp < currentTime) {
+                    console.log('Token is expired');
+                    return false;
+                }
+
+                // Check if user info exists
+                const userInfo = localStorage.getItem('userInfo');
+                if (!userInfo) {
+                    console.log('No user info found');
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Token validation error:', error);
+                return false;
+            }
+        }
+
+        // Clear all authentication data
+        function clearAuthData() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('refreshToken');
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
 
         // Run the check when page loads

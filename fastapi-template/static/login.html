@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-base" content="https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api/">
     <title>Centralized Delivery Platform - Login</title>
     <style>
         * {
@@ -268,7 +269,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Determine API base URL from meta tag or default to origin
             const metaApi = document.querySelector('meta[name="api-base"]');
-            const API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
+            let API_BASE = (metaApi && metaApi.content) ? metaApi.content : window.location.origin;
+            
+            // Ensure API_BASE doesn't end with a slash
+            if (API_BASE.endsWith('/')) {
+                API_BASE = API_BASE.slice(0, -1);
+            }
             
             console.log('Meta API element:', metaApi);
             console.log('API_BASE:', API_BASE);
@@ -299,7 +305,11 @@
              loading.style.display = 'block';
              
              try {
-                 const response = await fetch(`${API_BASE}/auth/login`, {
+                 console.log('Attempting login with API_BASE:', API_BASE);
+                 const loginUrl = `${API_BASE}/auth/login`;
+                 console.log('Login URL:', loginUrl);
+                 
+                 const response = await fetch(loginUrl, {
                      method: 'POST',
                      headers: {
                          'Content-Type': 'application/json',
@@ -310,7 +320,11 @@
                      })
                  });
                  
-                const data = await response.json();
+                 console.log('Response status:', response.status);
+                 console.log('Response headers:', response.headers);
+                 
+                 const data = await response.json();
+                 console.log('Response data:', data);
                  
                  if (data.success && data.token) {
                      // Store authentication token

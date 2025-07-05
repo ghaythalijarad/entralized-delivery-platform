@@ -591,20 +591,21 @@
                     
                     // Clear all authentication data
                     console.log('Clearing local storage...');
-                    localStorage.removeItem('accessToken');
-                    localStorage.removeItem('userInfo');
-                    localStorage.removeItem('authToken'); // Legacy cleanup
-                    localStorage.removeItem('refreshToken'); // Just in case
+                    localStorage.clear(); // Clear everything
+                    sessionStorage.clear(); // Clear session storage too
                     
                     // Clear any auth cookies that might be accessible
-                    document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
                     
-                    console.log('Local storage and cookies cleared');
+                    console.log('All storage and cookies cleared');
                     
-                    // Force redirect to login
-                    console.log('Redirecting to login...');
-                    window.location.replace('/login.html');
+                    // Force redirect to router which will handle login redirect
+                    console.log('Redirecting to router...');
+                    setTimeout(() => {
+                        window.location.replace('/');
+                    }, 100);
                     
                 } catch (error) {
                     console.error('Logout error:', error);
@@ -620,7 +621,9 @@
                             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
                         });
                         
-                        window.location.replace('/login.html');
+                        setTimeout(() => {
+                            window.location.replace('/');
+                        }, 100);
                     } catch (fallbackError) {
                         console.error('Even fallback logout failed:', fallbackError);
                         alert('تعذر تسجيل الخروج. سيتم إعادة تحميل الصفحة.');
