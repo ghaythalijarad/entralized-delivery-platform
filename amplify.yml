@@ -5,6 +5,8 @@ frontend:
       commands:
         - echo "Setting up organized project structure"
         - echo "Source files in src/, config in config/, docs in docs/"
+        - echo "Recursive listing of the entire project structure:"
+        - ls -laR
     build:
       commands:
         - echo "Creating a distribution directory"
