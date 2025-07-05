@@ -79,4 +79,5 @@ def get_config():
         return ProductionConfig()
     return DevelopmentConfig()
 
+# Expose a singleton config object
 config = get_config()

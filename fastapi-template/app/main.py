@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Response, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -12,7 +11,7 @@ import traceback
 from app.config import config
 
 # Import database components
-from app.database import get_db, check_database_connection, init_database
+from app.database import get_db
 from app.models import (
     Merchant as MerchantModel, Driver as DriverModel, Customer as CustomerModel, 
     Order as OrderModel, OrderItem, DailyStats, MerchantStatus, DriverStatus, 
@@ -35,8 +34,12 @@ from app.auth_schemas import CognitoLoginResponse, CognitoToken, CognitoUserResp
 
 # Import Cognito functions
 from app.cognito import (
-    initiate_auth, get_user_groups, list_users, admin_add_user_to_group, 
-    admin_remove_user_from_group, db as cognito_client, refresh_token as cognito_refresh,
+    initiate_auth,
+    get_user_groups,
+    list_users,
+    admin_add_user_to_group,
+    admin_remove_user_from_group,
+    refresh_token as cognito_refresh,
     global_sign_out
 )
 
@@ -51,45 +54,14 @@ app = FastAPI(
     root_path=os.environ.get("ROOT_PATH")
 )
 
-# Allow CORS for all origins (adjust in production)
-origins = ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Initialize database on startup
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database and check connection on startup"""
-    print("🚀 Starting Centralized Delivery Platform API...")
-    
-    # Skip database initialization for now to test login
-    print("⚠️  Skipping database initialization for testing")
-    print("🌟 API is ready to serve requests!")
+# Removed startup event to reduce Lambda cold start time
+# Database connections are now initialized lazily when needed
 
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    try:
-        db_status = check_database_connection()
-        return {
-            "status": "healthy" if db_status else "degraded",
-            "database": "connected" if db_status else "disconnected",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        # Gracefully handle errors
-        return {
-            "status": "degraded",
-            "database": "error",
-            "timestamp": datetime.now().isoformat(),
-            "error": str(e)
-        }
+    """Simple health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
 # ==========================================
@@ -1534,4 +1506,4 @@ async def login_page():
     
     raise HTTPException(404, "Login page not found")
 
-handler = Mangum(app)
+# Mangum handler removed - now handled in lambda_handler.py

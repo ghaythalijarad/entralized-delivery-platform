@@ -1,12 +1,8 @@
 # Database Configuration for Amazon RDS
 import os
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 # Database configuration
 class DatabaseConfig:
@@ -48,22 +44,33 @@ class DatabaseConfig:
 # Initialize database configuration
 db_config = DatabaseConfig()
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    db_config.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=os.getenv('DB_ECHO', 'false').lower() == 'true'
-)
+# Create SQLAlchemy engine with lazy initialization
+engine = None
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def get_engine():
+    global engine
+    if engine is None:
+        engine = create_engine(
+            db_config.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            pool_size=5,
+            max_overflow=10,
+            connect_args={"connect_timeout": 5},
+            echo=os.getenv('DB_ECHO', 'false').lower() == 'true'
+        )
+    return engine
+
+# Create SessionLocal class with lazy engine initialization
+def get_session_local():
+    return sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
 
 # Create Base class for models
 Base = declarative_base()
 
 # Database dependency for FastAPI
 def get_db():
+    SessionLocal = get_session_local()
     db = SessionLocal()
     try:
         yield db
@@ -73,6 +80,8 @@ def get_db():
 # Health check function
 def check_database_connection():
     try:
+        engine = get_engine()
+        SessionLocal = get_session_local()
         db = SessionLocal()
         from sqlalchemy import text
         db.execute(text("SELECT 1"))
@@ -88,6 +97,7 @@ def check_database_connection():
 def init_database():
     """Create all database tables"""
     try:
+        engine = get_engine()
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
         return True

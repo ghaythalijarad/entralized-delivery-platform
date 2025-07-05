@@ -2,8 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Globals:
   Function:
-    Timeout: 30
-    MemorySize: 512
+    Timeout: 60
+    MemorySize: 1024
 
 Resources:
   CentralDeliveryHttpApi:
@@ -28,15 +28,8 @@ Resources:
     Properties:
       CodeUri: fastapi-template/
       PackageType: Zip
-      Handler: app.main.handler
+      Handler: app.lambda_handler.lambda_handler
       Runtime: python3.9
-      VpcConfig:
-        SecurityGroupIds:
-          - sg-0af03b5e96b619945
-        SubnetIds:
-          - subnet-04e53ebd9d637235c
-          - subnet-0de9c8256a55f6e0b
-          - subnet-031e4d82a004477b1
       Environment:
         Variables:
           ROOT_PATH: /api
@@ -44,10 +37,13 @@ Resources:
           RDS_PORT: "5432"
           RDS_DB_NAME: delivery_platform
           RDS_USERNAME: ghayth
-          RDS_PASSWORD: Gha@551987
+          RDS_PASSWORD: Gha%40551987
           SECRET_KEY: prod-secret-key-centralized-delivery-platform-2025
           ENVIRONMENT: production
-          DATABASE_URL: postgresql://ghayth:Gha@551987@delivery-platform-db.clo2o2squsbf.eu-north-1.rds.amazonaws.com:5432/delivery_platform?sslmode=require
+          DATABASE_URL: postgresql://ghayth:Gha%40551987@delivery-platform-db.clo2o2squsbf.eu-north-1.rds.amazonaws.com:5432/delivery_platform?sslmode=require
+          COGNITO_REGION: us-east-1
+          COGNITO_USER_POOL_ID: us-east-1_9IItcBz7P
+          COGNITO_APP_CLIENT_ID: 5r4pff0krdrblr5nkcfuglo4j1
       Events:
         ApiEvent:
           Type: HttpApi
