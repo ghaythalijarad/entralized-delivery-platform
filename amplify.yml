@@ -18,6 +18,7 @@ frontend:
         - ls -la src/utils/ || echo "No src/utils directory found"
         - echo "Copying HTML pages from src/pages/"
         - if [ -d "src/pages" ]; then cp src/pages/*.html . 2>/dev/null || echo "No HTML files to copy"; else echo "src/pages directory not found"; fi
+        - if [ -d "src/pages" ]; then cp src/pages/session-test.html . 2>/dev/null || echo "No session-test.html file to copy"; else echo "src/pages directory not found"; fi
         - echo "Copying JavaScript utilities from src/utils/"
         - if [ -d "src/utils" ]; then cp src/utils/*.js . 2>/dev/null || echo "No JS files to copy"; else echo "src/utils directory not found"; fi
         - echo "Final build directory contents:"
