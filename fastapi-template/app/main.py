@@ -40,7 +40,15 @@ from app.cognito import (
     admin_add_user_to_group,
     admin_remove_user_from_group,
     refresh_token as cognito_refresh,
-    global_sign_out
+    global_sign_out,
+    admin_create_user,
+    admin_delete_user,
+    create_group,
+    list_groups,
+    admin_enable_user,
+    admin_disable_user,
+    admin_reset_user_password,
+    get_user_details
 )
 
 # Import fallback mock database for development
@@ -1309,9 +1317,21 @@ async def list_cognito_users(
     for u in raw_users:
         username = u.get('Username')
         groups = get_user_groups(username)
+        
+        # Extract user attributes
+        user_attrs = {}
+        for attr in u.get('UserAttributes', []):
+            user_attrs[attr['Name']] = attr['Value']
+        
         users.append({
             'username': username,
-            'groups': groups
+            'groups': groups,
+            'email': user_attrs.get('email', ''),
+            'name': user_attrs.get('name', ''),
+            'enabled': u.get('Enabled', True),
+            'user_status': u.get('UserStatus', ''),
+            'created_date': u.get('UserCreateDate'),
+            'modified_date': u.get('UserLastModifiedDate')
         })
     return {"users": users}
 
@@ -1334,6 +1354,142 @@ async def remove_user_group(
     """Revoke a Cognito group from a user (Admins only)"""
     admin_remove_user_from_group(username, group_name)
     return {"message": f"Removed {username} from {group_name}"}
+
+@app.post("/admin/cognito/users")
+async def create_cognito_user(
+    user_data: dict,
+    current_user = Depends(require_cognito_admin)
+):
+    """Create a new Cognito user (Admins only)"""
+    try:
+        from app.cognito import get_db_client
+        import boto3
+        
+        client = get_db_client()
+        
+        username = user_data.get('username')
+        email = user_data.get('email')
+        password = user_data.get('password')
+        full_name = user_data.get('full_name', '')
+        
+        if not username or not email or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username, email, and password are required"
+            )
+        
+        # Create user in Cognito
+        response = client.admin_create_user(
+            UserPoolId=config.COGNITO_USER_POOL_ID,
+            Username=username,
+            UserAttributes=[
+                {'Name': 'email', 'Value': email},
+                {'Name': 'email_verified', 'Value': 'true'},
+                {'Name': 'name', 'Value': full_name}
+            ],
+            TemporaryPassword=password,
+            MessageAction='SUPPRESS'  # Don't send welcome email
+        )
+        
+        # Set permanent password
+        client.admin_set_user_password(
+            UserPoolId=config.COGNITO_USER_POOL_ID,
+            Username=username,
+            Password=password,
+            Permanent=True
+        )
+        
+        return {
+            "success": True,
+            "message": f"User '{username}' created successfully",
+            "user": {
+                "username": username,
+                "email": email,
+                "full_name": full_name
+            }
+        }
+        
+    except client.exceptions.UsernameExistsException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists"
+        )
+    except Exception as e:
+        print(f"Error creating Cognito user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create user: {str(e)}"
+        )
+
+@app.delete("/admin/cognito/users/{username}")
+async def delete_cognito_user(
+    username: str,
+    current_user = Depends(require_cognito_admin)
+):
+    """Delete a Cognito user (Admins only)"""
+    try:
+        from app.cognito import get_db_client
+        
+        client = get_db_client()
+        
+        # Delete user from Cognito
+        client.admin_delete_user(
+            UserPoolId=config.COGNITO_USER_POOL_ID,
+            Username=username
+        )
+        
+        return {"message": f"User '{username}' deleted successfully"}
+        
+    except client.exceptions.UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    except Exception as e:
+        print(f"Error deleting Cognito user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {str(e)}"
+        )
+
+@app.post("/admin/cognito/groups")
+async def create_cognito_group(
+    group_data: dict,
+    current_user = Depends(require_cognito_admin)
+):
+    """Create a new Cognito group (Admins only)"""
+    try:
+        from app.cognito import get_db_client
+        
+        client = get_db_client()
+        group_name = group_data.get('group_name')
+        description = group_data.get('description', '')
+        
+        if not group_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Group name is required"
+            )
+        
+        client.create_group(
+            GroupName=group_name,
+            UserPoolId=config.COGNITO_USER_POOL_ID,
+            Description=description
+        )
+        
+        return {"message": f"Group '{group_name}' created successfully"}
+        
+    except client.exceptions.GroupExistsException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group already exists"
+        )
+    except Exception as e:
+        print(f"Error creating Cognito group: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create group: {str(e)}"
+        )
 
 # -- Search and Filter Endpoints --
 @app.get("/search")

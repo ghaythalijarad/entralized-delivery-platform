@@ -129,3 +129,123 @@ def global_sign_out(access_token: str):
         # This can happen if the access token is already expired.
         # We can ignore it as the user is effectively logged out.
         pass
+
+
+def admin_create_user(username: str, email: str, password: str, full_name: str = "") -> dict:
+    """
+    Create a new user in the Cognito User Pool.
+    """
+    client = get_db_client()
+    
+    response = client.admin_create_user(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username,
+        UserAttributes=[
+            {'Name': 'email', 'Value': email},
+            {'Name': 'email_verified', 'Value': 'true'},
+            {'Name': 'name', 'Value': full_name}
+        ],
+        TemporaryPassword=password,
+        MessageAction='SUPPRESS'  # Don't send welcome email
+    )
+    
+    # Set permanent password
+    client.admin_set_user_password(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username,
+        Password=password,
+        Permanent=True
+    )
+    
+    return response
+
+
+def admin_delete_user(username: str):
+    """
+    Delete a user from the Cognito User Pool.
+    """
+    client = get_db_client()
+    client.admin_delete_user(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username
+    )
+
+
+def create_group(group_name: str, description: str = ""):
+    """
+    Create a new group in the Cognito User Pool.
+    """
+    client = get_db_client()
+    client.create_group(
+        GroupName=group_name,
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Description=description
+    )
+
+
+def list_groups():
+    """
+    List all groups in the Cognito User Pool.
+    """
+    client = get_db_client()
+    response = client.list_groups(UserPoolId=config.COGNITO_USER_POOL_ID)
+    return response.get('Groups', [])
+
+
+def admin_enable_user(username: str):
+    """
+    Enable a user in the Cognito User Pool.
+    """
+    client = get_db_client()
+    client.admin_enable_user(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username
+    )
+
+
+def admin_disable_user(username: str):
+    """
+    Disable a user in the Cognito User Pool.
+    """
+    client = get_db_client()
+    client.admin_disable_user(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username
+    )
+
+
+def admin_reset_user_password(username: str):
+    """
+    Reset a user's password in the Cognito User Pool.
+    """
+    client = get_db_client()
+    response = client.admin_reset_user_password(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username
+    )
+    return response
+
+
+def get_user_details(username: str):
+    """
+    Get detailed information about a user from the Cognito User Pool.
+    """
+    client = get_db_client()
+    response = client.admin_get_user(
+        UserPoolId=config.COGNITO_USER_POOL_ID,
+        Username=username
+    )
+    
+    # Extract user attributes
+    user_attrs = {}
+    for attr in response.get('UserAttributes', []):
+        user_attrs[attr['Name']] = attr['Value']
+    
+    return {
+        'username': response.get('Username'),
+        'user_status': response.get('UserStatus'),
+        'enabled': response.get('Enabled'),
+        'created_date': response.get('UserCreateDate'),
+        'modified_date': response.get('UserLastModifiedDate'),
+        'attributes': user_attrs
+    }
