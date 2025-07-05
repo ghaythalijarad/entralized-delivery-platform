@@ -555,14 +555,25 @@
                 const userData = result.data.getCurrentUser;
                 const responseTime = Date.now() - startTime;
                 
-                showSuccess(`Welcome ${userData.firstName}! Access Level: ${userData.accessLevel} (${responseTime}ms)`);
+                // Role-based welcome message
+                const roleNames = {
+                    'ADMIN': 'System Administrator',
+                    'MANAGER': 'Operations Manager',
+                    'SUPPORT': 'Customer Support', 
+                    'ANALYST': 'Data Analyst',
+                    'VIEWER': 'Viewer'
+                };
                 
-                // Store user session with access level
+                const roleName = roleNames[userData.accessLevel] || userData.accessLevel;
+                showSuccess(`Welcome ${userData.firstName}! Role: ${roleName} (${responseTime}ms)`);
+                
+                // Store user session with complete role information
                 sessionStorage.setItem('userSession', JSON.stringify({
                     user: userData,
                     token: token,
                     accessLevel: userData.accessLevel,
                     permissions: userData.permissions,
+                    roleName: roleName,
                     loginTime: new Date().toISOString(),
                     responseTime: responseTime
                 }));

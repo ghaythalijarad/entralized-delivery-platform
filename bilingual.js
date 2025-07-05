@@ -82,30 +82,89 @@ class BilingualManager {
             
             // User Management
             userManagement: {
-                title: { ar: 'إدارة المستخدمين - منصة التوصيل المركزية', en: 'User Management - Centralized Delivery Platform' },
-                pageTitle: { ar: 'إدارة المستخدمين', en: 'User Management' },
-                totalUsers: { ar: 'إجمالي المستخدمين', en: 'Total Users' },
-                activeUsers: { ar: 'المستخدمون النشطون', en: 'Active Users' },
-                adminUsers: { ar: 'المستخدمون الإداريون', en: 'Admin Users' },
-                newUsers: { ar: 'مستخدمون جدد', en: 'New Users' },
-                searchPlaceholder: { ar: 'البحث بالاسم أو البريد الإلكتروني...', en: 'Search by name or email...' },
-                filterByGroup: { ar: 'تصفية حسب المجموعة', en: 'Filter by Group' },
-                allGroups: { ar: 'جميع المجموعات', en: 'All Groups' },
-                addUser: { ar: 'إضافة مستخدم جديد', en: 'Add New User' },
+                user_management_title: { ar: 'إدارة المستخدمين - مركز التحكم', en: 'User Management - Control Center' },
+                user_management: { ar: 'إدارة المستخدمين والأدوار', en: 'User & Role Management' },
+                user_management_desc: { ar: 'إدارة المستخدمين وتعيين الأدوار بصلاحيات محددة عبر منصة التوصيل', en: 'Manage users and assign roles with specific permissions across the delivery platform' },
+                
+                // Roles
+                admin_role: { ar: 'مدير النظام', en: 'System Administrator' },
+                manager_role: { ar: 'مدير العمليات', en: 'Operations Manager' },
+                support_role: { ar: 'دعم العملاء', en: 'Customer Support' },
+                analyst_role: { ar: 'محلل البيانات', en: 'Data Analyst' },
+                
+                // Role Descriptions
+                admin_desc: { ar: 'صلاحية كاملة للنظام مع إمكانية إدارة المستخدمين', en: 'Full system access with user management capabilities' },
+                manager_desc: { ar: 'صلاحية إدارة العمليات والتوصيل', en: 'Operations and delivery management access' },
+                support_desc: { ar: 'خدمة العملاء وإدارة الطلبات الأساسية', en: 'Customer service and basic order management' },
+                analyst_desc: { ar: 'صلاحية قراءة فقط للتحليلات والتقارير', en: 'Read-only access to analytics and reporting' },
+                
+                // Permissions
+                admin_perm_1: { ar: 'إدارة جميع المستخدمين والأدوار', en: 'Manage all users and roles' },
+                admin_perm_2: { ar: 'صلاحية إعدادات النظام', en: 'System configuration access' },
+                admin_perm_3: { ar: 'جميع عمليات المنصة', en: 'All platform operations' },
+                admin_perm_4: { ar: 'ضوابط الأمان والمراجعة', en: 'Security & audit controls' },
+                
+                manager_perm_1: { ar: 'إدارة السائقين والتوصيلات', en: 'Manage drivers and deliveries' },
+                manager_perm_2: { ar: 'إشراف معالجة الطلبات', en: 'Order processing oversight' },
+                manager_perm_3: { ar: 'تحليلات الأداء', en: 'Performance analytics' },
+                manager_perm_4: { ar: 'حل مشاكل العملاء', en: 'Customer issue resolution' },
+                
+                support_perm_1: { ar: 'إدارة حسابات العملاء', en: 'Customer account management' },
+                support_perm_2: { ar: 'تحديث حالة الطلبات', en: 'Order status updates' },
+                support_perm_3: { ar: 'تتبع وحل المشاكل', en: 'Issue tracking & resolution' },
+                support_perm_4: { ar: 'صلاحية التقارير الأساسية', en: 'Basic reporting access' },
+                
+                analyst_perm_1: { ar: 'صلاحية لوحة التحليلات', en: 'Analytics dashboard access' },
+                analyst_perm_2: { ar: 'إنشاء التقارير', en: 'Generate reports' },
+                analyst_perm_3: { ar: 'إمكانيات تصدير البيانات', en: 'Data export capabilities' },
+                analyst_perm_4: { ar: 'عرض مقاييس الأداء', en: 'Performance metrics view' },
+                
+                // User Management Interface
+                manage_users: { ar: 'إدارة المستخدمين', en: 'Manage Users' },
+                add_new_user: { ar: '+ إضافة مستخدم جديد', en: '+ Add New User' },
+                filter_by_role: { ar: 'تصفية حسب الدور', en: 'Filter by Role' },
+                filter_by_status: { ar: 'تصفية حسب الحالة', en: 'Filter by Status' },
+                search_users: { ar: 'البحث عن المستخدمين', en: 'Search Users' },
+                search_placeholder: { ar: 'البحث بالاسم أو البريد الإلكتروني...', en: 'Search by name or email...' },
+                
+                all_roles: { ar: 'جميع الأدوار', en: 'All Roles' },
+                all_statuses: { ar: 'جميع الحالات', en: 'All Statuses' },
+                active: { ar: 'نشط', en: 'Active' },
+                inactive: { ar: 'غير نشط', en: 'Inactive' },
+                
+                user: { ar: 'المستخدم', en: 'User' },
+                role: { ar: 'الدور', en: 'Role' },
+                status: { ar: 'الحالة', en: 'Status' },
+                last_login: { ar: 'آخر تسجيل دخول', en: 'Last Login' },
+                actions: { ar: 'الإجراءات', en: 'Actions' },
+                
+                // User Form
                 username: { ar: 'اسم المستخدم', en: 'Username' },
                 email: { ar: 'البريد الإلكتروني', en: 'Email' },
-                fullName: { ar: 'الاسم الكامل', en: 'Full Name' },
-                groups: { ar: 'المجموعات', en: 'Groups' },
-                status: { ar: 'الحالة', en: 'Status' },
-                actions: { ar: 'الإجراءات', en: 'Actions' },
-                enabled: { ar: 'مفعل', en: 'Enabled' },
-                disabled: { ar: 'معطل', en: 'Disabled' },
-                createUser: { ar: 'إنشاء مستخدم', en: 'Create User' },
-                editUser: { ar: 'تعديل مستخدم', en: 'Edit User' },
-                deleteUser: { ar: 'حذف مستخدم', en: 'Delete User' },
-                confirmDelete: { ar: 'هل أنت متأكد من حذف هذا المستخدم؟', en: 'Are you sure you want to delete this user?' }
+                first_name: { ar: 'الاسم الأول', en: 'First Name' },
+                last_name: { ar: 'الاسم الأخير', en: 'Last Name' },
+                select_role: { ar: 'اختر الدور', en: 'Select Role' },
+                create_user: { ar: 'إنشاء مستخدم', en: 'Create User' },
+                
+                // Navigation
+                system_admin: { ar: 'إدارة النظام', en: 'System Administration' },
+                role_permissions: { ar: 'الأدوار والصلاحيات', en: 'Role & Permissions' },
+                system_settings: { ar: 'إعدادات النظام', en: 'System Settings' },
+                audit_logs: { ar: 'سجلات المراجعة', en: 'Audit Logs' },
+                
+                operations_mgmt: { ar: 'إدارة العمليات', en: 'Operations Management' },
+                fleet_management: { ar: 'إدارة الأسطول', en: 'Fleet Management' },
+                performance_analytics: { ar: 'تحليلات الأداء', en: 'Performance Analytics' },
+                route_optimization: { ar: 'تحسين المسارات', en: 'Route Optimization' },
+                
+                customer_support: { ar: 'دعم العملاء', en: 'Customer Support' },
+                support_tickets: { ar: 'تذاكر الدعم', en: 'Support Tickets' },
+                customer_accounts: { ar: 'حسابات العملاء', en: 'Customer Accounts' },
+                refund_management: { ar: 'إدارة المبالغ المستردة', en: 'Refund Management' },
+                
+                logout: { ar: 'تسجيل الخروج', en: 'Logout' }
             },
-            
+
             // Settings
             settings: {
                 title: { ar: 'الإعدادات - منصة التوصيل المركزية', en: 'Settings - Centralized Delivery Platform' },

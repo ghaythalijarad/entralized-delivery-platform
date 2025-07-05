@@ -133,13 +133,20 @@ type AuthResult {
 
 type User {
   userId: ID!
+  username: String!
   email: String!
   firstName: String!
   lastName: String!
-  userType: UserType!
-  isActive: Boolean!
+  accessLevel: AccessLevel!
+  permissions: [Permission!]!
+  status: UserStatus!
   createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
   lastLoginAt: AWSDateTime
+  createdBy: String
+  department: String
+  phoneNumber: String
+  profilePicture: String
 }
 
 # Enums
@@ -189,6 +196,49 @@ enum UserType {
   DRIVER
   MERCHANT
   ADMIN
+}
+
+enum AccessLevel {
+  ADMIN
+  MANAGER
+  SUPPORT
+  ANALYST
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum Permission {
+  # Admin Permissions
+  MANAGE_USERS
+  MANAGE_ROLES
+  SYSTEM_CONFIGURATION
+  SECURITY_SETTINGS
+  AUDIT_LOGS
+  
+  # Manager Permissions
+  MANAGE_DRIVERS
+  MANAGE_ORDERS
+  VIEW_ANALYTICS
+  CUSTOMER_SUPPORT
+  FLEET_MANAGEMENT
+  
+  # Support Permissions
+  VIEW_CUSTOMERS
+  UPDATE_ORDERS
+  HANDLE_COMPLAINTS
+  BASIC_REPORTING
+  
+  # Analyst Permissions
+  VIEW_REPORTS
+  EXPORT_DATA
+  DASHBOARD_ACCESS
+  PERFORMANCE_METRICS
 }
 
 # Input Types
@@ -272,6 +322,37 @@ input RegisterMerchantInput {
   zone: String!
 }
 
+input CreateUserInput {
+  username: String!
+  email: String!
+  firstName: String!
+  lastName: String!
+  accessLevel: AccessLevel!
+  status: UserStatus!
+  department: String
+  phoneNumber: String
+  temporaryPassword: String!
+}
+
+input UpdateUserInput {
+  userId: ID!
+  username: String
+  email: String
+  firstName: String
+  lastName: String
+  accessLevel: AccessLevel
+  status: UserStatus
+  department: String
+  phoneNumber: String
+}
+
+input UserFilterInput {
+  accessLevel: AccessLevel
+  status: UserStatus
+  department: String
+  search: String
+}
+
 # Root Types
 type Query {
   # Authentication
@@ -300,6 +381,19 @@ type Query {
   # Analytics (Admin only)
   getOrderStats(startDate: AWSDateTime!, endDate: AWSDateTime!): OrderStats @aws_auth(cognito_groups: ["Admins"])
   getDriverStats(driverId: String, startDate: AWSDateTime!, endDate: AWSDateTime!): DriverStats @aws_auth(cognito_groups: ["Drivers", "Admins"])
+  
+  # User Management
+  getUser(userId: ID!): User @auth(rules: [{allow: private, provider: userPools}])
+  listUsers(filter: UserFilterInput, limit: Int, nextToken: String): UserConnection! @auth(rules: [{allow: private, provider: userPools}])
+  getUsersByRole(accessLevel: AccessLevel!, limit: Int, nextToken: String): UserConnection!
+  getUsersByStatus(status: UserStatus!, limit: Int, nextToken: String): UserConnection!
+  
+  # Current User Context
+  getCurrentUserPermissions: [Permission!]!
+  validateUserAccess(permission: Permission!): Boolean!
+  
+  # User Statistics
+  getUserStats: UserStats!
 }
 
 type Mutation {
@@ -324,6 +418,24 @@ type Mutation {
   # Merchant Management
   updateMerchantStatus(merchantId: ID!, isActive: Boolean!): Merchant! @aws_auth(cognito_groups: ["Merchants", "Admins"])
   updateMenuItemAvailability(merchantId: ID!, itemId: String!, isAvailable: Boolean!): Merchant! @aws_auth(cognito_groups: ["Merchants"])
+  
+  # User Management (Admin Only)
+  createUser(input: CreateUserInput!): User! @auth(rules: [{allow: private, operations: [create], provider: userPools}])
+  updateUser(input: UpdateUserInput!): User! @auth(rules: [{allow: private, operations: [update], provider: userPools}])
+  deleteUser(userId: ID!): Boolean! @auth(rules: [{allow: private, operations: [delete], provider: userPools}])
+  
+  # Role Management
+  assignUserRole(userId: ID!, accessLevel: AccessLevel!): User!
+  updateUserPermissions(userId: ID!, permissions: [Permission!]!): User!
+  
+  # User Status Management
+  activateUser(userId: ID!): User!
+  deactivateUser(userId: ID!): User!
+  suspendUser(userId: ID!, reason: String): User!
+  
+  # Password Management
+  resetUserPassword(userId: ID!): String! # Returns temporary password
+  forcePasswordChange(userId: ID!): Boolean!
 }
 
 type Subscription {
@@ -348,6 +460,21 @@ type Subscription {
   onDriverStatusChanged(zone: String): Driver
     @aws_subscribe(mutations: ["updateDriverStatus"])
     @aws_auth(cognito_groups: ["Admins"])
+  
+  # User Management Events
+  onUserCreated: User @auth(rules: [{allow: private, provider: userPools}])
+  onUserUpdated: User @auth(rules: [{allow: private, provider: userPools}])
+  onUserDeleted: String @auth(rules: [{allow: private, provider: userPools}])
+  onUserLoginActivity: UserLoginEvent @auth(rules: [{allow: private, provider: userPools}])
+}
+
+type UserLoginEvent {
+  userId: ID!
+  username: String!
+  loginTime: AWSDateTime!
+  ipAddress: String
+  userAgent: String
+  successful: Boolean!
 }
 
 # Connection Types for Pagination
@@ -366,6 +493,12 @@ type MerchantConnection {
   nextToken: String
 }
 
+type UserConnection {
+  items: [User!]!
+  nextToken: String
+  total: Int!
+}
+
 # Analytics Types
 type OrderStats {
   totalOrders: Int!
@@ -381,6 +514,22 @@ type DriverStats {
   averageRating: Float!
   averageDeliveryTime: Int!
   hoursWorked: Float!
+}
+
+type UserStats {
+  totalUsers: Int!
+  activeUsers: Int!
+  inactiveUsers: Int!
+  usersByRole: UserRoleStats!
+  recentLogins: Int!
+}
+
+type UserRoleStats {
+  admins: Int!
+  managers: Int!
+  support: Int!
+  analysts: Int!
+  viewers: Int!
 }
 
 type StatusCount {

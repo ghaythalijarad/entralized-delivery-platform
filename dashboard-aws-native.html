@@ -578,6 +578,106 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            background: #fff;
+            border-right: 1px solid #eee;
+            padding: 20px;
+            width: 250px;
+            position: fixed;
+            top: 70px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .collapse-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .collapse-btn:hover {
+            color: #764ba2;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Role-based Navigation */
+        .admin-nav, .manager-nav, .support-nav {
+            display: none;
+        }
+
+        .admin-nav.active, .manager-nav.active, .support-nav.active {
+            display: block;
+        }
+
+        /* Role-based Access Control */
+        .admin-only {
+            display: none;
+        }
+
+        .manager-only {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -611,6 +711,100 @@
             </div>
         </div>
     </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title" data-translate="navigation">Navigation</h2>
+            <button class="collapse-btn" id="collapseBtn">◀️</button>
+        </div>
+
+        <!-- Admin Navigation (Only for Admin Role) -->
+        <div class="admin-nav" id="adminNav" style="display: none;">
+            <div class="nav-section">
+                <h3 class="nav-section-title" data-translate="system_admin">System Administration</h3>
+                <ul class="nav-links">
+                    <li><a href="user-management.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        <span data-translate="user_management">User Management</span>
+                    </a></li>
+                    <li><a href="role-permissions.html" class="nav-link">
+                        <span class="nav-icon">🔐</span>
+                        <span data-translate="role_permissions">Role & Permissions</span>
+                    </a></li>
+                    <li><a href="system-settings.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        <span data-translate="system_settings">System Settings</span>
+                    </a></li>
+                    <li><a href="audit-logs.html" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span data-translate="audit_logs">Audit Logs</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Manager Navigation (Admin + Manager Roles) -->
+        <div class="manager-nav" id="managerNav" style="display: none;">
+            <div class="nav-section">
+                <h3 class="nav-section-title" data-translate="operations_mgmt">Operations Management</h3>
+                <ul class="nav-links">
+                    <li><a href="fleet-management.html" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        <span data-translate="fleet_management">Fleet Management</span>
+                    </a></li>
+                    <li><a href="performance-analytics.html" class="nav-link">
+                        <span class="nav-icon">📈</span>
+                        <span data-translate="performance_analytics">Performance Analytics</span>
+                    </a></li>
+                    <li><a href="route-optimization.html" class="nav-link">
+                        <span class="nav-icon">🗺️</span>
+                        <span data-translate="route_optimization">Route Optimization</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Support Navigation (Admin + Manager + Support Roles) -->
+        <div class="support-nav" id="supportNav" style="display: none;">
+            <div class="nav-section">
+                <h3 class="nav-section-title" data-translate="customer_support">Customer Support</h3>
+                <ul class="nav-links">
+                    <li><a href="customer-tickets.html" class="nav-link">
+                        <span class="nav-icon">🎫</span>
+                        <span data-translate="support_tickets">Support Tickets</span>
+                    </a></li>
+                    <li><a href="customer-accounts.html" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        <span data-translate="customer_accounts">Customer Accounts</span>
+                    </a></li>
+                    <li><a href="refund-management.html" class="nav-link">
+                        <span class="nav-icon">💰</span>
+                        <span data-translate="refund_management">Refund Management</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Common Navigation (All Roles) -->
+        <div class="nav-section">
+            <h3 class="nav-section-title" data-translate="dashboard">Dashboard</h3>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">
+                    <span class="nav-icon">🏠</span>
+                    <span data-translate="home">Home</span>
+                </a></li>
+                <li><a href="analytics.html" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    <span data-translate="analytics">Analytics</span>
+                </a></li>
+                <li><a href="settings.html" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    <span data-translate="settings">Settings</span>
+                </a></li>
+            </ul>
+        </div>
+    </aside>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -836,6 +1030,7 @@
             await loadDashboardData();
             setupRealtimeSubscriptions();
             startPerformanceMonitoring();
+            initializeRoleBasedAccess();
         });
 
         // Authentication check
@@ -858,9 +1053,35 @@
                     userType: userInfo['custom:user_type'] || 'admin'
                 }));
                 
+                // Setup role-based navigation
+                setupRoleBasedNavigation(userInfo['custom:user_type']);
+                
             } catch (error) {
                 console.error('Authentication check failed:', error);
                 window.location.href = 'login-aws-native.html';
+            }
+        }
+
+        // Setup role-based navigation
+        function setupRoleBasedNavigation(userType) {
+            const adminNav = document.getElementById('adminNav');
+            const managerNav = document.getElementById('managerNav');
+            const supportNav = document.getElementById('supportNav');
+
+            // Hide all role-based navigation
+            adminNav.style.display = 'none';
+            managerNav.style.display = 'none';
+            supportNav.style.display = 'none';
+
+            if (userType === 'admin') {
+                adminNav.style.display = 'block';
+                managerNav.style.display = 'block';
+                supportNav.style.display = 'block';
+            } else if (userType === 'manager') {
+                managerNav.style.display = 'block';
+                supportNav.style.display = 'block';
+            } else if (userType === 'support') {
+                supportNav.style.display = 'block';
             }
         }
 
@@ -1084,70 +1305,93 @@
             }
         }
 
-        // Utility functions
-        function getStatusColor(status) {
-            const colors = {
-                'PENDING': '#856404',
-                'CONFIRMED': '#155724',
-                'PREPARING': '#880e4f',
-                'IN_TRANSIT': '#0d47a1',
-                'DELIVERED': '#2e7d32'
-            };
-            return colors[status] || '#666';
+        // Role-based access control
+        function initializeRoleBasedAccess() {
+            const userSession = JSON.parse(sessionStorage.getItem('userSession') || '{}');
+            const userRole = userSession.user?.accessLevel || 'VIEWER';
+            
+            console.log('User role:', userRole);
+            
+            // Show navigation based on role
+            showNavigationByRole(userRole);
+            
+            // Update user info display
+            updateUserRoleDisplay(userRole, userSession.user);
+            
+            // Hide features user doesn't have access to
+            restrictFeaturesByRole(userRole);
         }
 
-        function animateNumber(elementId, targetValue, prefix = '') {
-            const element = document.getElementById(elementId);
-            const startValue = 0;
-            const duration = 1000;
-            const startTime = Date.now();
+        function showNavigationByRole(role) {
+            // Hide all role-specific navigation first
+            document.getElementById('adminNav').style.display = 'none';
+            document.getElementById('managerNav').style.display = 'none';
+            document.getElementById('supportNav').style.display = 'none';
             
-            function updateNumber() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const currentValue = Math.floor(startValue + (targetValue - startValue) * progress);
-                
-                element.textContent = prefix + currentValue + (prefix === '$' ? '.00' : '');
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateNumber);
-                }
+            // Show navigation based on role hierarchy
+            switch(role) {
+                case 'ADMIN':
+                    document.getElementById('adminNav').style.display = 'block';
+                    document.getElementById('managerNav').style.display = 'block';
+                    document.getElementById('supportNav').style.display = 'block';
+                    break;
+                case 'MANAGER':
+                    document.getElementById('managerNav').style.display = 'block';
+                    document.getElementById('supportNav').style.display = 'block';
+                    break;
+                case 'SUPPORT':
+                    document.getElementById('supportNav').style.display = 'block';
+                    break;
+                case 'ANALYST':
+                    // Analysts only see dashboard and reports
+                    break;
+                default:
+                    console.warn('Unknown role:', role);
             }
-            
-            updateNumber();
         }
 
-        function playNotificationSound() {
-            // Create a subtle notification sound
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+        function updateUserRoleDisplay(role, user) {
+            const roleNames = {
+                'ADMIN': 'System Administrator',
+                'MANAGER': 'Operations Manager', 
+                'SUPPORT': 'Customer Support',
+                'ANALYST': 'Data Analyst',
+                'VIEWER': 'Viewer'
+            };
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
+            const roleElement = document.querySelector('.user-role');
+            if (roleElement && user) {
+                roleElement.textContent = `${user.firstName} ${user.lastName} - ${roleNames[role] || role}`;
+            }
         }
 
-        function startPerformanceMonitoring() {
-            setInterval(() => {
-                // Simulate random API calls to show real-time performance
-                const randomResponseTime = Math.floor(Math.random() * 50) + 30; // 30-80ms
-                updatePerformanceMetrics(randomResponseTime);
-            }, 5000);
-        }
-
-        function showErrorState() {
-            const containers = ['ordersContainer', 'activityContainer'];
-            containers.forEach(id => {
-                const container = document.getElementById(id);
-                container.innerHTML = '<div class="loading" style="color: #e74c3c;">⚠️ <span data-translate="connection_error">Connection error</span></div>';
+        function restrictFeaturesByRole(role) {
+            // Hide admin-only buttons and features
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            const managerOnlyElements = document.querySelectorAll('.manager-only');
+            
+            adminOnlyElements.forEach(el => {
+                el.style.display = role === 'ADMIN' ? 'block' : 'none';
             });
+            
+            managerOnlyElements.forEach(el => {
+                el.style.display = ['ADMIN', 'MANAGER'].includes(role) ? 'block' : 'none';
+            });
+        }
+
+        function checkUserPermission(permission) {
+            const userSession = JSON.parse(sessionStorage.getItem('userSession') || '{}');
+            const userPermissions = userSession.user?.permissions || [];
+            return userPermissions.includes(permission);
+        }
+
+        // User management functions
+        async function openUserManagement() {
+            if (!checkUserPermission('MANAGE_USERS')) {
+                showError('You do not have permission to manage users.');
+                return;
+            }
+            window.location.href = 'user-management.html';
         }
 
         // Logout handler
