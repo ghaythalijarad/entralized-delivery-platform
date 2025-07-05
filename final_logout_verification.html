@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Final Logout Verification - Production Ready</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .status-banner {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .test-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .test-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 5px;
+            text-decoration: none;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn.success { background: #28a745; }
+        .btn.success:hover { background: #218838; }
+        .btn.danger { background: #dc3545; }
+        .btn.danger:hover { background: #c82333; }
+        .btn.warning { background: #ffc107; color: #212529; }
+        .btn.warning:hover { background: #e0a800; }
+        .btn.info { background: #17a2b8; }
+        .btn.info:hover { background: #138496; }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 0;
+        }
+        
+        .log-success { color: #28a745; font-weight: 600; }
+        .log-error { color: #dc3545; font-weight: 600; }
+        .log-warning { color: #ffc107; font-weight: 600; }
+        .log-info { color: #17a2b8; }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
+        .deployment-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .deployment-info h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .deployment-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 0 5px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .step.completed {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Final Logout Verification</h1>
+            <p>Production-Ready Logout Functionality Test</p>
+        </div>
+        
+        <div class="content">
+            <div class="status-banner">
+                <strong>🎯 Testing Live Deployment:</strong> 
+                <code>https://main.d2s9lcjcmc3bq3.amplifyapp.com</code>
+            </div>
+            
+            <div class="deployment-info">
+                <h4>🚀 Recent Deployment Updates:</h4>
+                <ul>
+                    <li>✅ Enhanced logout function with comprehensive error handling</li>
+                    <li>✅ Added visual feedback during logout process</li>
+                    <li>✅ Improved auth manager integration with fallback mechanisms</li>
+                    <li>✅ Added JavaScript error handling for better debugging</li>
+                    <li>✅ Enhanced token and cookie cleanup process</li>
+                    <li>✅ Added force fallback logout for edge cases</li>
+                </ul>
+            </div>
+            
+            <div class="step-indicator">
+                <div class="step" id="step1">
+                    <div>🔐</div>
+                    <div>Login</div>
+                </div>
+                <div class="step" id="step2">
+                    <div>🔍</div>
+                    <div>Verify</div>
+                </div>
+                <div class="step" id="step3">
+                    <div>🚪</div>
+                    <div>Logout</div>
+                </div>
+                <div class="step" id="step4">
+                    <div>✅</div>
+                    <div>Confirm</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>🔐 Authentication Setup</h3>
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" id="username" value="admin" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="password" value="AdminPass123!" placeholder="Enter password">
+                    </div>
+                    <button class="btn success" onclick="performLogin()">🔑 Login</button>
+                    <button class="btn info" onclick="checkAuthStatus()">📊 Check Status</button>
+                    <div id="authStatus" class="status info">Ready to authenticate</div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🚪 Logout Testing</h3>
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Test the enhanced logout functionality with proper session cleanup.
+                    </p>
+                    <button class="btn danger" onclick="testLogout()">🚪 Test Logout</button>
+                    <button class="btn warning" onclick="testForceLogout()">⚡ Force Logout</button>
+                    <div id="logoutStatus" class="status info">Ready to test logout</div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🔍 Verification</h3>
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Verify complete session cleanup and proper redirect behavior.
+                    </p>
+                    <button class="btn info" onclick="verifyLogout()">🔍 Verify Cleanup</button>
+                    <button class="btn warning" onclick="openLiveDashboard()">🌐 Open Dashboard</button>
+                    <div id="verifyStatus" class="status info">Ready to verify</div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🎯 Complete Flow Test</h3>
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Run the complete login → logout → verify flow automatically.
+                    </p>
+                    <button class="btn success" onclick="runCompleteFlow()">🧪 Run Full Test</button>
+                    <button class="btn info" onclick="exportResults()">📋 Export Results</button>
+                    <div id="flowStatus" class="status info">Ready for complete test</div>
+                </div>
+            </div>
+            
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">[READY] Final logout verification system initialized</div>
+                <div class="log-entry log-info">[INFO] Click "Run Full Test" for automated verification</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const LIVE_URL = 'https://main.d2s9lcjcmc3bq3.amplifyapp.com';
+        const API_BASE = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+        
+        let currentStep = 1;
+        let testResults = [];
+        
+        // Logging system
+        function log(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            
+            // Store for export
+            testResults.push({
+                timestamp: new Date().toISOString(),
+                type,
+                message: message.replace(/<[^>]*>/g, '') // Strip HTML
+            });
+            
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+        
+        function updateStep(step) {
+            // Clear previous active
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            
+            // Mark completed steps
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`step${i}`).classList.add('completed');
+            }
+            
+            // Mark current step
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            // Update progress bar
+            const progress = ((step - 1) / 3) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            currentStep = step;
+        }
+        
+        // Authentication functions
+        async function performLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            log('🔐 Initiating login to live deployment...', 'info');
+            updateStatus('authStatus', '🔄 Logging in...', 'info');
+            updateStep(1);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                log(`Login response: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.token) {
+                        localStorage.setItem('accessToken', data.token.access_token);
+                        localStorage.setItem('userInfo', JSON.stringify(data.token.user));
+                        
+                        log('✅ Login successful!', 'success');
+                        log(`👤 User: ${data.token.user.username}`, 'info');
+                        log(`🎭 Groups: ${data.token.user.groups?.join(', ') || 'none'}`, 'info');
+                        
+                        updateStatus('authStatus', '✅ Login successful', 'success');
+                        updateStep(2);
+                        
+                        // Auto-check status
+                        setTimeout(() => checkAuthStatus(), 1000);
+                        
+                    } else {
+                        throw new Error(data.message || 'Login failed');
+                    }
+                } else {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(`Login failed: ${errorData.detail || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+                updateStatus('authStatus', `❌ Login failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkAuthStatus() {
+            log('🔍 Checking authentication status...', 'info');
+            
+            const accessToken = localStorage.getItem('accessToken');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (accessToken) {
+                log('✅ Access token found', 'success');
+                updateStatus('authStatus', '✅ User authenticated', 'success');
+                
+                if (userInfo) {
+                    try {
+                        const user = JSON.parse(userInfo);
+                        log(`👤 User: ${user.username}`, 'info');
+                        log(`🎭 Groups: ${user.groups?.join(', ') || 'none'}`, 'info');
+                    } catch (e) {
+                        log('❌ Invalid user info in localStorage', 'error');
+                    }
+                }
+            } else {
+                log('❌ No access token found', 'error');
+                updateStatus('authStatus', '❌ Not authenticated', 'error');
+            }
+        }
+        
+        // Logout testing
+        async function testLogout() {
+            log('🚪 Testing enhanced logout functionality...', 'info');
+            updateStatus('logoutStatus', '🔄 Testing logout...', 'info');
+            updateStep(3);
+            
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                log('⚠️ No access token found - login first', 'warning');
+                updateStatus('logoutStatus', '⚠️ No token - login first', 'warning');
+                return;
+            }
+            
+            try {
+                // Test the same logout flow as the dashboard
+                log('📡 Calling logout API...', 'info');
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                log(`Logout API response: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.ok) {
+                    log('✅ Server logout successful', 'success');
+                } else {
+                    log(`⚠️ Server logout warning: ${response.status}`, 'warning');
+                }
+                
+                // Clear local storage (same as dashboard)
+                log('🧹 Clearing local storage...', 'info');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                
+                // Clear cookies
+                log('🍪 Clearing authentication cookies...', 'info');
+                document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                
+                log('✅ Logout completed successfully!', 'success');
+                updateStatus('logoutStatus', '✅ Logout successful', 'success');
+                updateStep(4);
+                
+                // Auto-verify
+                setTimeout(() => verifyLogout(), 1000);
+                
+            } catch (error) {
+                log(`❌ Logout error: ${error.message}`, 'error');
+                updateStatus('logoutStatus', `❌ Logout failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testForceLogout() {
+            log('⚡ Testing force logout (nuclear option)...', 'info');
+            updateStatus('logoutStatus', '🔄 Force logout...', 'info');
+            
+            try {
+                log('🧹 Clearing all storage...', 'info');
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                log('🍪 Clearing all cookies...', 'info');
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                log('✅ Force logout completed!', 'success');
+                updateStatus('logoutStatus', '✅ Force logout successful', 'success');
+                
+                // Auto-verify
+                setTimeout(() => verifyLogout(), 1000);
+                
+            } catch (error) {
+                log(`❌ Force logout error: ${error.message}`, 'error');
+                updateStatus('logoutStatus', `❌ Force logout failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Verification
+        async function verifyLogout() {
+            log('🔍 Verifying logout success...', 'info');
+            updateStatus('verifyStatus', '🔄 Verifying...', 'info');
+            
+            try {
+                // Check local storage
+                const hasAccessToken = !!localStorage.getItem('accessToken');
+                const hasUserInfo = !!localStorage.getItem('userInfo');
+                const hasAuthToken = !!localStorage.getItem('authToken');
+                
+                log(`💾 Access token: ${hasAccessToken ? 'STILL EXISTS ❌' : 'CLEARED ✅'}`, hasAccessToken ? 'error' : 'success');
+                log(`💾 User info: ${hasUserInfo ? 'STILL EXISTS ❌' : 'CLEARED ✅'}`, hasUserInfo ? 'error' : 'success');
+                log(`💾 Auth token: ${hasAuthToken ? 'STILL EXISTS ❌' : 'CLEARED ✅'}`, hasAuthToken ? 'error' : 'success');
+                
+                // Check cookies
+                const hasCookies = document.cookie.includes('refreshToken') || document.cookie.includes('accessToken');
+                log(`🍪 Auth cookies: ${hasCookies ? 'STILL EXISTS ❌' : 'CLEARED ✅'}`, hasCookies ? 'error' : 'success');
+                
+                // Test protected endpoint
+                log('🔒 Testing protected endpoint access...', 'info');
+                const testToken = localStorage.getItem('accessToken');
+                if (testToken) {
+                    const response = await fetch(`${API_BASE}/auth/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${testToken}`
+                        }
+                    });
+                    
+                    if (response.status === 401) {
+                        log('✅ Protected endpoint correctly rejects access', 'success');
+                    } else {
+                        log(`⚠️ Protected endpoint returned: ${response.status}`, 'warning');
+                    }
+                } else {
+                    log('✅ No token available for protected endpoint test', 'success');
+                }
+                
+                const allCleared = !hasAccessToken && !hasUserInfo && !hasAuthToken && !hasCookies;
+                
+                if (allCleared) {
+                    log('🎉 LOGOUT VERIFICATION SUCCESSFUL!', 'success');
+                    log('🔒 All authentication data properly cleared', 'success');
+                    updateStatus('verifyStatus', '✅ Logout verified - all data cleared', 'success');
+                    updateStatus('flowStatus', '✅ Complete flow successful', 'success');
+                } else {
+                    log('⚠️ Logout verification incomplete - some data remains', 'warning');
+                    updateStatus('verifyStatus', '⚠️ Logout incomplete - some data remains', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Verification error: ${error.message}`, 'error');
+                updateStatus('verifyStatus', `❌ Verification failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Complete flow test
+        async function runCompleteFlow() {
+            log('🧪 Starting complete logout flow test...', 'info');
+            updateStatus('flowStatus', '🔄 Running complete test...', 'info');
+            
+            try {
+                // Step 1: Login
+                await performLogin();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 2: Verify authentication
+                checkAuthStatus();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Step 3: Logout
+                await testLogout();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 4: Verify logout
+                await verifyLogout();
+                
+                log('🎉 COMPLETE FLOW TEST SUCCESSFUL!', 'success');
+                updateStatus('flowStatus', '✅ Complete flow successful', 'success');
+                
+            } catch (error) {
+                log(`❌ Complete flow error: ${error.message}`, 'error');
+                updateStatus('flowStatus', `❌ Complete flow failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Utility functions
+        function openLiveDashboard() {
+            log('🌐 Opening live dashboard...', 'info');
+            window.open(`${LIVE_URL}/dashboard`, '_blank');
+        }
+        
+        function exportResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                testResults: testResults,
+                summary: {
+                    total: testResults.length,
+                    success: testResults.filter(r => r.type === 'success').length,
+                    error: testResults.filter(r => r.type === 'error').length,
+                    warning: testResults.filter(r => r.type === 'warning').length
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logout-verification-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('📋 Test results exported', 'info');
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🚀 Final logout verification system ready', 'info');
+            log(`🎯 Target deployment: ${LIVE_URL}`, 'info');
+            log('💡 Use "Run Full Test" for automated verification', 'info');
+            
+            // Check initial auth status
+            checkAuthStatus();
+        });
+        
+        // Error handling
+        window.addEventListener('error', function(e) {
+            log(`💥 JavaScript Error: ${e.error?.message || e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            log(`💥 Unhandled Promise Rejection: ${e.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Test Logout Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.danger { background: #dc3545; }
+        .btn.danger:hover { background: #c82333; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Logout Functionality</h1>
+        <p>This page tests the logout functionality on the live deployment.</p>
+
+        <!-- Test Section -->
+        <div class="test-section">
+            <h3>🔐 Setup Test Environment</h3>
+            <div>
+                <label>Username: <input type="text" id="username" placeholder="Username" value="admin" style="margin: 5px; padding: 8px;"></label>
+                <label>Password: <input type="password" id="password" placeholder="Password" value="AdminPass123!" style="margin: 5px; padding: 8px;"></label>
+                <button class="btn" onclick="testLogin()">🔑 Login</button>
+            </div>
+            <div id="authStatus" class="status"></div>
+        </div>
+
+        <!-- Logout Test -->
+        <div class="test-section">
+            <h3>🚪 Test Logout</h3>
+            <button class="btn danger" onclick="testLogout()">🚪 Test Logout</button>
+            <button class="btn danger" onclick="testForceLogout()">⚡ Force Logout</button>
+            <div id="logoutStatus" class="status"></div>
+        </div>
+
+        <!-- Debug Information -->
+        <div class="test-section">
+            <h3>🐛 Debug Information</h3>
+            <button class="btn" onclick="checkStatus()">🔍 Check Status</button>
+            <button class="btn" onclick="clearLog()">🧹 Clear Log</button>
+            <div id="debugLog" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'https://l17hfioxt7.execute-api.eu-north-1.amazonaws.com/api';
+        
+        // Logging function
+        function log(message, type = 'info') {
+            const container = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.style.color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#007bff';
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        // Test login
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            log('🔐 Testing login...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.token) {
+                        localStorage.setItem('accessToken', data.token.access_token);
+                        localStorage.setItem('userInfo', JSON.stringify(data.token.user));
+                        
+                        log('✅ Login successful!', 'success');
+                        log(`👤 User: ${data.token.user.username}`, 'info');
+                        updateStatus('authStatus', '✅ User is authenticated', 'success');
+                    } else {
+                        throw new Error(data.message || 'Login failed');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(`Login failed: ${errorData.detail || response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+                updateStatus('authStatus', '❌ Login failed', 'error');
+            }
+        }
+
+        // Test logout using the same function as index.html
+        async function testLogout() {
+            log('🚪 Testing logout (same as index.html)...', 'info');
+            
+            if (!confirm('هل تريد تسجيل الخروج؟')) {
+                log('🚫 Logout cancelled by user', 'warning');
+                return;
+            }
+            
+            try {
+                // Check if we have a token
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    log('⚠️ No access token found', 'warning');
+                    updateStatus('logoutStatus', '⚠️ No access token found', 'warning');
+                    return;
+                }
+                
+                log('📡 Making logout API call...', 'info');
+                
+                // Call logout API
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    log('✅ Server logout successful', 'success');
+                } else {
+                    log(`⚠️ Server logout returned: ${response.status} ${response.statusText}`, 'warning');
+                }
+                
+                // Clear local storage
+                log('🧹 Clearing local storage...', 'info');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                
+                // Clear cookies
+                log('🍪 Clearing cookies...', 'info');
+                document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                
+                log('✅ Logout completed successfully!', 'success');
+                updateStatus('logoutStatus', '✅ Logout successful', 'success');
+                updateStatus('authStatus', '❌ User is not authenticated', 'error');
+                
+                // In real app, this would redirect
+                log('ℹ️ In real app, would redirect to /login.html now', 'info');
+                
+            } catch (error) {
+                log(`❌ Logout error: ${error.message}`, 'error');
+                updateStatus('logoutStatus', '❌ Logout failed', 'error');
+            }
+        }
+
+        // Force logout (clears everything)
+        async function testForceLogout() {
+            log('⚡ Testing force logout...', 'info');
+            
+            try {
+                // Clear everything
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Clear all cookies
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                log('✅ Force logout completed!', 'success');
+                updateStatus('logoutStatus', '✅ Force logout successful', 'success');
+                updateStatus('authStatus', '❌ User is not authenticated', 'error');
+                
+            } catch (error) {
+                log(`❌ Force logout error: ${error.message}`, 'error');
+                updateStatus('logoutStatus', '❌ Force logout failed', 'error');
+            }
+        }
+
+        // Check current authentication status
+        function checkStatus() {
+            log('🔍 Checking authentication status...', 'info');
+            
+            const accessToken = localStorage.getItem('accessToken');
+            const userInfo = localStorage.getItem('userInfo');
+            const authToken = localStorage.getItem('authToken');
+            
+            log(`💾 localStorage.accessToken: ${accessToken ? 'EXISTS' : 'NONE'}`, 'info');
+            log(`💾 localStorage.userInfo: ${userInfo ? 'EXISTS' : 'NONE'}`, 'info');
+            log(`💾 localStorage.authToken: ${authToken ? 'EXISTS' : 'NONE'}`, 'info');
+            
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    log(`👤 User: ${user.username} (Groups: ${user.groups?.join(', ') || 'none'})`, 'info');
+                } catch (e) {
+                    log('❌ Invalid user info in localStorage', 'error');
+                }
+            }
+            
+            // Check cookies
+            const allCookies = document.cookie;
+            log(`🍪 All cookies: ${allCookies || 'NONE'}`, 'info');
+            
+            if (accessToken) {
+                updateStatus('authStatus', '✅ User is authenticated', 'success');
+            } else {
+                updateStatus('authStatus', '❌ User is not authenticated', 'error');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🚀 Logout test page loaded', 'info');
+            checkStatus();
+        });
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            log(`💥 JavaScript Error: ${e.error?.message || e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            log(`💥 Unhandled Promise Rejection: ${e.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>
