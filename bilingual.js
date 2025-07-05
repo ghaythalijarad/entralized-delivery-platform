@@ -59,8 +59,9 @@ class BilingualManager {
             
             // Dashboard
             dashboard: {
-                title: { ar: 'لوحة التحكم - نظام التوصيل المركزي', en: 'Dashboard - Centralized Delivery System' },
-                logoText: { ar: 'نظام التوصيل المركزي', en: 'Centralized Delivery System' },
+                title: { ar: 'لوحة التحكم - مركز التحكم الإداري', en: 'Dashboard - Admin Control Center' },
+                dashboard_title: { ar: 'مركز التحكم الإداري', en: 'Admin Control Center' },
+                logoText: { ar: 'مركز التحكم الإداري', en: 'Admin Control Center' },
                 welcome: { ar: 'مرحباً، ', en: 'Welcome, ' },
                 admin: { ar: 'المدير', en: 'Admin' },
                 logout: { ar: 'تسجيل الخروج', en: 'Logout' },
