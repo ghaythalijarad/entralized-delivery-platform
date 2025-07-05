@@ -1,0 +1,26 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Setting up organized project structure"
+        - echo "Source files in src/, config in config/, docs in docs/"
+    build:
+      commands:
+        - echo "Building from organized structure"
+        - echo "Copying HTML pages from src/pages/"
+        - cp src/pages/*.html . || echo "No HTML files found in src/pages/"
+        - echo "Copying JavaScript utilities from src/utils/"
+        - cp src/utils/*.js . || echo "No JS files found in src/utils/"
+        - echo "Listing files in build directory:"
+        - ls -la *.html *.js || echo "No HTML/JS files in root"
+        - echo "Clean build completed"
+    postBuild:
+      commands:
+        - echo "Post-build: Organized file structure deployed"
+  artifacts:
+    baseDirectory: .
+    files:
+      - '**/*'
+  cache:
+    paths: []
