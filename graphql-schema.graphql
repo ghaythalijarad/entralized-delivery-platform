@@ -1,0 +1,543 @@
+type Order {
+  orderId: ID!
+  customerId: String!
+  driverId: String
+  merchantId: String!
+  items: [OrderItem!]!
+  status: OrderStatus!
+  amount: Float!
+  deliveryAddress: Address!
+  merchantAddress: Address!
+  estimatedDeliveryTime: AWSDateTime
+  actualDeliveryTime: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  notes: String
+  paymentMethod: PaymentMethod!
+  deliveryFee: Float!
+  rating: Int
+  review: String
+}
+
+type OrderItem {
+  itemId: String!
+  name: String!
+  quantity: Int!
+  price: Float!
+  specialInstructions: String
+}
+
+type Address {
+  street: String!
+  city: String!
+  district: String!
+  latitude: Float!
+  longitude: Float!
+  instructions: String
+}
+
+type Driver {
+  driverId: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  phoneNumber: String!
+  status: DriverStatus!
+  currentLocation: Location
+  vehicle: Vehicle!
+  zone: String!
+  rating: Float
+  totalDeliveries: Int!
+  isOnline: Boolean!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Vehicle {
+  type: VehicleType!
+  licensePlate: String!
+  model: String!
+  color: String!
+}
+
+type Location {
+  latitude: Float!
+  longitude: Float!
+  timestamp: AWSDateTime!
+}
+
+type Merchant {
+  merchantId: ID!
+  name: String!
+  email: String!
+  phoneNumber: String!
+  address: Address!
+  category: MerchantCategory!
+  zone: String!
+  isActive: Boolean!
+  rating: Float
+  averagePreparationTime: Int
+  menu: [MenuItem!]
+  operatingHours: OperatingHours!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type MenuItem {
+  itemId: String!
+  name: String!
+  description: String
+  price: Float!
+  category: String!
+  isAvailable: Boolean!
+  preparationTime: Int
+  image: String
+}
+
+type OperatingHours {
+  monday: DayHours
+  tuesday: DayHours
+  wednesday: DayHours
+  thursday: DayHours
+  friday: DayHours
+  saturday: DayHours
+  sunday: DayHours
+}
+
+type DayHours {
+  open: String!
+  close: String!
+  isOpen: Boolean!
+}
+
+type Customer {
+  customerId: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  phoneNumber: String
+  addresses: [Address!]
+  defaultPaymentMethod: PaymentMethod
+  orderHistory: [Order!]
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type AuthResult {
+  success: Boolean!
+  message: String!
+  user: User
+  accessToken: String
+  refreshToken: String
+}
+
+type User {
+  userId: ID!
+  username: String!
+  email: String!
+  firstName: String!
+  lastName: String!
+  accessLevel: AccessLevel!
+  permissions: [Permission!]!
+  status: UserStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  lastLoginAt: AWSDateTime
+  createdBy: String
+  department: String
+  phoneNumber: String
+  profilePicture: String
+}
+
+# Enums
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+  ON_BREAK
+}
+
+enum VehicleType {
+  MOTORCYCLE
+  CAR
+  BICYCLE
+  WALKING
+}
+
+enum MerchantCategory {
+  RESTAURANT
+  GROCERY
+  PHARMACY
+  ELECTRONICS
+  CLOTHING
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  DIGITAL_WALLET
+}
+
+enum UserType {
+  CUSTOMER
+  DRIVER
+  MERCHANT
+  ADMIN
+}
+
+enum AccessLevel {
+  ADMIN
+  MANAGER
+  SUPPORT
+  ANALYST
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum Permission {
+  # Admin Permissions
+  MANAGE_USERS
+  MANAGE_ROLES
+  SYSTEM_CONFIGURATION
+  SECURITY_SETTINGS
+  AUDIT_LOGS
+  
+  # Manager Permissions
+  MANAGE_DRIVERS
+  MANAGE_ORDERS
+  VIEW_ANALYTICS
+  CUSTOMER_SUPPORT
+  FLEET_MANAGEMENT
+  
+  # Support Permissions
+  VIEW_CUSTOMERS
+  UPDATE_ORDERS
+  HANDLE_COMPLAINTS
+  BASIC_REPORTING
+  
+  # Analyst Permissions
+  VIEW_REPORTS
+  EXPORT_DATA
+  DASHBOARD_ACCESS
+  PERFORMANCE_METRICS
+}
+
+# Input Types
+input CreateOrderInput {
+  customerId: String!
+  merchantId: String!
+  items: [OrderItemInput!]!
+  deliveryAddress: AddressInput!
+  paymentMethod: PaymentMethod!
+  notes: String
+}
+
+input OrderItemInput {
+  itemId: String!
+  name: String!
+  quantity: Int!
+  price: Float!
+  specialInstructions: String
+}
+
+input AddressInput {
+  street: String!
+  city: String!
+  district: String!
+  latitude: Float!
+  longitude: Float!
+  instructions: String
+}
+
+input UpdateOrderStatusInput {
+  orderId: ID!
+  status: OrderStatus!
+  driverId: String
+  estimatedDeliveryTime: AWSDateTime
+  actualDeliveryTime: AWSDateTime
+}
+
+input UpdateDriverLocationInput {
+  driverId: ID!
+  latitude: Float!
+  longitude: Float!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input RegisterCustomerInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phoneNumber: String
+}
+
+input RegisterDriverInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phoneNumber: String!
+  vehicle: VehicleInput!
+  zone: String!
+}
+
+input VehicleInput {
+  type: VehicleType!
+  licensePlate: String!
+  model: String!
+  color: String!
+}
+
+input RegisterMerchantInput {
+  email: String!
+  password: String!
+  name: String!
+  phoneNumber: String!
+  address: AddressInput!
+  category: MerchantCategory!
+  zone: String!
+}
+
+input CreateUserInput {
+  username: String!
+  email: String!
+  firstName: String!
+  lastName: String!
+  accessLevel: AccessLevel!
+  status: UserStatus!
+  department: String
+  phoneNumber: String
+  temporaryPassword: String!
+}
+
+input UpdateUserInput {
+  userId: ID!
+  username: String
+  email: String
+  firstName: String
+  lastName: String
+  accessLevel: AccessLevel
+  status: UserStatus
+  department: String
+  phoneNumber: String
+}
+
+input UserFilterInput {
+  accessLevel: AccessLevel
+  status: UserStatus
+  department: String
+  search: String
+}
+
+# Root Types
+type Query {
+  # Authentication
+  getCurrentUser: User @aws_auth(cognito_groups: ["Customers", "Drivers", "Merchants", "Admins"])
+  
+  # Orders
+  getOrder(orderId: ID!): Order @aws_auth(cognito_groups: ["Customers", "Drivers", "Merchants", "Admins"])
+  getOrdersByCustomer(customerId: String!, limit: Int, nextToken: String): OrderConnection @aws_auth(cognito_groups: ["Customers", "Admins"])
+  getOrdersByDriver(driverId: String!, status: OrderStatus, limit: Int, nextToken: String): OrderConnection @aws_auth(cognito_groups: ["Drivers", "Admins"])
+  getOrdersByMerchant(merchantId: String!, status: OrderStatus, limit: Int, nextToken: String): OrderConnection @aws_auth(cognito_groups: ["Merchants", "Admins"])
+  getActiveOrders(limit: Int, nextToken: String): OrderConnection @aws_auth(cognito_groups: ["Admins"])
+  
+  # Drivers
+  getDriver(driverId: ID!): Driver @aws_auth(cognito_groups: ["Drivers", "Admins"])
+  getAvailableDrivers(zone: String): [Driver!]! @aws_auth(cognito_groups: ["Admins"])
+  getDriversByZone(zone: String!, status: DriverStatus, limit: Int, nextToken: String): DriverConnection @aws_auth(cognito_groups: ["Admins"])
+  
+  # Merchants
+  getMerchant(merchantId: ID!): Merchant @aws_auth(cognito_groups: ["Merchants", "Customers", "Admins"])
+  getMerchantsByZone(zone: String!, category: MerchantCategory, limit: Int, nextToken: String): MerchantConnection @aws_auth(cognito_groups: ["Customers", "Admins"])
+  searchMerchants(searchTerm: String!, zone: String, category: MerchantCategory, limit: Int, nextToken: String): MerchantConnection @aws_auth(cognito_groups: ["Customers", "Admins"])
+  
+  # Customers
+  getCustomer(customerId: ID!): Customer @aws_auth(cognito_groups: ["Customers", "Admins"])
+  
+  # Analytics (Admin only)
+  getOrderStats(startDate: AWSDateTime!, endDate: AWSDateTime!): OrderStats @aws_auth(cognito_groups: ["Admins"])
+  getDriverStats(driverId: String, startDate: AWSDateTime!, endDate: AWSDateTime!): DriverStats @aws_auth(cognito_groups: ["Drivers", "Admins"])
+  
+  # User Management
+  getUser(userId: ID!): User @auth(rules: [{allow: private, provider: userPools}])
+  listUsers(filter: UserFilterInput, limit: Int, nextToken: String): UserConnection! @auth(rules: [{allow: private, provider: userPools}])
+  getUsersByRole(accessLevel: AccessLevel!, limit: Int, nextToken: String): UserConnection!
+  getUsersByStatus(status: UserStatus!, limit: Int, nextToken: String): UserConnection!
+  
+  # Current User Context
+  getCurrentUserPermissions: [Permission!]!
+  validateUserAccess(permission: Permission!): Boolean!
+  
+  # User Statistics
+  getUserStats: UserStats!
+}
+
+type Mutation {
+  # Authentication
+  login(input: LoginInput!): AuthResult
+  logout: Boolean! @aws_auth(cognito_groups: ["Customers", "Drivers", "Merchants", "Admins"])
+  registerCustomer(input: RegisterCustomerInput!): AuthResult
+  registerDriver(input: RegisterDriverInput!): AuthResult
+  registerMerchant(input: RegisterMerchantInput!): AuthResult
+  
+  # Orders
+  createOrder(input: CreateOrderInput!): Order! @aws_auth(cognito_groups: ["Customers"])
+  updateOrderStatus(input: UpdateOrderStatusInput!): Order! @aws_auth(cognito_groups: ["Drivers", "Merchants", "Admins"])
+  cancelOrder(orderId: ID!, reason: String): Order! @aws_auth(cognito_groups: ["Customers", "Admins"])
+  assignDriverToOrder(orderId: ID!, driverId: String!): Order! @aws_auth(cognito_groups: ["Admins"])
+  rateOrder(orderId: ID!, rating: Int!, review: String): Order! @aws_auth(cognito_groups: ["Customers"])
+  
+  # Driver Management
+  updateDriverStatus(driverId: ID!, status: DriverStatus!): Driver! @aws_auth(cognito_groups: ["Drivers", "Admins"])
+  updateDriverLocation(input: UpdateDriverLocationInput!): Driver! @aws_auth(cognito_groups: ["Drivers"])
+  
+  # Merchant Management
+  updateMerchantStatus(merchantId: ID!, isActive: Boolean!): Merchant! @aws_auth(cognito_groups: ["Merchants", "Admins"])
+  updateMenuItemAvailability(merchantId: ID!, itemId: String!, isAvailable: Boolean!): Merchant! @aws_auth(cognito_groups: ["Merchants"])
+  
+  # User Management (Admin Only)
+  createUser(input: CreateUserInput!): User! @auth(rules: [{allow: private, operations: [create], provider: userPools}])
+  updateUser(input: UpdateUserInput!): User! @auth(rules: [{allow: private, operations: [update], provider: userPools}])
+  deleteUser(userId: ID!): Boolean! @auth(rules: [{allow: private, operations: [delete], provider: userPools}])
+  
+  # Role Management
+  assignUserRole(userId: ID!, accessLevel: AccessLevel!): User!
+  updateUserPermissions(userId: ID!, permissions: [Permission!]!): User!
+  
+  # User Status Management
+  activateUser(userId: ID!): User!
+  deactivateUser(userId: ID!): User!
+  suspendUser(userId: ID!, reason: String): User!
+  
+  # Password Management
+  resetUserPassword(userId: ID!): String! # Returns temporary password
+  forcePasswordChange(userId: ID!): Boolean!
+}
+
+type Subscription {
+  # Real-time Order Updates
+  onOrderStatusChanged(customerId: String): Order
+    @aws_subscribe(mutations: ["updateOrderStatus", "createOrder", "cancelOrder"])
+    @aws_auth(cognito_groups: ["Customers", "Drivers", "Merchants", "Admins"])
+  
+  onOrderAssignedToDriver(driverId: String!): Order
+    @aws_subscribe(mutations: ["assignDriverToOrder", "updateOrderStatus"])
+    @aws_auth(cognito_groups: ["Drivers"])
+  
+  onNewOrderForMerchant(merchantId: String!): Order
+    @aws_subscribe(mutations: ["createOrder"])
+    @aws_auth(cognito_groups: ["Merchants"])
+  
+  # Real-time Driver Updates
+  onDriverLocationChanged(orderId: String): Driver
+    @aws_subscribe(mutations: ["updateDriverLocation"])
+    @aws_auth(cognito_groups: ["Customers", "Admins"])
+  
+  onDriverStatusChanged(zone: String): Driver
+    @aws_subscribe(mutations: ["updateDriverStatus"])
+    @aws_auth(cognito_groups: ["Admins"])
+  
+  # User Management Events
+  onUserCreated: User @auth(rules: [{allow: private, provider: userPools}])
+  onUserUpdated: User @auth(rules: [{allow: private, provider: userPools}])
+  onUserDeleted: String @auth(rules: [{allow: private, provider: userPools}])
+  onUserLoginActivity: UserLoginEvent @auth(rules: [{allow: private, provider: userPools}])
+}
+
+type UserLoginEvent {
+  userId: ID!
+  username: String!
+  loginTime: AWSDateTime!
+  ipAddress: String
+  userAgent: String
+  successful: Boolean!
+}
+
+# Connection Types for Pagination
+type OrderConnection {
+  items: [Order!]!
+  nextToken: String
+}
+
+type DriverConnection {
+  items: [Driver!]!
+  nextToken: String
+}
+
+type MerchantConnection {
+  items: [Merchant!]!
+  nextToken: String
+}
+
+type UserConnection {
+  items: [User!]!
+  nextToken: String
+  total: Int!
+}
+
+# Analytics Types
+type OrderStats {
+  totalOrders: Int!
+  totalRevenue: Float!
+  averageOrderValue: Float!
+  ordersByStatus: [StatusCount!]!
+  ordersByHour: [HourlyCount!]!
+}
+
+type DriverStats {
+  totalDeliveries: Int!
+  totalEarnings: Float!
+  averageRating: Float!
+  averageDeliveryTime: Int!
+  hoursWorked: Float!
+}
+
+type UserStats {
+  totalUsers: Int!
+  activeUsers: Int!
+  inactiveUsers: Int!
+  usersByRole: UserRoleStats!
+  recentLogins: Int!
+}
+
+type UserRoleStats {
+  admins: Int!
+  managers: Int!
+  support: Int!
+  analysts: Int!
+  viewers: Int!
+}
+
+type StatusCount {
+  status: OrderStatus!
+  count: Int!
+}
+
+type HourlyCount {
+  hour: Int!
+  count: Int!
+}

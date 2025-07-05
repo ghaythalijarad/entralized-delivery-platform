@@ -7,31 +7,20 @@ frontend:
         - echo "Source files in src/, config in config/, docs in docs/"
     build:
       commands:
-        - echo "Building from organized structure"
-        - echo "Current directory contents:"
-        - ls -la
-        - echo "Checking src directory:"
-        - ls -la src/ || echo "No src directory found"
-        - echo "Checking src/pages directory:"
-        - ls -la src/pages/ || echo "No src/pages directory found"
-        - echo "Checking src/utils directory:"
-        - ls -la src/utils/ || echo "No src/utils directory found"
-        - echo "Copying HTML pages from src/pages/"
-        - if [ -d "src/pages" ]; then cp src/pages/*.html . 2>/dev/null || echo "No HTML files to copy"; else echo "src/pages directory not found"; fi
-        - if [ -d "src/pages" ]; then cp src/pages/session-test.html . 2>/dev/null || echo "No session-test.html file to copy"; else echo "src/pages directory not found"; fi
-        - echo "Copying JavaScript utilities from src/utils/"
-        - if [ -d "src/utils" ]; then cp src/utils/*.js . 2>/dev/null || echo "No JS files to copy"; else echo "src/utils directory not found"; fi
-        - echo "Final build directory contents:"
-        - ls -la
-        - echo "Checking for required files:"
-        - ls -la index.html || echo "WARNING: No index.html found"
-        - ls -la *.js || echo "No JS files found"
+        - echo "Creating a distribution directory"
+        - mkdir dist
+        - echo "Copying HTML pages from src/pages to dist"
+        - cp src/pages/*.html dist/
+        - echo "Copying JavaScript utilities from src/utils to dist"
+        - cp src/utils/*.js dist/
+        - echo "Listing contents of dist directory"
+        - ls -la dist
         - echo "Clean build completed"
     postBuild:
       commands:
         - echo "Post-build: Organized file structure deployed"
   artifacts:
-    baseDirectory: .
+    baseDirectory: dist
     files:
       - '**/*'
   cache:

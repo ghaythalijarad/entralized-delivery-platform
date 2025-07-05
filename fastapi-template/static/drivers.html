@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>إدارة السائقين - النظام المركزي | Driver Management - Central System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <!-- Bilingual Support -->
+    <script src="bilingual.js"></script>
+    <style>
+        body {
+            background: #f4f6fb;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Mobile-first responsive containers */
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: 1.5rem 2rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .container-fluid {
+                padding: 2rem 3rem;
+            }
+        }
+        
+        /* Responsive header */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 1.5rem;
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .page-header h2 {
+                font-size: 2rem;
+                margin-bottom: 0;
+            }
+        }
+        
+        /* Mobile-friendly action buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .action-buttons {
+                flex-direction: row;
+            }
+        }
+        
+        /* Responsive cards */
+        .driver-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .driver-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 767.98px) {
+            .driver-card .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        /* Mobile table alternatives */
+        @media (max-width: 767.98px) {
+            .table-responsive {
+                display: none;
+            }
+            
+            .mobile-driver-card {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                border: 1px solid #f1f3f4;
+            }
+            
+            .mobile-driver-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            
+            .mobile-driver-info {
+                margin-right: 1rem;
+                flex: 1;
+            }
+            
+            .mobile-driver-details {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .mobile-driver-field {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .mobile-driver-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            .mobile-driver-value {
+                color: #333;
+            }
+            
+            .mobile-driver-actions {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+            
+            .mobile-driver-actions .btn {
+                flex: 1;
+                min-width: 100px;
+                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-drivers {
+                display: none;
+            }
+        }
+        
+        /* Touch-friendly interactions */
+        @media (hover: none) {
+            .driver-card:hover {
+                transform: none;
+            }
+            
+            .driver-card:active,
+            .mobile-driver-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s;
+            }
+        }
+        
+        /* Modal responsiveness */
+        @media (max-width: 767.98px) {
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            
+            .modal-content {
+                border-radius: 12px;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 1rem;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Enhanced responsive typography */
+        @media (max-width: 767.98px) {
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h5 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>إدارة السائقين و تطبيق السائقين</h2>
+            <div>
+                <button class="btn btn-outline-secondary me-2">تطبيق السائقين APK</button>
+                <button class="btn btn-primary" onclick="showAddDriverModal()">إضافة سائق جديد</button>
+            </div>
+        </div>
+        
+        <div class="alert alert-light border">
+            <strong>تطبيق السائقين:</strong> يتلقى مهام التوصيل من النظام المركزي ويرسل تحديثات الموقع
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>اسم السائق</th>
+                                <th>رقم الهوية</th>
+                                <th>الهاتف</th>
+                                <th>نوع المركبة</th>
+                                <th>الحالة</th>
+                                <th>التقييم</th>
+                                <th>عدد الطلبات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody">
+                            <!-- Dynamic driver rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5>إحصائيات تطبيق السائقين</h5>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>السائقون المتصلون</span>
+                                <strong class="text-success">8</strong>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>في مهمة توصيل</span>
+                                <strong class="text-warning">7</strong>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>غير متصلين</span>
+                                <strong class="text-secondary">2</strong>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>إصدار التطبيق</span>
+                                <strong>v1.8.2</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Details Modal -->
+        <div class="modal fade" id="driverDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">تفاصيل السائق</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="driverDetailsContent">
+                        <!-- Dynamic driver details here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Driver Modal -->
+        <div class="modal fade" id="addDriverModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addEditDriverTitle">إضافة سائق جديد</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="driverForm">
+                            <input type="hidden" id="driverId">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">اسم السائق</label>
+                                    <input type="text" class="form-control" id="driverName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رقم الهوية</label>
+                                    <input type="text" class="form-control" id="driverNationalId" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">الهاتف</label>
+                                    <input type="tel" class="form-control" id="driverPhone" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">نوع المركبة</label>
+                                    <select class="form-select" id="driverVehicleType" required>
+                                        <option value="">اختر النوع</option>
+                                        <option value="motorcycle">دراجة نارية</option>
+                                        <option value="car">سيارة</option>
+                                        <option value="bicycle">دراجة هوائية</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">رخصة القيادة (صورة)</label>
+                                    <input type="file" class="form-control" id="driverLicenseImage" accept="image/*">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">نسخة الهوية (صورة)</label>
+                                    <input type="file" class="form-control" id="driverIdImage" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">عقد العمل (PDF)</label>
+                                <input type="file" class="form-control" id="driverContractPdf" accept="application/pdf">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ملاحظات</label>
+                                <textarea class="form-control" id="driverNotes" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-primary" onclick="saveDriver()">حفظ السائق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Test driver data
+        const drivers = [
+            {
+                id: 'D001',
+                name: 'محمد سالم',
+                nationalId: '1234567890',
+                phone: '0551234567',
+                vehicleType: 'دراجة نارية',
+                status: 'متاح',
+                rating: 4.8,
+                orders: 156,
+                licenseImage: 'https://dummyimage.com/120x80/eee/333&text=رخصة',
+                idImage: 'https://dummyimage.com/120x80/eee/333&text=هوية',
+                contractPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                notes: 'سائق نشيط وملتزم'
+            },
+            {
+                id: 'D002',
+                name: 'خالد فهد',
+                nationalId: '9876543210',
+                phone: '0559876543',
+                vehicleType: 'سيارة',
+                status: 'مشغول',
+                rating: 4.6,
+                orders: 89,
+                licenseImage: '',
+                idImage: '',
+                contractPdf: '',
+                notes: ''
+            }
+        ];
+
+        function renderDriversTable() {
+            const tbody = document.getElementById('driversTableBody');
+            tbody.innerHTML = drivers.map(driver => `
+                <tr>
+                    <td>${driver.name}</td>
+                    <td>${driver.nationalId}</td>
+                    <td>${driver.phone}</td>
+                    <td>${driver.vehicleType}</td>
+                    <td>
+                        <span class="badge ${driver.status === 'متاح' ? 'bg-success' : driver.status === 'مشغول' ? 'bg-warning text-dark' : 'bg-secondary'}">${driver.status}</span>
+                    </td>
+                    <td>⭐ ${driver.rating}</td>
+                    <td>${driver.orders}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showDriverDetails('${driver.id}')">عرض</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editDriver('${driver.id}')">تعديل</button>
+                        <button class="btn btn-sm btn-outline-info" onclick="trackDriver('${driver.id}')">تتبع</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showDriverDetails(driverId) {
+            const driver = drivers.find(d => d.id === driverId);
+            if (!driver) return;
+            document.getElementById('driverDetailsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>معلومات السائق</h6>
+                        <p><strong>الاسم:</strong> ${driver.name}</p>
+                        <p><strong>رقم الهوية:</strong> ${driver.nationalId}</p>
+                        <p><strong>الهاتف:</strong> ${driver.phone}</p>
+                        <p><strong>نوع المركبة:</strong> ${driver.vehicleType}</p>
+                        <p><strong>الحالة:</strong> <span class="badge ${driver.status === 'متاح' ? 'bg-success' : driver.status === 'مشغول' ? 'bg-warning text-dark' : 'bg-secondary'}">${driver.status}</span></p>
+                        <p><strong>التقييم:</strong> ⭐ ${driver.rating}</p>
+                        <p><strong>عدد الطلبات:</strong> ${driver.orders}</p>
+                        <p><strong>ملاحظات:</strong> ${driver.notes || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>الوثائق</h6>
+                        <div class="mb-2">
+                            <strong>رخصة القيادة:</strong><br>
+                            ${driver.licenseImage ? `<img src="${driver.licenseImage}" alt="رخصة القيادة" class="img-thumbnail mb-2" style="max-width:120px;">` : '<span class="text-muted">غير متوفر</span>'}
+                        </div>
+                        <div class="mb-2">
+                            <strong>نسخة الهوية:</strong><br>
+                            ${driver.idImage ? `<img src="${driver.idImage}" alt="هوية" class="img-thumbnail mb-2" style="max-width:120px;">` : '<span class="text-muted">غير متوفر</span>'}
+                        </div>
+                        <div class="mb-2">
+                            <strong>عقد العمل:</strong><br>
+                            ${driver.contractPdf ? `<a href="${driver.contractPdf}" target="_blank" class="btn btn-sm btn-outline-secondary">عرض العقد (PDF)</a>` : '<span class="text-muted">غير متوفر</span>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('driverDetailsModal')).show();
+        }
+
+        function showAddDriverModal() {
+            document.getElementById('addEditDriverTitle').textContent = 'إضافة سائق جديد';
+            document.getElementById('driverForm').reset();
+            document.getElementById('driverId').value = '';
+            new bootstrap.Modal(document.getElementById('addDriverModal')).show();
+        }
+
+        function editDriver(driverId) {
+            const driver = drivers.find(d => d.id === driverId);
+            if (!driver) return;
+            document.getElementById('addEditDriverTitle').textContent = 'تعديل بيانات السائق';
+            document.getElementById('driverId').value = driver.id;
+            document.getElementById('driverName').value = driver.name;
+            document.getElementById('driverNationalId').value = driver.nationalId;
+            document.getElementById('driverPhone').value = driver.phone;
+            document.getElementById('driverVehicleType').value = driver.vehicleType;
+            document.getElementById('driverNotes').value = driver.notes || '';
+            // File inputs cannot be set for security reasons
+            new bootstrap.Modal(document.getElementById('addDriverModal')).show();
+        }
+
+        function saveDriver() {
+            const id = document.getElementById('driverId').value || `D${Date.now()}`;
+            const name = document.getElementById('driverName').value;
+            const nationalId = document.getElementById('driverNationalId').value;
+            const phone = document.getElementById('driverPhone').value;
+            const vehicleType = document.getElementById('driverVehicleType').value;
+            const notes = document.getElementById('driverNotes').value;
+            // For demo, we don't handle file uploads, just mark as "مرفوع"
+            let licenseImage = '', idImage = '', contractPdf = '';
+            const driverIdx = drivers.findIndex(d => d.id === id);
+            if (driverIdx > -1) {
+                drivers[driverIdx] = { ...drivers[driverIdx], name, nationalId, phone, vehicleType, notes };
+            } else {
+                drivers.push({ id, name, nationalId, phone, vehicleType, status: 'متاح', rating: 0, orders: 0, licenseImage, idImage, contractPdf, notes });
+            }
+            renderDriversTable();
+            bootstrap.Modal.getInstance(document.getElementById('addDriverModal')).hide();
+        }
+
+        function trackDriver(driverId) {
+            alert('ميزة تتبع السائق قيد التطوير');
+        }
+
+        // Initial render
+        renderDriversTable();
+    </script>
+
+    <!-- No code changes needed to run the admin. Just follow these steps: -->
+
+    <!-- 1. Make sure your server is running -->
+    <!-- In terminal: -->
+    <!-- cd "/Users/ghaythallaheebi/centralized platform/fastapi-template/static" -->
+    <!-- python3 -m http.server 8000 -->
+
+    <!-- 2. Open your browser and go to: -->
+    <!-- http://localhost:8000/drivers.html -->
+
+    <!-- 3. You should see the drivers page with test data, document management, and detailed driver profiles. -->
+
+    <!-- 4. Click on any driver to view details, documents (license, ID, contract), and other actions. -->
+
+    <!-- If you see the driver list and can open driver details with documents and notes, everything is working! -->
+
+    <!-- The page is ready to run with complete driver management features. -->
+</body>
+</html>
