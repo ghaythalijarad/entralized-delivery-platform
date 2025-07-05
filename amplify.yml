@@ -8,12 +8,23 @@ frontend:
     build:
       commands:
         - echo "Building from organized structure"
+        - echo "Current directory contents:"
+        - ls -la
+        - echo "Checking src directory:"
+        - ls -la src/ || echo "No src directory found"
+        - echo "Checking src/pages directory:"
+        - ls -la src/pages/ || echo "No src/pages directory found"
+        - echo "Checking src/utils directory:"
+        - ls -la src/utils/ || echo "No src/utils directory found"
         - echo "Copying HTML pages from src/pages/"
-        - cp src/pages/*.html . || echo "No HTML files found in src/pages/"
+        - if [ -d "src/pages" ]; then cp src/pages/*.html . 2>/dev/null || echo "No HTML files to copy"; else echo "src/pages directory not found"; fi
         - echo "Copying JavaScript utilities from src/utils/"
-        - cp src/utils/*.js . || echo "No JS files found in src/utils/"
-        - echo "Listing files in build directory:"
-        - ls -la *.html *.js || echo "No HTML/JS files in root"
+        - if [ -d "src/utils" ]; then cp src/utils/*.js . 2>/dev/null || echo "No JS files to copy"; else echo "src/utils directory not found"; fi
+        - echo "Final build directory contents:"
+        - ls -la
+        - echo "Checking for required files:"
+        - ls -la index.html || echo "WARNING: No index.html found"
+        - ls -la *.js || echo "No JS files found"
         - echo "Clean build completed"
     postBuild:
       commands:
