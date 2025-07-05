@@ -1,0 +1,21 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "🚀 Starting Centralized Delivery Platform deployment"
+        - echo "📁 Listing HTML files..."
+        - ls -la *.html || echo "No HTML files found in root"
+    build:
+      commands:
+        - echo "🔧 Building frontend..."
+        - echo "📊 Files to deploy:"
+        - find . -name "*.html" -exec echo "  HTML: {}" \;
+        - echo "✅ Build complete"
+  artifacts:
+    baseDirectory: .
+    files:
+      - '**/*'
+    name: centralized-delivery-platform
+  cache:
+    paths: []
