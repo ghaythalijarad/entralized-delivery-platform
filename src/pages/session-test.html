@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Test</title>
+    <script>
+        function checkSession() {
+            const token = localStorage.getItem('aws-native-token');
+            const statusElement = document.getElementById('session-status');
+            if (token) {
+                statusElement.textContent = 'Session token found. User is likely logged in.';
+                statusElement.style.color = 'green';
+            } else {
+                statusElement.textContent = 'No session token found. User is logged out.';
+                statusElement.style.color = 'red';
+            }
+        }
+    </script>
+</head>
+<body onload="checkSession()">
+    <h1>Session Status Check</h1>
+    <p id="session-status">Checking session...</p>
+    <p><a href="login-aws-native.html">Login Page</a></p>
+</body>
+</html>
