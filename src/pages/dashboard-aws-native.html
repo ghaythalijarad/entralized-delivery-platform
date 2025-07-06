@@ -18,6 +18,7 @@
     
     <!-- Utilities -->
     <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
     <script src="../utils/auth.js"></script>
     <script src="../utils/bilingual.js"></script>
     <script src="../utils/bilingual-extensions.js"></script>
@@ -1518,42 +1519,45 @@
         `;
 
         // Initialize dashboard
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', async function() {
-            initializeBilingual();
-            await checkAuthentication();
-            await loadDashboardData();
-            setupRealtimeSubscriptions();
-            startPerformanceMonitoring();
-            initializeRoleBasedAccess();
+            try {
+                // Initialize AuthManager first
+                await AuthManager.initialize();
+                
+                // Check authentication
+                const isAuthenticated = await AuthManager.requireAuth();
+                if (!isAuthenticated) {
+                    return; // Will redirect to login
+                }
+                
+                // Initialize other components
+                initializeBilingual();
+                
+                // Update user profile in navigation
+                AuthManager.updateUserProfile();
+                AuthManager.setupAuthListeners();
+                
+                // Load dashboard data
+                await loadDashboardData();
+                setupRealtimeSubscriptions();
+                startPerformanceMonitoring();
+                initializeRoleBasedAccess();
+                
+                console.log('Dashboard initialized successfully');
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                // Redirect to login on error
+                window.location.href = 'login-aws-native.html';
+            }
         });
 
         // Authentication check
+        // Authentication check (simplified - now handled by AuthManager)
         async function checkAuthentication() {
-            try {
-                const user = await Auth.currentAuthenticatedUser();
-                const userInfo = user.attributes;
-                
-                // Update user avatar
-                const avatar = document.getElementById('userAvatar');
-                const initials = (userInfo.given_name?.[0] || '') + (userInfo.family_name?.[0] || '');
-                avatar.textContent = initials || userInfo.email[0].toUpperCase();
-                
-                // Store user session
-                sessionStorage.setItem('currentUser', JSON.stringify({
-                    userId: user.username,
-                    email: userInfo.email,
-                    firstName: userInfo.given_name,
-                    lastName: userInfo.family_name,
-                    userType: userInfo['custom:user_type'] || 'admin'
-                }));
-                
-                // Setup role-based navigation
-                setupRoleBasedNavigation(userInfo['custom:user_type']);
-                
-            } catch (error) {
-                console.error('Authentication check failed:', error);
-                window.location.href = 'login-aws-native.html';
-            }
+            // This function is kept for backward compatibility
+            // but the actual authentication is handled by AuthManager
+            return await AuthManager.requireAuth();
         }
 
         // Setup role-based navigation

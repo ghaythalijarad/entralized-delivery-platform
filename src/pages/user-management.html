@@ -17,6 +17,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Bilingual Support -->
+    <script src="../utils/auth-manager.js"></script>
     <script src="../utils/bilingual.js"></script>
     <script src="../utils/bilingual-extensions.js"></script>
     <script src="../utils/unified-navigation.js"></script>
@@ -949,10 +950,32 @@
         let editingUserId = null;
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeBilingual();
-            loadUsers();
-            setupEventListeners();
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize AuthManager first
+                await AuthManager.initialize();
+                
+                // Check authentication
+                const isAuthenticated = await AuthManager.requireAuth();
+                if (!isAuthenticated) {
+                    return; // Will redirect to login
+                }
+                
+                // Initialize other components
+                initializeBilingual();
+                loadUsers();
+                setupEventListeners();
+                
+                // Update user profile in navigation
+                AuthManager.updateUserProfile();
+                AuthManager.setupAuthListeners();
+                
+                console.log('User Management initialized successfully');
+            } catch (error) {
+                console.error('User Management initialization error:', error);
+                // Redirect to login on error
+                window.location.href = 'login-aws-native.html';
+            }
         });
 
         function setupEventListeners() {

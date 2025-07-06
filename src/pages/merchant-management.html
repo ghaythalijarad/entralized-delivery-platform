@@ -21,6 +21,7 @@
     
     <!-- Custom utilities -->
     <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
     <script src="../utils/merchant-api.js"></script>
     <script src="../utils/bilingual.js"></script>
     <script src="../utils/unified-navigation.js"></script>
@@ -526,12 +527,17 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', async function() {
-            // Check authentication first
-            if (!checkAuthentication()) {
-                return;
-            }
-
             try {
+                // Initialize AuthManager first
+                await AuthManager.initialize();
+                
+                // Check authentication
+                const isAuthenticated = await AuthManager.requireAuth();
+                if (!isAuthenticated) {
+                    return; // Will redirect to login
+                }
+                
+                // Initialize other components
                 // Initialize Merchant API
                 merchantAPI = new MerchantAPI();
                 await merchantAPI.initialize();
@@ -541,6 +547,10 @@
                 
                 // Setup event listeners
                 setupEventListeners();
+                
+                // Update user profile in navigation
+                AuthManager.updateUserProfile();
+                AuthManager.setupAuthListeners();
                 
                 console.log('✅ Merchant Management initialized successfully');
             } catch (error) {

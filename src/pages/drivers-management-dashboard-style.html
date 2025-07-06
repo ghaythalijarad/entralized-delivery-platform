@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers Management - Delivery Management Platform</title>
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
+    
+    <!-- AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
+    
+    <!-- Utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
+    <script src="../utils/auth.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/bilingual-extensions.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
+    
+    <style>
+        /* Drivers Management specific styles - matching dashboard structure */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-number {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 0 2px 4px rgba(0, 193, 232, 0.1);
+        }
+
+        .stat-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-change {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-md);
+        }
+
+        .stat-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stat-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .drivers-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .drivers-table-section {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+        }
+
+        .filters-section {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .drivers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .drivers-table th {
+            background: var(--primary-lightest);
+            color: var(--gray-800);
+            font-weight: 600;
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .drivers-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: middle;
+        }
+
+        .drivers-table tr:hover {
+            background: var(--primary-lightest);
+        }
+
+        .driver-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .driver-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+
+        .status-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-xxl);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-suspended { background: #f8d7da; color: #721c24; }
+        .status-inactive { background: #e2e3e5; color: #495057; }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-action {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-size: var(--font-size-xs);
+            transition: var(--transition-normal);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-view { background: var(--info-color); color: var(--white); }
+        .btn-edit { background: var(--primary-color); color: var(--white); }
+        .btn-approve { background: var(--success-color); color: var(--white); }
+        .btn-suspend { background: var(--warning-color); color: var(--gray-800); }
+
+        .recent-applications {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .application-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition-normal);
+        }
+
+        .application-item:hover {
+            background: var(--primary-lightest);
+        }
+
+        .application-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-lightest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .application-content {
+            flex: 1;
+        }
+
+        .application-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .application-time {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .action-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            text-align: center;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-lightest), rgba(255, 255, 255, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+            margin: 0 auto var(--spacing-md);
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .action-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .search-input {
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            width: 100%;
+            transition: var(--transition-normal);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 193, 232, 0.25);
+        }
+
+        .filter-select {
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--white);
+            transition: var(--transition-normal);
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 193, 232, 0.25);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .drivers-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filters-section {
+                padding: var(--spacing-md);
+            }
+            
+            .filters-section .row {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+            
+            .table-container {
+                font-size: var(--font-size-xs);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Unified Top Bar -->
+    <div class="unified-topbar">
+        <div class="unified-topbar-container">
+            <div class="unified-topbar-left">
+                <div class="unified-logo">
+                    <i class="fas fa-truck"></i>
+                    <span>Delivery Platform</span>
+                </div>
+            </div>
+            <div class="unified-topbar-right">
+                <div class="unified-user-controls">
+                    <div class="unified-language-toggle">
+                        <button class="unified-btn-icon" onclick="toggleLanguage()">
+                            <i class="fas fa-language"></i>
+                        </button>
+                    </div>
+                    <div class="unified-user-menu">
+                        <button class="unified-btn-icon" onclick="toggleUserMenu()">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="unified-user-dropdown" id="userDropdown">
+                            <a href="#" onclick="signOut()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span data-key="signOut">Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Navigation Bar -->
+    <nav class="unified-navbar">
+        <div class="unified-navbar-container">
+            <div class="unified-nav-items">
+                <a href="dashboard-aws-native.html" class="unified-nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span data-key="dashboard">Dashboard</span>
+                </a>
+                <a href="drivers-management.html" class="unified-nav-item active">
+                    <i class="fas fa-users"></i>
+                    <span data-key="drivers">Drivers</span>
+                </a>
+                <a href="merchant-management.html" class="unified-nav-item">
+                    <i class="fas fa-store"></i>
+                    <span data-key="merchants">Merchants</span>
+                </a>
+                <a href="user-management.html" class="unified-nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span data-key="users">Users</span>
+                </a>
+            </div>
+            <div class="unified-breadcrumb">
+                <span data-key="drivers">Drivers</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="unified-main-content">
+        <div class="unified-content-container">
+            <!-- Page Header -->
+            <div class="unified-page-header">
+                <div class="unified-page-title">
+                    <h1><i class="fas fa-users"></i> <span data-key="driversManagement">Drivers Management</span></h1>
+                    <p data-key="driversManagementDesc">Manage driver applications, approvals, and performance monitoring</p>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="totalDrivers">142</div>
+                    <div class="stat-label" data-key="totalDrivers">Total Drivers</div>
+                    <div class="stat-change positive">+5% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number" id="activeDrivers">128</div>
+                    <div class="stat-label" data-key="activeDrivers">Active Drivers</div>
+                    <div class="stat-change positive">+3% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number" id="pendingApplications">8</div>
+                    <div class="stat-label" data-key="pendingApplications">Pending Applications</div>
+                    <div class="stat-change negative">-2% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <div class="stat-number" id="suspendedDrivers">6</div>
+                    <div class="stat-label" data-key="suspendedDrivers">Suspended Drivers</div>
+                    <div class="stat-change positive">-8% from last month</div>
+                </div>
+            </div>
+
+            <!-- Main Drivers Section -->
+            <div class="drivers-section">
+                <!-- Drivers Table Section -->
+                <div class="drivers-table-section">
+                    <div class="unified-card-header">
+                        <h3><i class="fas fa-table"></i> <span data-key="driversList">Drivers List</span></h3>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="filters-section">
+                        <div class="row" style="display: flex; align-items: center; gap: var(--spacing-md);">
+                            <div style="flex: 2;">
+                                <input type="text" class="search-input" id="searchDrivers" 
+                                       placeholder="Search drivers by name, phone, or email..." data-key="searchDrivers">
+                            </div>
+                            <div style="flex: 1;">
+                                <select class="filter-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <select class="filter-select" id="vehicleFilter">
+                                    <option value="">All Vehicles</option>
+                                    <option value="car">Car</option>
+                                    <option value="motorcycle">Motorcycle</option>
+                                    <option value="bicycle">Bicycle</option>
+                                    <option value="truck">Truck</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-container">
+                        <table class="drivers-table">
+                            <thead>
+                                <tr>
+                                    <th data-key="driver">Driver</th>
+                                    <th data-key="contact">Contact</th>
+                                    <th data-key="vehicle">Vehicle</th>
+                                    <th data-key="status">Status</th>
+                                    <th data-key="rating">Rating</th>
+                                    <th data-key="actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driversTableBody">
+                                <!-- Sample data -->
+                                <tr>
+                                    <td>
+                                        <div class="driver-info">
+                                            <div class="driver-avatar">AH</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Ahmed Hassan</div>
+                                                <div style="font-size: var(--font-size-xs); color: var(--gray-500);">ID: DRV001</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>+966 50 123 4567</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--gray-500);">ahmed.hassan@email.com</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;">Car</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--gray-500);">ABC-123</div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <div style="font-weight: 600;">4.8 ⭐</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--gray-500);">234 deliveries</div>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-view" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn-action btn-edit" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-action btn-suspend" title="Suspend">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="driver-info">
+                                            <div class="driver-avatar">FH</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Fatima Hassan</div>
+                                                <div style="font-size: var(--font-size-xs); color: var(--gray-500);">ID: DRV002</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>+966 50 234 5678</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--gray-500);">fatima.hassan@email.com</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;">Motorcycle</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--gray-500);">XYZ-789</div>
+                                    </td>
+                                    <td><span class="status-badge status-pending">Pending</span></td>
+                                    <td>
+                                        <div style="color: var(--gray-500);">No ratings yet</div>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-action btn-view" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn-action btn-approve" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Applications and Quick Actions -->
+                <div>
+                    <!-- Recent Applications -->
+                    <div class="unified-card" style="margin-bottom: var(--spacing-lg);">
+                        <div class="unified-card-header">
+                            <h3><i class="fas fa-clock"></i> <span data-key="recentApplications">Recent Applications</span></h3>
+                        </div>
+                        <div class="recent-applications">
+                            <div class="application-item">
+                                <div class="application-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="application-content">
+                                    <div class="application-title">Mohammed Al-Rashid</div>
+                                    <div class="application-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="application-item">
+                                <div class="application-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="application-content">
+                                    <div class="application-title">Sara Abdullah</div>
+                                    <div class="application-time">5 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="application-item">
+                                <div class="application-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="application-content">
+                                    <div class="application-title">Omar Al-Zahrani</div>
+                                    <div class="application-time">1 day ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="unified-card">
+                        <div class="unified-card-header">
+                            <h3><i class="fas fa-bolt"></i> <span data-key="quickActions">Quick Actions</span></h3>
+                        </div>
+                        <div class="quick-actions">
+                            <div class="action-card" onclick="addNewDriver()">
+                                <div class="action-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="action-title" data-key="addDriver">Add Driver</div>
+                                <div class="action-description" data-key="addDriverDesc">Register new driver</div>
+                            </div>
+                            <div class="action-card" onclick="reviewApplications()">
+                                <div class="action-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="action-title" data-key="reviewApps">Review Applications</div>
+                                <div class="action-description" data-key="reviewAppsDesc">Pending applications</div>
+                            </div>
+                            <div class="action-card" onclick="generateReports()">
+                                <div class="action-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="action-title" data-key="reports">Reports</div>
+                                <div class="action-description" data-key="reportsDesc">Driver analytics</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize unified navigation
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize AuthManager first
+                await AuthManager.initialize();
+                
+                // Check authentication
+                const isAuthenticated = await AuthManager.requireAuth();
+                if (!isAuthenticated) {
+                    return; // Will redirect to login
+                }
+                
+                // Initialize other components
+                if (typeof UnifiedNavigation !== 'undefined') {
+                    UnifiedNavigation.init();
+                }
+                
+                // Update user profile in navigation
+                AuthManager.updateUserProfile();
+                AuthManager.setupAuthListeners();
+                
+                // Initialize drivers management
+                initializeDriversManagement();
+                
+                console.log('Drivers Management initialized successfully');
+            } catch (error) {
+                console.error('Drivers Management initialization error:', error);
+                // Redirect to login on error
+                window.location.href = 'login-aws-native.html';
+            }
+        });
+
+        function initializeDriversManagement() {
+            // Sample data loading and initialization
+            console.log('Drivers Management initialized with dashboard-style layout');
+            
+            // Setup search functionality
+            document.getElementById('searchDrivers').addEventListener('input', function(e) {
+                filterDrivers();
+            });
+            
+            document.getElementById('statusFilter').addEventListener('change', function(e) {
+                filterDrivers();
+            });
+            
+            document.getElementById('vehicleFilter').addEventListener('change', function(e) {
+                filterDrivers();
+            });
+        }
+
+        function filterDrivers() {
+            // Filter implementation
+            console.log('Filtering drivers...');
+        }
+
+        function addNewDriver() {
+            console.log('Add new driver clicked');
+        }
+
+        function reviewApplications() {
+            console.log('Review applications clicked');
+        }
+
+        function generateReports() {
+            console.log('Generate reports clicked');
+        }
+
+        function signOut() {
+            localStorage.clear();
+            window.location.href = 'login-aws-native.html';
+        }
+
+        function toggleLanguage() {
+            // Language toggle implementation
+            console.log('Toggle language clicked');
+        }
+
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.unified-user-menu')) {
+                document.getElementById('userDropdown').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

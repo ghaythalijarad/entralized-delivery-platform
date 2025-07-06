@@ -43,8 +43,26 @@ function signIn(email, password) {
         onSuccess: function (result) {
             console.log('Authentication successful:', result);
             const accessToken = result.getAccessToken().getJwtToken();
-            // Store the token in localStorage for session management
-            localStorage.setItem('aws-native-token', accessToken);
+            
+            // Get user attributes and store with AuthManager
+            cognitoUser.getUserAttributes(function(err, attributes) {
+                if (err) {
+                    console.error('Error getting user attributes:', err);
+                } else {
+                    const userInfo = parseUserAttributes(attributes);
+                    userInfo.username = email; // Ensure username is set
+                    
+                    // Store auth data using AuthManager
+                    if (window.AuthManager) {
+                        window.AuthManager.setAuthData(accessToken, userInfo);
+                    } else {
+                        // Fallback to direct localStorage
+                        localStorage.setItem('aws-native-token', accessToken);
+                        localStorage.setItem('aws-native-user', JSON.stringify(userInfo));
+                    }
+                }
+            });
+            
             console.log('Authentication successful');
             // Redirect to the dashboard without creating browser history entry
             window.location.replace('dashboard-aws-native.html');
@@ -97,7 +115,25 @@ function submitMfaCode(mfaCode) {
         onSuccess: function (result) {
             console.log('MFA submission successful:', result);
             const accessToken = result.getAccessToken().getJwtToken();
-            localStorage.setItem('aws-native-token', accessToken);
+            
+            // Get user attributes and store with AuthManager
+            cognitoUser.getUserAttributes(function(err, attributes) {
+                if (err) {
+                    console.error('Error getting user attributes:', err);
+                } else {
+                    const userInfo = parseUserAttributes(attributes);
+                    
+                    // Store auth data using AuthManager
+                    if (window.AuthManager) {
+                        window.AuthManager.setAuthData(accessToken, userInfo);
+                    } else {
+                        // Fallback to direct localStorage
+                        localStorage.setItem('aws-native-token', accessToken);
+                        localStorage.setItem('aws-native-user', JSON.stringify(userInfo));
+                    }
+                }
+            });
+            
             console.log('MFA successful, authentication complete.');
             window.location.replace('dashboard-aws-native.html');
         },
@@ -126,7 +162,25 @@ function submitNewPassword(newPassword) {
         onSuccess: function (result) {
             console.log('New password set successfully:', result);
             const accessToken = result.getAccessToken().getJwtToken();
-            localStorage.setItem('aws-native-token', accessToken);
+            
+            // Get user attributes and store with AuthManager
+            cognitoUser.getUserAttributes(function(err, attributes) {
+                if (err) {
+                    console.error('Error getting user attributes:', err);
+                } else {
+                    const userInfo = parseUserAttributes(attributes);
+                    
+                    // Store auth data using AuthManager
+                    if (window.AuthManager) {
+                        window.AuthManager.setAuthData(accessToken, userInfo);
+                    } else {
+                        // Fallback to direct localStorage
+                        localStorage.setItem('aws-native-token', accessToken);
+                        localStorage.setItem('aws-native-user', JSON.stringify(userInfo));
+                    }
+                }
+            });
+            
             console.log('Password change successful, authentication complete.');
             window.location.replace('dashboard-aws-native.html');
         },
@@ -148,10 +202,18 @@ function submitNewPassword(newPassword) {
  * Signs out the current user.
  */
 function signOut() {
+    // Use AuthManager if available
+    if (window.AuthManager) {
+        window.AuthManager.signOut();
+        return;
+    }
+    
+    // Fallback to original implementation
     const cognitoUser = userPool.getCurrentUser();
     if (cognitoUser != null) {
         cognitoUser.signOut();
         localStorage.removeItem('aws-native-token');
+        localStorage.removeItem('aws-native-user');
         console.log('User signed out.');
         window.location.href = 'login-aws-native.html';
     }
@@ -197,6 +259,13 @@ function isUserAuthenticated() {
  * If not, redirects to the login page.
  */
 function checkAuthentication() {
+    // Use AuthManager if available
+    if (window.AuthManager) {
+        window.AuthManager.requireAuth();
+        return;
+    }
+    
+    // Fallback to original implementation
     const cognitoUser = userPool.getCurrentUser();
     if (cognitoUser == null) {
         window.location.href = 'login-aws-native.html';
@@ -207,4 +276,48 @@ function checkAuthentication() {
             }
         });
     }
+}
+
+// Add helper function to parse user attributes
+function parseUserAttributes(attributes) {
+    const userInfo = {
+        username: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        userType: 'admin',
+        phone: '',
+        verified: false
+    };
+
+    if (attributes && Array.isArray(attributes)) {
+        attributes.forEach(attr => {
+            switch (attr.Name) {
+                case 'sub':
+                    userInfo.id = attr.Value;
+                    break;
+                case 'email':
+                    userInfo.email = attr.Value;
+                    userInfo.username = attr.Value;
+                    break;
+                case 'given_name':
+                    userInfo.firstName = attr.Value;
+                    break;
+                case 'family_name':
+                    userInfo.lastName = attr.Value;
+                    break;
+                case 'phone_number':
+                    userInfo.phone = attr.Value;
+                    break;
+                case 'email_verified':
+                    userInfo.verified = attr.Value === 'true';
+                    break;
+                case 'custom:user_type':
+                    userInfo.userType = attr.Value;
+                    break;
+            }
+        });
+    }
+
+    return userInfo;
 }

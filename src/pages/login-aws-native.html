@@ -14,6 +14,7 @@
     <link href="../utils/unified-design.css" rel="stylesheet">
     
     <!-- Bilingual Support -->
+    <script src="../utils/auth-manager.js"></script>
     <script src="../utils/bilingual.js"></script>
     <script src="../utils/bilingual-extensions.js"></script>
     <script src="../utils/unified-navigation.js"></script>
@@ -511,13 +512,38 @@
     
     <script>
         // Initialize unified navigation for login page
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof UnifiedNavigation !== 'undefined') {
-                // Initialize with login page specific settings
-                UnifiedNavigation.init({
-                    showNavigation: false, // Don't show navigation on login page
-                    showTopbar: false // Don't show topbar on login page
-                });
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize AuthManager first
+                await AuthManager.initialize();
+                
+                // Check if user is already authenticated
+                const isAuthenticated = await AuthManager.isAuthenticated();
+                if (isAuthenticated) {
+                    // User is already logged in, redirect to dashboard
+                    window.location.replace('dashboard-aws-native.html');
+                    return;
+                }
+                
+                // Initialize navigation for login page
+                if (typeof UnifiedNavigation !== 'undefined') {
+                    // Initialize with login page specific settings
+                    UnifiedNavigation.init({
+                        showNavigation: false, // Don't show navigation on login page
+                        showTopbar: false // Don't show topbar on login page
+                    });
+                }
+                
+                console.log('Login page initialized successfully');
+            } catch (error) {
+                console.error('Login page initialization error:', error);
+                // Continue with login page display
+                if (typeof UnifiedNavigation !== 'undefined') {
+                    UnifiedNavigation.init({
+                        showNavigation: false,
+                        showTopbar: false
+                    });
+                }
             }
         });
     </script>
