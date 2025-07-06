@@ -1,101 +1,36 @@
 // Authentication Manager - Centralized authentication handling
 // This module provides consistent authentication across all pages
 
+// Add AWS Amplify configuration and import Auth API
+import Amplify, { Auth } from 'aws-amplify';
+import awsExports from '../aws-exports';
+
+Amplify.configure(awsExports);
+
 class AuthManager {
     constructor() {
         this.tokenKey = 'aws-native-token';
         this.userKey = 'aws-native-user';
-        this.sessionKey = 'aws-native-session';
         this.isInitialized = false;
         this.currentUser = null;
-        this.userPool = null;
-        this.cognitoUser = null;
     }
 
-    // Initialize the authentication manager
-    async initialize() {
-        if (this.isInitialized) return;
-        
-        try {
-            // Initialize Cognito User Pool
-            if (typeof AmazonCognitoIdentity !== 'undefined' && typeof awsConfig !== 'undefined') {
-                const poolData = {
-                    UserPoolId: awsConfig.cognito.userPoolId,
-                    ClientId: awsConfig.cognito.userPoolClientId
-                };
-                this.userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-                console.log('AuthManager: Cognito User Pool initialized');
-            }
-            
-            // Load current user session
-            await this.loadCurrentUser();
-            this.isInitialized = true;
-            console.log('AuthManager: Initialized successfully');
-        } catch (error) {
-            console.error('AuthManager: Initialization failed', error);
-            this.isInitialized = false;
-        }
-    }
-
-    // Load current user from storage or Cognito
+    // Load current user session via Amplify Auth
     async loadCurrentUser() {
         try {
-            // First check if we have a valid token
-            const token = localStorage.getItem(this.tokenKey);
-            if (!token) {
-                console.log('AuthManager: No token found');
-                return false;
-            }
-
-            // Try to get current user from Cognito
-            if (this.userPool) {
-                const cognitoUser = this.userPool.getCurrentUser();
-                if (cognitoUser) {
-                    return new Promise((resolve) => {
-                        cognitoUser.getSession((err, session) => {
-                            if (err || !session || !session.isValid()) {
-                                console.log('AuthManager: Invalid session, clearing auth data');
-                                this.clearAuthData();
-                                resolve(false);
-                            } else {
-                                // Get user attributes
-                                cognitoUser.getUserAttributes((err, attributes) => {
-                                    if (err) {
-                                        console.error('AuthManager: Error getting user attributes', err);
-                                        resolve(false);
-                                    } else {
-                                        // Store user info
-                                        const userInfo = this.parseUserAttributes(attributes);
-                                        this.currentUser = userInfo;
-                                        localStorage.setItem(this.userKey, JSON.stringify(userInfo));
-                                        this.cognitoUser = cognitoUser;
-                                        console.log('AuthManager: User loaded successfully', userInfo);
-                                        resolve(true);
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-            }
-
-            // Fallback: check if we have stored user info
-            const storedUser = localStorage.getItem(this.userKey);
-            if (storedUser) {
-                try {
-                    this.currentUser = JSON.parse(storedUser);
-                    console.log('AuthManager: User loaded from storage', this.currentUser);
-                    return true;
-                } catch (e) {
-                    console.error('AuthManager: Error parsing stored user', e);
-                    this.clearAuthData();
-                    return false;
-                }
-            }
-
-            return false;
+            const user = await Auth.currentAuthenticatedUser();
+            const session = await Auth.currentSession();
+            const token = session.getIdToken().getJwtToken();
+            localStorage.setItem(this.tokenKey, token);
+            const attributes = await Auth.userAttributes(user);
+            const userInfo = this.parseUserAttributes(attributes);
+            this.currentUser = userInfo;
+            localStorage.setItem(this.userKey, JSON.stringify(userInfo));
+            console.log('AuthManager: User loaded successfully', userInfo);
+            return true;
         } catch (error) {
-            console.error('AuthManager: Error loading current user', error);
+            console.log('AuthManager: loadCurrentUser failed', error);
+            this.clearAuthData();
             return false;
         }
     }
@@ -146,33 +81,29 @@ class AuthManager {
 
     // Check if user is authenticated
     async isAuthenticated() {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        const token = localStorage.getItem(this.tokenKey);
-        if (!token) {
-            return false;
-        }
-
-        // If we have a current user, check session validity
-        if (this.currentUser) {
-            return true;
-        }
-
-        // Try to load user
         return await this.loadCurrentUser();
     }
 
     // Require authentication (redirect to login if not authenticated)
     async requireAuth() {
-        const isAuth = await this.isAuthenticated();
-        if (!isAuth) {
-            console.log('AuthManager: Authentication required, redirecting to login');
-            window.location.href = 'login-aws-native.html';
+        // Skip authentication requirement on login page to avoid loop
+        if (window.location.pathname.endsWith('login-aws-native.html')) {
             return false;
         }
-        return true;
+        try {
+            const isAuth = await this.isAuthenticated();
+            if (!isAuth) {
+                console.log('AuthManager: Authentication required, redirecting to login');
+                // Redirect immediately without repeated calls
+                window.location.replace('login-aws-native.html');
+                return false;
+            }
+            console.log('AuthManager: Authentication confirmed');
+            return true;
+        } catch (error) {
+            console.error('AuthManager: Error in requireAuth', error);
+            return false;
+        }
     }
 
     // Get current user
@@ -197,39 +128,20 @@ class AuthManager {
     clearAuthData() {
         localStorage.removeItem(this.tokenKey);
         localStorage.removeItem(this.userKey);
-        localStorage.removeItem(this.sessionKey);
         sessionStorage.clear();
         this.currentUser = null;
-        this.cognitoUser = null;
         console.log('AuthManager: Auth data cleared');
     }
 
-    // Sign out user
+    // Sign out user via Amplify Auth
     async signOut() {
         try {
-            // Sign out from Cognito if available
-            if (this.cognitoUser) {
-                this.cognitoUser.signOut();
-            } else if (this.userPool) {
-                const cognitoUser = this.userPool.getCurrentUser();
-                if (cognitoUser) {
-                    cognitoUser.signOut();
-                }
-            }
-
-            // Clear local data
-            this.clearAuthData();
-            
-            console.log('AuthManager: User signed out successfully');
-            
-            // Redirect to login
-            window.location.href = 'login-aws-native.html';
+            await Auth.signOut();
         } catch (error) {
             console.error('AuthManager: Error during sign out', error);
-            // Clear data anyway
-            this.clearAuthData();
-            window.location.href = 'login-aws-native.html';
         }
+        this.clearAuthData();
+        window.location.href = 'login-aws-native.html';
     }
 
     // Update user profile in navigation
@@ -259,30 +171,6 @@ class AuthManager {
         }
     }
 
-    // Setup authentication event listeners
-    setupAuthListeners() {
-        // Sign out button
-        const signOutBtn = document.getElementById('signOutBtn');
-        if (signOutBtn) {
-            signOutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.signOut();
-            });
-        }
-
-        // Handle token expiration
-        window.addEventListener('beforeunload', () => {
-            // Check if session is still valid before page unload
-            if (this.currentUser && this.cognitoUser) {
-                this.cognitoUser.getSession((err, session) => {
-                    if (err || !session || !session.isValid()) {
-                        this.clearAuthData();
-                    }
-                });
-            }
-        });
-    }
-
     // Get user role/permissions
     getUserRole() {
         return this.currentUser?.userType || 'admin';
@@ -303,6 +191,61 @@ class AuthManager {
 
         const permissions = rolePermissions[userRole] || [];
         return permissions.includes('all') || permissions.includes(permission);
+    }
+
+    /**
+     * Sign in a user and handle challenges
+     */
+    async signIn(username, password) {
+        try {
+            const user = await Auth.signIn(username, password);
+            // Handle MFA or new password challenge
+            if (user.challengeName === 'SMS_MFA' || user.challengeName === 'SOFTWARE_TOKEN_MFA') {
+                // Store interim user for confirmation
+                this.currentUser = user;
+                return { challenge: 'MFA' };
+            }
+            if (user.challengeName === 'NEW_PASSWORD_REQUIRED') {
+                this.currentUser = user;
+                return { challenge: 'NEW_PASSWORD' };
+            }
+            // Successful sign in
+            await this.loadCurrentUser();
+            return { challenge: null };
+        } catch (error) {
+            console.error('AuthManager: signIn error', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Confirm MFA code
+     */
+    async confirmSignIn(code) {
+        try {
+            const user = this.currentUser;
+            const result = await Auth.confirmSignIn(user, code);
+            await this.loadCurrentUser();
+            return result;
+        } catch (error) {
+            console.error('AuthManager: confirmSignIn error', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Complete new password challenge
+     */
+    async completeNewPassword(newPassword) {
+        try {
+            const user = this.currentUser;
+            const result = await Auth.completeNewPassword(user, newPassword);
+            await this.loadCurrentUser();
+            return result;
+        } catch (error) {
+            console.error('AuthManager: completeNewPassword error', error);
+            throw error;
+        }
     }
 }
 

@@ -15,22 +15,19 @@
  */
 
 // Check if user is already authenticated when page loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('Login page loaded, checking authentication status...');
-    
-    // Check if user is already authenticated
-    isUserAuthenticated().then(function(isAuthenticated) {
-        if (isAuthenticated) {
+    try {
+        const isAuth = await window.AuthManager.isAuthenticated();
+        if (isAuth) {
             console.log('User is already authenticated, redirecting to dashboard...');
-            window.location.replace('dashboard-aws-native.html');
-        } else {
-            console.log('User is not authenticated, showing login form...');
-            initializeLoginPage();
+            window.location.replace('pages/dashboard-aws-native.html');
+            return;
         }
-    }).catch(function(error) {
-        console.error('Error checking authentication:', error);
-        initializeLoginPage();
-    });
+    } catch (err) {
+        console.error('Auth check failed', err);
+    }
+    initializeLoginPage();
 });
 
 /**
@@ -71,7 +68,7 @@ function initializeLoginForm() {
         return;
     }
     
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const username = document.getElementById('username').value.trim();
@@ -87,14 +84,23 @@ function initializeLoginForm() {
         loginButton.disabled = true;
         loadingSpinner.style.display = 'inline-block';
         errorMessage.style.display = 'none';
-        
-        // Attempt sign in
         try {
-            signIn(username, password);
+            const { challenge } = await window.AuthManager.signIn(username, password);
+            if (challenge === 'MFA') {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mfaForm').style.display = 'block';
+            } else if (challenge === 'NEW_PASSWORD') {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('newPasswordForm').style.display = 'block';
+            } else {
+                window.location.replace('pages/dashboard-aws-native.html');
+            }
         } catch (error) {
             console.error('Sign in error:', error);
-            showError('An error occurred during sign in. Please try again.');
-            resetLoginButton();
+            showError(error.message || 'An error occurred during sign in.');
+        } finally {
+            loginButton.disabled = false;
+            loadingSpinner.style.display = 'none';
         }
     });
     
@@ -114,27 +120,19 @@ function initializeMfaForm() {
         return;
     }
     
-    mfaForm.addEventListener('submit', function(e) {
+    mfaForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const mfaCode = document.getElementById('mfaCode').value.trim();
-        
-        if (!mfaCode) {
-            showError('Please enter the MFA code');
-            return;
-        }
-        
-        // Show loading state
-        mfaButton.disabled = true;
-        mfaLoadingSpinner.style.display = 'inline-block';
-        
-        // Submit MFA code
+        mfaButton.disabled = true; mfaLoadingSpinner.style.display = 'inline-block';
+        errorMessage.style.display = 'none';
+        const code = document.getElementById('mfaCode').value.trim();
         try {
-            submitMfaCode(mfaCode);
+            await window.AuthManager.confirmSignIn(code);
+            window.location.replace('pages/dashboard-aws-native.html');
         } catch (error) {
             console.error('MFA submission error:', error);
-            showError('An error occurred during MFA verification. Please try again.');
-            resetMfaButton();
+            showError(error.message || 'An error occurred during MFA verification.');
+        } finally {
+            mfaButton.disabled = false; mfaLoadingSpinner.style.display = 'none';
         }
     });
     
@@ -154,39 +152,25 @@ function initializeNewPasswordForm() {
         return;
     }
     
-    newPasswordForm.addEventListener('submit', function(e) {
+    newPasswordForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        
-        // Validation
-        if (!newPassword || !confirmPassword) {
-            showError('Please enter both password fields');
-            return;
-        }
-        
-        if (newPassword !== confirmPassword) {
+        newPasswordButton.disabled = true; newPasswordLoadingSpinner.style.display = 'inline-block';
+        errorMessage.style.display = 'none';
+        const newPwd = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        if (newPwd !== confirm) {
             showError('Passwords do not match');
+            resetNewPasswordButton();
             return;
         }
-        
-        if (newPassword.length < 8) {
-            showError('Password must be at least 8 characters long');
-            return;
-        }
-        
-        // Show loading state
-        newPasswordButton.disabled = true;
-        newPasswordLoadingSpinner.style.display = 'inline-block';
-        
-        // Submit new password
         try {
-            submitNewPassword(newPassword);
+            await window.AuthManager.completeNewPassword(newPwd);
+            window.location.replace('pages/dashboard-aws-native.html');
         } catch (error) {
             console.error('New password submission error:', error);
-            showError('An error occurred while setting new password. Please try again.');
-            resetNewPasswordButton();
+            showError(error.message || 'An error occurred while setting new password.');
+        } finally {
+            newPasswordButton.disabled = false; newPasswordLoadingSpinner.style.display = 'none';
         }
     });
     

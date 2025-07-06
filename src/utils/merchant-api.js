@@ -4,12 +4,15 @@
  * 4 merchant types: restaurant, store, pharmacy, cloud_kitchen
  */
 
+// Add Amplify imports & configuration
+import Amplify, { Auth, API, graphqlOperation } from 'aws-amplify';
+import awsExports from '../aws-exports';
+Amplify.configure(awsExports);
+
 class MerchantAPI {
     constructor() {
         // Default configuration - will be overridden by AWS config
         this.baseURL = 'https://YOUR_API_GATEWAY_URL/dev'; 
-        this.cognitoUser = null;
-        this.awsCredentials = null;
         this.mockMode = false;
         this.isInitialized = false;
         
@@ -48,7 +51,6 @@ class MerchantAPI {
             
             // Try to get current user from Cognito (optional)
             try {
-                this.cognitoUser = await this.getCurrentUser();
                 this.awsCredentials = await this.getAWSCredentials();
                 console.log('Merchant API initialized with authentication');
             } catch (authError) {
@@ -99,70 +101,29 @@ class MerchantAPI {
     }
 
     /**
-     * Get current Cognito user
+     * Get AWS credentials via Amplify Auth
      */
-    async getCurrentUser() {
-        return new Promise((resolve, reject) => {
-            if (typeof AWS === 'undefined' || typeof AmazonCognitoIdentity === 'undefined') {
-                reject(new Error('AWS SDK not loaded'));
-                return;
-            }
-
-            const userPool = new AmazonCognitoIdentity.CognitoUserPool({
-                UserPoolId: AWS_CONFIG.userPoolId,
-                ClientId: AWS_CONFIG.userPoolWebClientId
-            });
-
-            const cognitoUser = userPool.getCurrentUser();
-            if (!cognitoUser) {
-                reject(new Error('No current user found'));
-                return;
-            }
-
-            cognitoUser.getSession((err, session) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                if (!session.isValid()) {
-                    reject(new Error('Session is not valid'));
-                    return;
-                }
-
-                resolve(cognitoUser);
-            });
-        });
+    async getAWSCredentials() {
+        return Auth.currentCredentials();
     }
 
     /**
-     * Get AWS credentials for API calls
+     * Execute GraphQL query or mutation using Amplify API
      */
-    async getAWSCredentials() {
-        return new Promise((resolve, reject) => {
-            this.cognitoUser.getSession((err, session) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+    async executeGraphQL(query, variables = {}) {
+        const result = await API.graphql(graphqlOperation(query, variables));
+        if (result.errors) {
+            throw new Error(result.errors.map(e => e.message).join(', '));
+        }
+        return result.data;
+    }
 
-                // Configure AWS credentials
-                AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-                    IdentityPoolId: AWS_CONFIG.identityPoolId,
-                    Logins: {
-                        [`cognito-idp.${AWS_CONFIG.region}.amazonaws.com/${AWS_CONFIG.userPoolId}`]: session.getIdToken().getJwtToken()
-                    }
-                });
-
-                AWS.config.credentials.refresh((error) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(AWS.config.credentials);
-                    }
-                });
-            });
-        });
+    /**
+     * Get JWT token for authentication via Amplify
+     */
+    async getJWTToken() {
+        const session = await Auth.currentSession();
+        return session.getIdToken().getJwtToken();
     }
 
     /**
@@ -206,7 +167,7 @@ class MerchantAPI {
                 decision: decision, // 'approved', 'rejected', 'suspended'
                 comments: comments,
                 reviewedAt: new Date().toISOString(),
-                reviewerId: this.cognitoUser?.getUsername() || 'admin'
+                reviewerId: 'admin'
             };
 
             const response = await this.makeAPICall('POST', endpoint, body);
