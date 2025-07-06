@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers Management - Delivery Management Platform</title>
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
+    
+    <!-- AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
+    
+    <!-- Utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/bilingual-extensions.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
+    
+    <style>
+        /* Dashboard-style drivers management */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-number {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 0 2px 4px rgba(0, 193, 232, 0.1);
+        }
+
+        .stat-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-change {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-md);
+        }
+
+        .stat-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stat-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .drivers-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .filters-section {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-lg);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+        }
+
+        .driver-table-container {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+            width: 100%;
+        }
+
+        .table th {
+            background: var(--primary-lightest);
+            border: none;
+            font-weight: 600;
+            color: var(--gray-800);
+            padding: var(--spacing-md);
+            font-size: var(--font-size-sm);
+        }
+
+        .table td {
+            padding: var(--spacing-md);
+            vertical-align: middle;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .status-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-xxl);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active { 
+            background: #d4edda; 
+            color: #155724; 
+        }
+        
+        .status-inactive { 
+            background: #f8d7da; 
+            color: #721c24; 
+        }
+        
+        .status-suspended { 
+            background: #fff3cd; 
+            color: #856404; 
+        }
+        
+        .status-pending { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+        }
+
+        .btn-action {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            margin: 0 var(--spacing-xs);
+            border-radius: var(--border-radius-md);
+            font-size: var(--font-size-xs);
+            border: none;
+            transition: var(--transition-normal);
+            cursor: pointer;
+        }
+
+        .btn-approve { 
+            background: var(--success-color); 
+            color: var(--white); 
+        }
+        
+        .btn-reject { 
+            background: var(--danger-color); 
+            color: var(--white); 
+        }
+        
+        .btn-suspend { 
+            background: var(--warning-color); 
+            color: var(--gray-800); 
+        }
+        
+        .btn-view { 
+            background: var(--info-color); 
+            color: var(--white); 
+        }
+        
+        .btn-edit { 
+            background: var(--primary-color); 
+            color: var(--white); 
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .recent-applications {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .application-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition-normal);
+        }
+
+        .application-item:hover {
+            background: var(--primary-lightest);
+        }
+
+        .application-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-lightest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .application-content {
+            flex: 1;
+        }
+
+        .application-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .application-time {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .action-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            text-align: center;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-lightest), rgba(255, 255, 255, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+            margin: 0 auto var(--spacing-md);
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .action-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .driver-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            margin-right: var(--spacing-sm);
+        }
+
+        /* Form controls */
+        .form-control, .form-select {
+            border-radius: var(--border-radius-md);
+            border: 2px solid var(--gray-300);
+            padding: var(--spacing-sm) var(--spacing-md);
+            transition: var(--transition-normal);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 193, 232, 0.25);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .drivers-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .table {
+                font-size: var(--font-size-xs);
+            }
+            
+            .btn-action {
+                padding: var(--spacing-xs);
+                margin: 0 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Unified Top Bar -->
+    <div class="unified-topbar">
+        <div class="unified-topbar-container">
+            <div class="unified-topbar-left">
+                <div class="unified-logo">
+                    <i class="fas fa-truck"></i>
+                    <span>Delivery Platform</span>
+                </div>
+            </div>
+            <div class="unified-topbar-right">
+                <div class="unified-user-controls">
+                    <div class="unified-language-toggle">
+                        <button class="unified-btn-icon" onclick="toggleLanguage()">
+                            <i class="fas fa-language"></i>
+                        </button>
+                    </div>
+                    <div class="unified-user-menu">
+                        <button class="unified-btn-icon" onclick="toggleUserMenu()">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="unified-user-dropdown" id="userDropdown">
+                            <a href="#" onclick="signOut()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span data-key="signOut">Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Navigation Bar -->
+    <nav class="unified-navbar">
+        <div class="unified-navbar-container">
+            <div class="unified-nav-items">
+                <a href="dashboard-aws-native.html" class="unified-nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span data-key="dashboard">Dashboard</span>
+                </a>
+                <a href="drivers-management.html" class="unified-nav-item active">
+                    <i class="fas fa-users"></i>
+                    <span data-key="drivers">Drivers</span>
+                </a>
+                <a href="merchant-management.html" class="unified-nav-item">
+                    <i class="fas fa-store"></i>
+                    <span data-key="merchants">Merchants</span>
+                </a>
+                <a href="user-management.html" class="unified-nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span data-key="users">Users</span>
+                </a>
+            </div>
+            <div class="unified-breadcrumb">
+                <span data-key="drivers">Drivers</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="unified-main-content">
+        <div class="unified-content-container">
+            <!-- Page Header -->
+            <div class="unified-page-header">
+                <div class="unified-page-title">
+                    <h1><i class="fas fa-users"></i> <span data-key="driversManagement">Drivers Management</span></h1>
+                    <p data-key="driversManagementDesc">Manage driver applications, approvals, and status monitoring</p>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="totalDrivers">0</div>
+                    <div class="stat-label" data-key="totalDrivers">Total Drivers</div>
+                    <div class="stat-change positive">+5% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number" id="activeDrivers">0</div>
+                    <div class="stat-label" data-key="activeDrivers">Active Drivers</div>
+                    <div class="stat-change positive">+3% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number" id="pendingApplications">0</div>
+                    <div class="stat-label" data-key="pendingApplications">Pending Applications</div>
+                    <div class="stat-change negative">-2% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <div class="stat-number" id="suspendedDrivers">0</div>
+                    <div class="stat-label" data-key="suspendedDrivers">Suspended Drivers</div>
+                    <div class="stat-change positive">-8% from last month</div>
+                </div>
+            </div>
+
+            <!-- Main Drivers Section -->
+            <div class="drivers-section">
+                <!-- Drivers Table Section -->
+                <div class="unified-card">
+                    <div class="unified-card-header">
+                        <h3><i class="fas fa-table"></i> Drivers List</h3>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="filters-section">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="searchDrivers" 
+                                       placeholder="Search drivers by name, phone, or email...">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="vehicleFilter">
+                                    <option value="">All Vehicles</option>
+                                    <option value="car">Car</option>
+                                    <option value="motorcycle">Motorcycle</option>
+                                    <option value="bicycle">Bicycle</option>
+                                    <option value="truck">Truck</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" id="addDriverBtn">
+                                    <i class="fas fa-plus"></i> Add Driver
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-info w-100" id="refreshBtn">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Drivers Table -->
+                    <div class="driver-table-container">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Driver</th>
+                                    <th>Contact</th>
+                                    <th>Vehicle</th>
+                                    <th>Status</th>
+                                    <th>Join Date</th>
+                                    <th>Rating</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driversTableBody">
+                                <!-- Dynamic content will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Drivers pagination" class="mt-4">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Dynamic pagination will be loaded here -->
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- Recent Applications Sidebar -->
+                <div class="unified-card">
+                    <div class="unified-card-header">
+                        <h3><i class="fas fa-clock"></i> Recent Applications</h3>
+                    </div>
+                    <div class="recent-applications">
+                        <div class="application-item">
+                            <div class="application-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="application-content">
+                                <div class="application-title">Ahmed Hassan</div>
+                                <div class="application-time">2 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="application-item">
+                            <div class="application-icon">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="application-content">
+                                <div class="application-title">Sarah Al-Mahmoud</div>
+                                <div class="application-time">15 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="application-item">
+                            <div class="application-icon">
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="application-content">
+                                <div class="application-title">Omar Khalil</div>
+                                <div class="application-time">1 hour ago</div>
+                            </div>
+                        </div>
+                        <div class="application-item">
+                            <div class="application-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="application-content">
+                                <div class="application-title">Fatima Ali</div>
+                                <div class="application-time">3 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="application-item">
+                            <div class="application-icon">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="application-content">
+                                <div class="application-title">Mohamed Rashid</div>
+                                <div class="application-time">5 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Section -->
+            <div class="unified-section-header">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            </div>
+            
+            <div class="quick-actions">
+                <a href="#" class="action-card" onclick="openAddDriverModal()">
+                    <div class="action-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="action-title">Add New Driver</div>
+                    <div class="action-description">Register a new driver in the system</div>
+                </a>
+                
+                <a href="#" class="action-card" onclick="reviewApplications()">
+                    <div class="action-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="action-title">Review Applications</div>
+                    <div class="action-description">Process pending driver applications</div>
+                </a>
+                
+                <a href="#" class="action-card" onclick="generateReport()">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="action-title">Generate Report</div>
+                    <div class="action-description">Create driver performance reports</div>
+                </a>
+                
+                <a href="#" class="action-card" onclick="manageDocuments()">
+                    <div class="action-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="action-title">Manage Documents</div>
+                    <div class="action-description">Review and verify driver documents</div>
+                </a>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="text-center mt-4" style="display: none;" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap for modal components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Drivers Management JavaScript -->
+    <script>
+        // Check authentication first
+        function checkAuthentication() {
+            const token = localStorage.getItem('aws-native-token');
+            if (!token) {
+                window.location.href = 'login-aws-native.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Call authentication check on page load
+        if (!checkAuthentication()) {
+            // User will be redirected, stop execution
+        } else {
+            // Initialize the page
+            initializeDriversManagement();
+        }
+
+        function initializeDriversManagement() {
+            // Initialize bilingual support
+            if (typeof initializeBilingual === 'function') {
+                initializeBilingual();
+            }
+
+            // Initialize the Drivers Management System
+            driversManager = new DriversManagementSystem();
+            
+            // Initialize unified navigation
+            if (typeof UnifiedNavigation !== 'undefined') {
+                UnifiedNavigation.init();
+            }
+        }
+
+        class DriversManagementSystem {
+            constructor() {
+                this.drivers = [];
+                this.filteredDrivers = [];
+                this.currentPage = 1;
+                this.driversPerPage = 10;
+                this.currentFilter = {
+                    search: '',
+                    status: '',
+                    vehicle: ''
+                };
+                
+                this.init();
+            }
+
+            async init() {
+                this.setupEventListeners();
+                await this.loadDrivers();
+                this.updateStatistics();
+                this.renderDriversTable();
+            }
+
+            setupEventListeners() {
+                // Search and filters
+                document.getElementById('searchDrivers').addEventListener('input', (e) => {
+                    this.currentFilter.search = e.target.value;
+                    this.filterDrivers();
+                });
+
+                document.getElementById('statusFilter').addEventListener('change', (e) => {
+                    this.currentFilter.status = e.target.value;
+                    this.filterDrivers();
+                });
+
+                document.getElementById('vehicleFilter').addEventListener('change', (e) => {
+                    this.currentFilter.vehicle = e.target.value;
+                    this.filterDrivers();
+                });
+
+                // Buttons
+                document.getElementById('addDriverBtn').addEventListener('click', () => {
+                    this.showAddDriverModal();
+                });
+
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadDrivers();
+                });
+            }
+
+            async loadDrivers() {
+                this.showLoading(true);
+                try {
+                    // Mock data for demonstration
+                    this.drivers = [
+                        {
+                            id: 'D001',
+                            firstName: 'Ahmed',
+                            lastName: 'Al-Rashid',
+                            phoneNumber: '+966501234567',
+                            email: 'ahmed.rashid@email.com',
+                            vehicleType: 'car',
+                            licensePlate: 'ABC-123',
+                            status: 'active',
+                            joinDate: '2024-01-15',
+                            rating: 4.8,
+                            totalDeliveries: 234
+                        },
+                        {
+                            id: 'D002',
+                            firstName: 'Fatima',
+                            lastName: 'Hassan',
+                            phoneNumber: '+966502345678',
+                            email: 'fatima.hassan@email.com',
+                            vehicleType: 'motorcycle',
+                            licensePlate: 'XYZ-789',
+                            status: 'pending',
+                            joinDate: '2024-03-10',
+                            rating: 0,
+                            totalDeliveries: 0
+                        },
+                        {
+                            id: 'D003',
+                            firstName: 'Omar',
+                            lastName: 'Al-Zahrani',
+                            phoneNumber: '+966503456789',
+                            email: 'omar.zahrani@email.com',
+                            vehicleType: 'bicycle',
+                            licensePlate: '',
+                            status: 'suspended',
+                            joinDate: '2023-11-20',
+                            rating: 4.2,
+                            totalDeliveries: 156
+                        }
+                    ];
+                    
+                    this.filteredDrivers = [...this.drivers];
+                    this.updateStatistics();
+                    this.renderDriversTable();
+                } catch (error) {
+                    console.error('Error loading drivers:', error);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            filterDrivers() {
+                this.filteredDrivers = this.drivers.filter(driver => {
+                    const matchesSearch = !this.currentFilter.search || 
+                        driver.firstName.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
+                        driver.lastName.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
+                        driver.phoneNumber.includes(this.currentFilter.search) ||
+                        driver.email.toLowerCase().includes(this.currentFilter.search.toLowerCase());
+                    
+                    const matchesStatus = !this.currentFilter.status || driver.status === this.currentFilter.status;
+                    const matchesVehicle = !this.currentFilter.vehicle || driver.vehicleType === this.currentFilter.vehicle;
+                    
+                    return matchesSearch && matchesStatus && matchesVehicle;
+                });
+                
+                this.currentPage = 1;
+                this.renderDriversTable();
+            }
+
+            updateStatistics() {
+                const stats = {
+                    total: this.drivers.length,
+                    active: this.drivers.filter(d => d.status === 'active').length,
+                    pending: this.drivers.filter(d => d.status === 'pending').length,
+                    suspended: this.drivers.filter(d => d.status === 'suspended').length
+                };
+
+                document.getElementById('totalDrivers').textContent = stats.total;
+                document.getElementById('activeDrivers').textContent = stats.active;
+                document.getElementById('pendingApplications').textContent = stats.pending;
+                document.getElementById('suspendedDrivers').textContent = stats.suspended;
+            }
+
+            renderDriversTable() {
+                const startIndex = (this.currentPage - 1) * this.driversPerPage;
+                const endIndex = startIndex + this.driversPerPage;
+                const driversToShow = this.filteredDrivers.slice(startIndex, endIndex);
+
+                const tbody = document.getElementById('driversTableBody');
+                tbody.innerHTML = driversToShow.map(driver => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="driver-avatar">
+                                    ${driver.firstName.charAt(0)}${driver.lastName.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${driver.firstName} ${driver.lastName}</div>
+                                    <small class="text-muted">ID: ${driver.id}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>${driver.phoneNumber}</div>
+                            <small class="text-muted">${driver.email}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold">${this.getVehicleDisplay(driver.vehicleType)}</div>
+                            ${driver.licensePlate ? `<small class="text-muted">${driver.licensePlate}</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="status-badge status-${driver.status}">
+                                ${this.getStatusDisplay(driver.status)}
+                            </span>
+                        </td>
+                        <td>${new Date(driver.joinDate).toLocaleDateString()}</td>
+                        <td>
+                            ${driver.rating > 0 ? `
+                                <div class="fw-bold">${driver.rating.toFixed(1)} ⭐</div>
+                                <small class="text-muted">${driver.totalDeliveries} deliveries</small>
+                            ` : '<span class="text-muted">No ratings yet</span>'}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn-action btn-view" onclick="driversManager.viewDriver('${driver.id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" onclick="driversManager.editDriver('${driver.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${driver.status === 'pending' ? `
+                                    <button class="btn-action btn-approve" onclick="driversManager.quickApprove('${driver.id}')" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-action btn-reject" onclick="driversManager.quickReject('${driver.id}')" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : ''}
+                                ${driver.status === 'active' ? `
+                                    <button class="btn-action btn-suspend" onclick="driversManager.quickSuspend('${driver.id}')" title="Suspend">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+                this.renderPagination();
+            }
+
+            renderPagination() {
+                const totalPages = Math.ceil(this.filteredDrivers.length / this.driversPerPage);
+                const pagination = document.getElementById('pagination');
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = '';
+                
+                // Previous button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="driversManager.changePage(${this.currentPage - 1})">Previous</a>
+                    </li>
+                `;
+
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHTML += `
+                        <li class="page-item ${i === this.currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="driversManager.changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                }
+
+                // Next button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="driversManager.changePage(${this.currentPage + 1})">Next</a>
+                    </li>
+                `;
+
+                pagination.innerHTML = paginationHTML;
+            }
+
+            changePage(page) {
+                const totalPages = Math.ceil(this.filteredDrivers.length / this.driversPerPage);
+                if (page < 1 || page > totalPages) return;
+                
+                this.currentPage = page;
+                this.renderDriversTable();
+            }
+
+            getVehicleDisplay(vehicleType) {
+                const vehicles = {
+                    car: 'Car',
+                    motorcycle: 'Motorcycle',
+                    bicycle: 'Bicycle',
+                    truck: 'Truck'
+                };
+                return vehicles[vehicleType] || vehicleType;
+            }
+
+            getStatusDisplay(status) {
+                const statuses = {
+                    active: 'Active',
+                    inactive: 'Inactive',
+                    suspended: 'Suspended',
+                    pending: 'Pending Review'
+                };
+                return statuses[status] || status;
+            }
+
+            viewDriver(driverId) {
+                console.log('View driver:', driverId);
+                // Implementation for viewing driver details
+            }
+
+            editDriver(driverId) {
+                console.log('Edit driver:', driverId);
+                // Implementation for editing driver
+            }
+
+            showAddDriverModal() {
+                console.log('Show add driver modal');
+                // Implementation for add driver modal
+            }
+
+            async quickApprove(driverId) {
+                await this.updateDriverStatus(driverId, 'active');
+                this.showAlert('Driver approved successfully', 'success');
+            }
+
+            async quickReject(driverId) {
+                await this.updateDriverStatus(driverId, 'inactive');
+                this.showAlert('Driver application rejected', 'warning');
+            }
+
+            async quickSuspend(driverId) {
+                await this.updateDriverStatus(driverId, 'suspended');
+                this.showAlert('Driver suspended', 'warning');
+            }
+
+            async updateDriverStatus(driverId, newStatus) {
+                const driver = this.drivers.find(d => d.id === driverId);
+                if (driver) {
+                    driver.status = newStatus;
+                    this.filterDrivers();
+                    this.updateStatistics();
+                }
+            }
+
+            showLoading(show) {
+                const spinner = document.getElementById('loadingSpinner');
+                if (spinner) {
+                    spinner.style.display = show ? 'block' : 'none';
+                }
+            }
+
+            showAlert(message, type) {
+                // Create and show alert
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 5000);
+            }
+        }
+
+        // Make driversManager globally accessible for onclick handlers
+        let driversManager;
+
+        // Quick action functions
+        function openAddDriverModal() {
+            console.log('Open add driver modal');
+        }
+
+        function reviewApplications() {
+            console.log('Review applications');
+        }
+
+        function generateReport() {
+            console.log('Generate report');
+        }
+
+        function manageDocuments() {
+            console.log('Manage documents');
+        }
+
+        // Sign out function
+        function signOut() {
+            localStorage.clear();
+            window.location.href = 'login-aws-native.html';
+        }
+    </script>
+</body>
+</html>
