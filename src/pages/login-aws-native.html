@@ -476,6 +476,16 @@
     <script src="auth.js"></script>
 
     <script>
+        // Add a global error handler to catch and display all script errors
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = `An unexpected error occurred: ${message}`;
+            errorMessage.style.display = 'block';
+            // Also log to console for good measure
+            console.error("Caught by global handler:", message, source, lineno, colno, error);
+            return true; // Prevents the default browser error handling
+        };
+
         // Global variables
         let performanceStart = Date.now();
 
