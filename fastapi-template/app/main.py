@@ -1008,7 +1008,205 @@ async def get_drivers(
                 "offset": offset
             }
     except Exception as e:
+        raise HTTPException(500, f"Error fetching drivers: {str(e)}")
+
+@app.post("/drivers")
+async def create_driver(
+    driver_data: dict,
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
+    """Create a new driver"""
+    try:
+        if check_database_connection():
+            # Create driver in real database
+            from app.models import VehicleType, DriverStatus
+            
+            # Map vehicle type
+            vehicle_type_mapping = {
+                'car': VehicleType.CAR,
+                'motorcycle': VehicleType.MOTORCYCLE,
+                'bicycle': VehicleType.BICYCLE,
+                'truck': VehicleType.TRUCK
+            }
+            
+            vehicle_type = vehicle_type_mapping.get(
+                driver_data.get('vehicleType', 'car').lower(), 
+                VehicleType.CAR
+            )
+            
+            # Map status
+            status_mapping = {
+                'active': DriverStatus.ACTIVE,
+                'inactive': DriverStatus.INACTIVE,
+                'suspended': DriverStatus.SUSPENDED,
+                'pending': DriverStatus.INACTIVE  # New drivers start as inactive until approved
+            }
+            
+            status = status_mapping.get(
+                driver_data.get('status', 'pending').lower(),
+                DriverStatus.INACTIVE
+            )
+            
+            # Create full name from parts
+            full_name = f"{driver_data.get('firstName', '')} {driver_data.get('middleName', '')} {driver_data.get('lastName', '')}".strip()
+            
+            new_driver = DriverModel(
+                name=full_name,
+                phone=driver_data.get('phoneNumber', ''),
+                email=driver_data.get('email', ''),
+                national_id=driver_data.get('nationalId', ''),
+                vehicle_type=vehicle_type,
+                status=status,
+                license_plate=driver_data.get('licensePlate', ''),
+                address=f"{driver_data.get('streetAddress', '')}, {driver_data.get('city', '')} {driver_data.get('zipCode', '')}".strip(),
+                emergency_contact=driver_data.get('emergencyName', ''),
+                emergency_phone=driver_data.get('emergencyPhone', '')
+            )
+            
+            db.add(new_driver)
+            db.commit()
+            db.refresh(new_driver)
+            
+            return {
+                "success": True,
+                "message": "Driver created successfully",
+                "driver": {
+                    "id": new_driver.id,
+                    "name": new_driver.name,
+                    "phone": new_driver.phone,
+                    "email": new_driver.email,
+                    "vehicle_type": new_driver.vehicle_type.value,
+                    "status": new_driver.status.value,
+                    "created_at": new_driver.created_at.isoformat()
+                }
+            }
+        else:
+            # Use mock database
+            driver_id = f"D{len(list(mock_db.collection('drivers').stream())) + 1:03d}"
+            
+            new_driver = {
+                "id": driver_id,
+                "firstName": driver_data.get('firstName', ''),
+                "middleName": driver_data.get('middleName', ''),
+                "lastName": driver_data.get('lastName', ''),
+                "phoneNumber": driver_data.get('phoneNumber', ''),
+                "email": driver_data.get('email', ''),
+                "streetAddress": driver_data.get('streetAddress', ''),
+                "city": driver_data.get('city', ''),
+                "zipCode": driver_data.get('zipCode', ''),
+                "vehicleType": driver_data.get('vehicleType', 'car'),
+                "licensePlate": driver_data.get('licensePlate', ''),
+                "status": driver_data.get('status', 'pending'),
+                "joinDate": datetime.now().strftime('%Y-%m-%d'),
+                "rating": 0,
+                "totalDeliveries": 0,
+                "emergencyName": driver_data.get('emergencyName', ''),
+                "emergencyPhone": driver_data.get('emergencyPhone', ''),
+                "documents": {
+                    "driverLicense": '',
+                    "vehicleRegistration": ''
+                },
+                "created_at": datetime.now().isoformat()
+            }
+            
+            ref = mock_db.collection("drivers").add(new_driver)
+            new_driver["id"] = ref[1].id
+            
+            return {
+                "success": True,
+                "message": "Driver created successfully",
+                "driver": new_driver
+            }
+            
+    except Exception as e:
         raise HTTPException(500, f"Error creating driver: {str(e)}")
+
+@app.put("/drivers/{driver_id}")
+async def update_driver(
+    driver_id: str,
+    driver_data: dict,
+    current_user: User = Depends(require_admin_or_manager),
+    db: Session = Depends(get_db)
+):
+    """Update driver information"""
+    try:
+        if check_database_connection():
+            driver = db.query(DriverModel).filter(DriverModel.id == driver_id).first()
+            if not driver:
+                raise HTTPException(404, "Driver not found")
+            
+            # Update fields if provided
+            if 'firstName' in driver_data or 'middleName' in driver_data or 'lastName' in driver_data:
+                full_name = f"{driver_data.get('firstName', '')} {driver_data.get('middleName', '')} {driver_data.get('lastName', '')}".strip()
+                if full_name:
+                    driver.name = full_name
+                    
+            if 'phoneNumber' in driver_data:
+                driver.phone = driver_data['phoneNumber']
+            if 'email' in driver_data:
+                driver.email = driver_data['email']
+            if 'vehicleType' in driver_data:
+                from app.models import VehicleType
+                vehicle_type_mapping = {
+                    'car': VehicleType.CAR,
+                    'motorcycle': VehicleType.MOTORCYCLE,
+                    'bicycle': VehicleType.BICYCLE,
+                    'truck': VehicleType.TRUCK
+                }
+                if driver_data['vehicleType'].lower() in vehicle_type_mapping:
+                    driver.vehicle_type = vehicle_type_mapping[driver_data['vehicleType'].lower()]
+            if 'licensePlate' in driver_data:
+                driver.license_plate = driver_data['licensePlate']
+            if 'streetAddress' in driver_data or 'city' in driver_data or 'zipCode' in driver_data:
+                address = f"{driver_data.get('streetAddress', '')}, {driver_data.get('city', '')} {driver_data.get('zipCode', '')}".strip()
+                if address and address != ', ':
+                    driver.address = address
+            if 'emergencyName' in driver_data:
+                driver.emergency_contact = driver_data['emergencyName']
+            if 'emergencyPhone' in driver_data:
+                driver.emergency_phone = driver_data['emergencyPhone']
+            
+            driver.updated_at = datetime.now()
+            db.commit()
+            
+            return {
+                "success": True,
+                "message": "Driver updated successfully",
+                "driver": {
+                    "id": driver.id,
+                    "name": driver.name,
+                    "phone": driver.phone,
+                    "email": driver.email,
+                    "vehicle_type": driver.vehicle_type.value,
+                    "status": driver.status.value,
+                    "updated_at": driver.updated_at.isoformat()
+                }
+            }
+        else:
+            # Use mock database
+            doc_ref = mock_db.collection("drivers").document(driver_id)
+            doc = doc_ref.get()
+            
+            if not doc.exists:
+                raise HTTPException(404, "Driver not found")
+            
+            # Update the document
+            update_data = {k: v for k, v in driver_data.items() if v is not None}
+            update_data["updated_at"] = datetime.now().isoformat()
+            
+            doc_ref.update(update_data)
+            
+            return {
+                "success": True,
+                "message": "Driver updated successfully",
+                "driver": {**to_dict(doc), **update_data}
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Error updating driver: {str(e)}")
 
 # -- Customers Management Endpoints --
 @app.get("/customers")

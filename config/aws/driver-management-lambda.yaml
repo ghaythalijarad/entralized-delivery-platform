@@ -1,0 +1,801 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Driver Management System - AWS Lambda Functions and API Gateway'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'dev'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name'
+
+Resources:
+  # DynamoDB Table for Drivers
+  DriversTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Environment}-delivery-drivers'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: driverId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: zone
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: driverId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: ZoneIndex
+          KeySchema:
+            - AttributeName: zone
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Service
+          Value: DriverManagement
+
+  # IAM Role for Lambda Functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt DriversTable.Arn
+                  - !Sub '${DriversTable.Arn}/index/*'
+        - PolicyName: CognitoAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminSetUserPassword
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                Resource: '*'
+
+  # Lambda Function: Create Driver
+  CreateDriverFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-create-driver'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+          const cognito = new AWS.CognitoIdentityServiceProvider();
+          const { v4: uuidv4 } = require('uuid');
+
+          exports.handler = async (event) => {
+              try {
+                  console.log('Event:', JSON.stringify(event, null, 2));
+                  
+                  const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+                  
+                  // Validate required fields
+                  const requiredFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'vehicleType'];
+                  const missingFields = requiredFields.filter(field => !body[field]);
+                  
+                  if (missingFields.length > 0) {
+                      return {
+                          statusCode: 400,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              error: 'Missing required fields',
+                              fields: missingFields
+                          })
+                      };
+                  }
+
+                  const driverId = uuidv4();
+                  const now = new Date().toISOString();
+                  
+                  // Map vehicle types
+                  const vehicleTypeMap = {
+                      'car': 'CAR',
+                      'motorcycle': 'MOTORCYCLE',
+                      'bicycle': 'BICYCLE',
+                      'walking': 'WALKING'
+                  };
+
+                  const driver = {
+                      driverId: driverId,
+                      email: body.email,
+                      firstName: body.firstName,
+                      lastName: body.lastName,
+                      phoneNumber: body.phoneNumber,
+                      status: 'PENDING',
+                      vehicle: {
+                          type: vehicleTypeMap[body.vehicleType.toLowerCase()] || body.vehicleType.toUpperCase(),
+                          licensePlate: body.licensePlate || '',
+                          model: body.vehicleModel || 'Unknown',
+                          color: body.vehicleColor || 'Unknown'
+                      },
+                      zone: body.zone || 'central',
+                      address: body.streetAddress ? {
+                          street: body.streetAddress,
+                          city: body.city || '',
+                          zipCode: body.zipCode || ''
+                      } : null,
+                      emergencyContact: body.emergencyName ? {
+                          name: body.emergencyName,
+                          phone: body.emergencyPhone || ''
+                      } : null,
+                      rating: 0,
+                      totalDeliveries: 0,
+                      isOnline: false,
+                      createdAt: now,
+                      updatedAt: now
+                  };
+
+                  // Save to DynamoDB
+                  await dynamodb.put({
+                      TableName: process.env.DRIVERS_TABLE,
+                      Item: driver
+                  }).promise();
+
+                  // Create Cognito user (optional - for drivers who can login)
+                  try {
+                      if (body.createCognitoUser) {
+                          await cognito.adminCreateUser({
+                              UserPoolId: process.env.USER_POOL_ID,
+                              Username: body.email,
+                              TemporaryPassword: body.password || 'TempPass123!',
+                              UserAttributes: [
+                                  { Name: 'email', Value: body.email },
+                                  { Name: 'given_name', Value: body.firstName },
+                                  { Name: 'family_name', Value: body.lastName },
+                                  { Name: 'phone_number', Value: body.phoneNumber },
+                                  { Name: 'custom:driver_id', Value: driverId }
+                              ],
+                              MessageAction: 'SUPPRESS'
+                          }).promise();
+
+                          // Add to Drivers group
+                          await cognito.adminAddUserToGroup({
+                              UserPoolId: process.env.USER_POOL_ID,
+                              Username: body.email,
+                              GroupName: 'Drivers'
+                          }).promise();
+                      }
+                  } catch (cognitoError) {
+                      console.warn('Cognito user creation failed:', cognitoError);
+                      // Continue without Cognito user
+                  }
+
+                  return {
+                      statusCode: 201,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          success: true,
+                          message: 'Driver created successfully',
+                          driver: driver
+                      })
+                  };
+
+              } catch (error) {
+                  console.error('Error:', error);
+                  return {
+                      statusCode: 500,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          error: 'Internal server error',
+                          message: error.message
+                      })
+                  };
+              }
+          };
+      Environment:
+        Variables:
+          DRIVERS_TABLE: !Ref DriversTable
+          USER_POOL_ID: !Ref UserPoolId
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+
+  # Lambda Function: Get Drivers
+  GetDriversFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-get-drivers'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+          exports.handler = async (event) => {
+              try {
+                  console.log('Event:', JSON.stringify(event, null, 2));
+                  
+                  const queryParams = event.queryStringParameters || {};
+                  const limit = parseInt(queryParams.limit) || 50;
+                  const exclusiveStartKey = queryParams.nextToken ? JSON.parse(Buffer.from(queryParams.nextToken, 'base64').toString()) : null;
+                  
+                  let params = {
+                      TableName: process.env.DRIVERS_TABLE,
+                      Limit: limit
+                  };
+
+                  if (exclusiveStartKey) {
+                      params.ExclusiveStartKey = exclusiveStartKey;
+                  }
+
+                  // Filter by status if provided
+                  if (queryParams.status) {
+                      params.IndexName = 'StatusIndex';
+                      params.KeyConditionExpression = '#status = :status';
+                      params.ExpressionAttributeNames = {
+                          '#status': 'status'
+                      };
+                      params.ExpressionAttributeValues = {
+                          ':status': queryParams.status.toUpperCase()
+                      };
+                      
+                      const result = await dynamodb.query(params).promise();
+                      
+                      return {
+                          statusCode: 200,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              drivers: result.Items,
+                              nextToken: result.LastEvaluatedKey ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64') : null,
+                              count: result.Count
+                          })
+                      };
+                  }
+
+                  // Filter by zone if provided
+                  if (queryParams.zone) {
+                      params.IndexName = 'ZoneIndex';
+                      params.KeyConditionExpression = 'zone = :zone';
+                      params.ExpressionAttributeValues = {
+                          ':zone': queryParams.zone
+                      };
+                      
+                      if (queryParams.status) {
+                          params.KeyConditionExpression += ' AND #status = :status';
+                          params.ExpressionAttributeNames = {
+                              '#status': 'status'
+                          };
+                          params.ExpressionAttributeValues[':status'] = queryParams.status.toUpperCase();
+                      }
+                      
+                      const result = await dynamodb.query(params).promise();
+                      
+                      return {
+                          statusCode: 200,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              drivers: result.Items,
+                              nextToken: result.LastEvaluatedKey ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64') : null,
+                              count: result.Count
+                          })
+                      };
+                  }
+
+                  // Get all drivers
+                  const result = await dynamodb.scan(params).promise();
+
+                  return {
+                      statusCode: 200,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          drivers: result.Items,
+                          nextToken: result.LastEvaluatedKey ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64') : null,
+                          count: result.Count
+                      })
+                  };
+
+              } catch (error) {
+                  console.error('Error:', error);
+                  return {
+                      statusCode: 500,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          error: 'Internal server error',
+                          message: error.message
+                      })
+                  };
+              }
+          };
+      Environment:
+        Variables:
+          DRIVERS_TABLE: !Ref DriversTable
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+
+  # Lambda Function: Update Driver Status
+  UpdateDriverStatusFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-update-driver-status'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+          exports.handler = async (event) => {
+              try {
+                  console.log('Event:', JSON.stringify(event, null, 2));
+                  
+                  const driverId = event.pathParameters?.driverId;
+                  const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+
+                  if (!driverId) {
+                      return {
+                          statusCode: 400,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              error: 'Driver ID is required'
+                          })
+                      };
+                  }
+
+                  const now = new Date().toISOString();
+                  
+                  // Map status values
+                  const statusMap = {
+                      'approved': 'AVAILABLE',
+                      'active': 'AVAILABLE',
+                      'rejected': 'OFFLINE',
+                      'inactive': 'OFFLINE', 
+                      'suspended': 'OFFLINE',
+                      'pending': 'PENDING'
+                  };
+
+                  const newStatus = statusMap[body.status?.toLowerCase()] || body.status?.toUpperCase() || 'PENDING';
+
+                  // Update driver status
+                  const params = {
+                      TableName: process.env.DRIVERS_TABLE,
+                      Key: {
+                          driverId: driverId
+                      },
+                      UpdateExpression: 'SET #status = :status, updatedAt = :updatedAt',
+                      ExpressionAttributeNames: {
+                          '#status': 'status'
+                      },
+                      ExpressionAttributeValues: {
+                          ':status': newStatus,
+                          ':updatedAt': now
+                      },
+                      ReturnValues: 'ALL_NEW'
+                  };
+
+                  // Add reason if provided
+                  if (body.reason) {
+                      params.UpdateExpression += ', reason = :reason';
+                      params.ExpressionAttributeValues[':reason'] = body.reason;
+                  }
+
+                  const result = await dynamodb.update(params).promise();
+
+                  return {
+                      statusCode: 200,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          success: true,
+                          message: 'Driver status updated successfully',
+                          driver: result.Attributes
+                      })
+                  };
+
+              } catch (error) {
+                  console.error('Error:', error);
+                  return {
+                      statusCode: 500,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          error: 'Internal server error',
+                          message: error.message
+                      })
+                  };
+              }
+          };
+      Environment:
+        Variables:
+          DRIVERS_TABLE: !Ref DriversTable
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+
+  # Lambda Function: Get Driver by ID
+  GetDriverByIdFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-get-driver-by-id'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+          exports.handler = async (event) => {
+              try {
+                  console.log('Event:', JSON.stringify(event, null, 2));
+                  
+                  const driverId = event.pathParameters?.driverId;
+
+                  if (!driverId) {
+                      return {
+                          statusCode: 400,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              error: 'Driver ID is required'
+                          })
+                      };
+                  }
+
+                  const params = {
+                      TableName: process.env.DRIVERS_TABLE,
+                      Key: {
+                          driverId: driverId
+                      }
+                  };
+
+                  const result = await dynamodb.get(params).promise();
+
+                  if (!result.Item) {
+                      return {
+                          statusCode: 404,
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          body: JSON.stringify({
+                              error: 'Driver not found'
+                          })
+                      };
+                  }
+
+                  return {
+                      statusCode: 200,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          driver: result.Item
+                      })
+                  };
+
+              } catch (error) {
+                  console.error('Error:', error);
+                  return {
+                      statusCode: 500,
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Access-Control-Allow-Origin': '*'
+                      },
+                      body: JSON.stringify({
+                          error: 'Internal server error',
+                          message: error.message
+                      })
+                  };
+              }
+          };
+      Environment:
+        Variables:
+          DRIVERS_TABLE: !Ref DriversTable
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+
+  # API Gateway
+  DriverAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub '${Environment}-driver-api'
+      Description: 'Driver Management API'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resources and Methods
+  DriversResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ParentId: !GetAtt DriverAPI.RootResourceId
+      PathPart: drivers
+
+  DriverResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ParentId: !Ref DriversResource
+      PathPart: '{driverId}'
+
+  DriverStatusResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ParentId: !Ref DriverResource
+      PathPart: status
+
+  # POST /drivers
+  CreateDriverMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriversResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateDriverFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Origin: "'*'"
+        - StatusCode: '400'
+        - StatusCode: '500'
+
+  # GET /drivers
+  GetDriversMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriversResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDriversFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Origin: "'*'"
+
+  # GET /drivers/{driverId}
+  GetDriverByIdMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriverResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDriverByIdFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Origin: "'*'"
+
+  # PUT /drivers/{driverId}/status
+  UpdateDriverStatusMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriverStatusResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateDriverStatusFunction.Arn}/invocations'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Origin: "'*'"
+
+  # CORS Options Methods
+  DriversOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriversResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: '200'
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Headers: true
+            Access-Control-Allow-Methods: true
+            Access-Control-Allow-Origin: true
+
+  DriverOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DriverAPI
+      ResourceId: !Ref DriverResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: '200'
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: '200'
+          ResponseHeaders:
+            Access-Control-Allow-Headers: true
+            Access-Control-Allow-Methods: true
+            Access-Control-Allow-Origin: true
+
+  # Lambda Permissions
+  CreateDriverPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CreateDriverFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DriverAPI}/*/*'
+
+  GetDriversPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetDriversFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DriverAPI}/*/*'
+
+  UpdateDriverStatusPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateDriverStatusFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DriverAPI}/*/*'
+
+  GetDriverByIdPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetDriverByIdFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DriverAPI}/*/*'
+
+  # API Gateway Deployment
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - CreateDriverMethod
+      - GetDriversMethod
+      - GetDriverByIdMethod
+      - UpdateDriverStatusMethod
+      - DriversOptionsMethod
+      - DriverOptionsMethod
+    Properties:
+      RestApiId: !Ref DriverAPI
+      StageName: !Ref Environment
+
+Outputs:
+  DriversTableName:
+    Description: 'Drivers DynamoDB Table Name'
+    Value: !Ref DriversTable
+    Export:
+      Name: !Sub '${Environment}-DriversTable'
+
+  DriverAPIEndpoint:
+    Description: 'Driver API Gateway endpoint URL'
+    Value: !Sub 'https://${DriverAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${Environment}-DriverAPIEndpoint'
+
+  CreateDriverFunctionArn:
+    Description: 'Create Driver Lambda Function ARN'
+    Value: !GetAtt CreateDriverFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-CreateDriverFunction'
+
+  GetDriversFunctionArn:
+    Description: 'Get Drivers Lambda Function ARN'
+    Value: !GetAtt GetDriversFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-GetDriversFunction'
+
+  UpdateDriverStatusFunctionArn:
+    Description: 'Update Driver Status Lambda Function ARN'
+    Value: !GetAtt UpdateDriverStatusFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-UpdateDriverStatusFunction'
+
+  GetDriverByIdFunctionArn:
+    Description: 'Get Driver By ID Lambda Function ARN'
+    Value: !GetAtt GetDriverByIdFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-GetDriverByIdFunction'
