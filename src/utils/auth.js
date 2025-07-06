@@ -158,6 +158,29 @@ function signOut() {
 }
 
 /**
+ * Checks if a user is currently authenticated (for login page redirect).
+ * Returns a promise that resolves to true if authenticated, false otherwise.
+ */
+function isUserAuthenticated() {
+    return new Promise((resolve) => {
+        const cognitoUser = userPool.getCurrentUser();
+        if (cognitoUser == null) {
+            resolve(false);
+        } else {
+            cognitoUser.getSession(function(err, session) {
+                if (err || !session || !session.isValid()) {
+                    // Clear invalid token
+                    localStorage.removeItem('aws-native-token');
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            });
+        }
+    });
+}
+
+/**
  * Checks if a user is currently authenticated.
  * If not, redirects to the login page.
  */

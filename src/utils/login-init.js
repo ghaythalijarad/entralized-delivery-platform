@@ -25,12 +25,16 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         console.log("DOM content loaded. Initializing scripts...");
         
-        // 0. Check if user is already authenticated
-        const existingToken = localStorage.getItem('aws-native-token');
-        if (existingToken) {
-            console.log("User already authenticated, redirecting to dashboard...");
-            window.location.replace('dashboard-aws-native.html');
-            return; // Stop further initialization
+        // 0. Check if user is already authenticated with valid session
+        if (typeof isUserAuthenticated === 'function') {
+            isUserAuthenticated().then(function(isAuthenticated) {
+                if (isAuthenticated) {
+                    console.log("Valid session found, redirecting to dashboard...");
+                    window.location.replace('dashboard-aws-native.html');
+                }
+            }).catch(function(error) {
+                console.error("Authentication check failed:", error);
+            });
         }
         
         // 1. Initialize bilingual support
