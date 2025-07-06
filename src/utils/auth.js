@@ -158,6 +158,18 @@ function signOut() {
 }
 
 /**
+ * Clears all authentication data (for debugging)
+ */
+function clearAuthData() {
+    localStorage.removeItem('aws-native-token');
+    sessionStorage.clear();
+    console.log("All authentication data cleared");
+}
+
+// Make clearAuthData available globally for debugging
+window.clearAuthData = clearAuthData;
+
+/**
  * Checks if a user is currently authenticated (for login page redirect).
  * Returns a promise that resolves to true if authenticated, false otherwise.
  */

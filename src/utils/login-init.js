@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("DOM content loaded. Initializing scripts...");
         
         // 0. Check if user is already authenticated with valid session
+        // TEMPORARILY DISABLED FOR DEBUGGING
+        console.log("Authentication check temporarily disabled for debugging");
+        /*
         if (typeof isUserAuthenticated === 'function') {
             isUserAuthenticated().then(function(isAuthenticated) {
                 if (isAuthenticated) {
@@ -36,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error("Authentication check failed:", error);
             });
         }
+        */
         
         // 1. Initialize bilingual support
         if (typeof initializeBilingual === 'function') {
