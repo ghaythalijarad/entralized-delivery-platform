@@ -46,8 +46,8 @@ function signIn(email, password) {
             // Store the token in localStorage for session management
             localStorage.setItem('aws-native-token', accessToken);
             console.log('Authentication successful');
-            // Redirect to the dashboard or main application page
-            window.location.href = 'dashboard-aws-native.html';
+            // Redirect to the dashboard without creating browser history entry
+            window.location.replace('dashboard-aws-native.html');
         },
         onFailure: function (err) {
             console.error('Authentication failed:', err);
@@ -99,7 +99,7 @@ function submitMfaCode(mfaCode) {
             const accessToken = result.getAccessToken().getJwtToken();
             localStorage.setItem('aws-native-token', accessToken);
             console.log('MFA successful, authentication complete.');
-            window.location.href = 'dashboard-aws-native.html';
+            window.location.replace('dashboard-aws-native.html');
         },
         onFailure: function (err) {
             console.error('MFA submission failed:', err);
@@ -128,7 +128,7 @@ function submitNewPassword(newPassword) {
             const accessToken = result.getAccessToken().getJwtToken();
             localStorage.setItem('aws-native-token', accessToken);
             console.log('Password change successful, authentication complete.');
-            window.location.href = 'dashboard-aws-native.html';
+            window.location.replace('dashboard-aws-native.html');
         },
         onFailure: function (err) {
             console.error('New password submission failed:', err);

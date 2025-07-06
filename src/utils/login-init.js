@@ -25,6 +25,14 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         console.log("DOM content loaded. Initializing scripts...");
         
+        // 0. Check if user is already authenticated
+        const existingToken = localStorage.getItem('aws-native-token');
+        if (existingToken) {
+            console.log("User already authenticated, redirecting to dashboard...");
+            window.location.replace('dashboard-aws-native.html');
+            return; // Stop further initialization
+        }
+        
         // 1. Initialize bilingual support
         if (typeof initializeBilingual === 'function') {
             initializeBilingual();
