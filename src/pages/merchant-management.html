@@ -568,8 +568,24 @@
         let allMerchants = [];
         let currentReviewMerchant = null;
 
+        // Check authentication on page load
+        function checkAuthentication() {
+            const token = localStorage.getItem('aws-native-token');
+            if (!token) {
+                console.log('No authentication token found, redirecting to login');
+                window.location.href = 'login-aws-native.html';
+                return false;
+            }
+            return true;
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication first
+            if (!checkAuthentication()) {
+                return;
+            }
+
             try {
                 // Initialize Merchant API
                 merchantAPI = new MerchantAPI();
