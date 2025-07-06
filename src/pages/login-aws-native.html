@@ -471,95 +471,24 @@
         </div>
     </div>
 
-    <!-- Local Auth Scripts -->
+    <!-- 
+      SCRIPT LOADING ORDER IS CRITICAL:
+      1. AWS SDK - The core library.
+      2. Cognito SDK - Depends on the AWS SDK.
+      3. aws-config.js - Defines the Cognito User Pool details; needed by auth.js.
+      4. bilingual.js & bilingual-extensions.js - Defines language functions; needed by login-init.js.
+      5. auth.js - Defines signIn, signOut; needed by login-init.js.
+      6. login-init.js - This MUST be last. It runs all the setup logic and depends on all other scripts.
+    -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
+    
     <script src="aws-config.js"></script>
+    <script src="bilingual.js"></script>
+    <script src="bilingual-extensions.js"></script>
     <script src="auth.js"></script>
+    <script src="login-init.js"></script>
 
-    <script>
-        // Add a global error handler to catch and display all script errors
-        window.onerror = function(message, source, lineno, colno, error) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = `An unexpected error occurred: ${message}`;
-            errorMessage.style.display = 'block';
-            // Also log to console for good measure
-            console.error("Caught by global handler:", message, source, lineno, colno, error);
-            return true; // Prevents the default browser error handling
-        };
-
-        // Global variables
-        let performanceStart = Date.now();
-
-        // Initialize bilingual support and login form
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeBilingual();
-            measurePerformance();
-
-            const loginForm = document.getElementById('loginForm');
-            if(loginForm) {
-                loginForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    const email = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
-                    
-                    const loginButton = document.getElementById('loginButton');
-                    const loadingSpinner = document.getElementById('loadingSpinner');
-                    
-                    loginButton.disabled = true;
-                    loadingSpinner.style.display = 'inline-block';
-
-                    // Call the signIn function from auth.js
-                    signIn(email, password);
-                });
-            }
-
-            const mfaForm = document.getElementById('mfaForm');
-            if(mfaForm) {
-                mfaForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    const mfaCode = document.getElementById('mfaCode').value;
-
-                    const mfaButton = document.getElementById('mfaButton');
-                    const mfaLoadingSpinner = document.getElementById('mfaLoadingSpinner');
-
-                    mfaButton.disabled = true;
-                    mfaLoadingSpinner.style.display = 'inline-block';
-
-                    // Call the submitMfaCode function from auth.js
-                    submitMfaCode(mfaCode);
-                });
-            }
-        });
-
-        // Password toggle
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggle = document.querySelector('.password-toggle');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggle.textContent = '🙈';
-            } else {
-                passwordInput.type = 'password';
-                toggle.textContent = '👁️';
-            }
-        }
-
-        // Placeholder for forgot password functionality
-        function forgotPassword() {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = 'Forgot password feature is not implemented in this demo.';
-            errorMessage.style.display = 'block';
-        }
-
-        // Performance measurement
-        function measurePerformance() {
-            const loadTime = Date.now() - performanceStart;
-            console.log(`Page loaded in ${loadTime}ms`);
-            const badge = document.querySelector('.performance-badge');
-            if (badge) {
-                badge.textContent += ` (${loadTime}ms)`;
-            }
-        }
-    </script>
 </body>
 </html>
