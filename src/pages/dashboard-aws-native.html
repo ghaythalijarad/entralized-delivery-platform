@@ -3,102 +3,588 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Control Center - Delivery Management Dashboard</title>
+    <title>Dashboard - Delivery Management Platform</title>
     
-    <!-- AWS Amplify SDK -->
-    <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/auth@latest/dist/aws-amplify-auth.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/api-graphql@latest/dist/aws-amplify-api-graphql.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Real-time GraphQL Subscriptions -->
-    <script src="https://unpkg.com/@aws-amplify/pubsub@latest/dist/aws-amplify-pubsub.min.js"></script>
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
     
-    <!-- Bilingual Support -->
-    <script src="./bilingual.js"></script>
-    <script src="./bilingual-extensions.js"></script>
+    <!-- AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
+    
+    <!-- Utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/bilingual-extensions.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Dashboard-specific styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-            overflow-x: hidden;
-            transition: all 0.3s ease;
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
         }
 
-        body[dir="rtl"] {
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
-        }
-
-        /* Header */
-        .header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
+        .stat-card::before {
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1000;
-            padding: 0 20px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
         }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 70px;
-            max-width: 1400px;
-            margin: 0 auto;
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
         }
 
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 12px;
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
+            color: var(--white);
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-md);
         }
 
-        .app-title {
-            font-size: 20px;
+        .stat-number {
+            font-size: var(--font-size-3xl);
             font-weight: 700;
-            color: #333;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 0 2px 4px rgba(0, 193, 232, 0.1);
         }
 
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .performance-indicator {
-            background: #2a5;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+        .stat-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
             font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-change {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-md);
+        }
+
+        .stat-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stat-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .recent-activities {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition-normal);
         }
+
+        .activity-item:hover {
+            background: var(--primary-lightest);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-lightest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .activity-time {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .action-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            border: 2px solid rgba(0, 193, 232, 0.1);
+            text-align: center;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-lightest), rgba(255, 255, 255, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+            margin: 0 auto var(--spacing-md);
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .action-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Unified Top Bar -->
+    <div id="unified-topbar" class="unified-topbar"></div>
+    
+    <!-- Unified Navigation -->
+    <div id="unified-navbar" class="unified-navbar"></div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="page-container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title" data-translate="dashboard.title">Control Center Dashboard</h1>
+                <p class="page-subtitle" data-translate="dashboard.subtitle">Monitor and manage your delivery operations</p>
+            </div>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Statistics Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-number" id="totalDeliveries">1,248</div>
+                        <div class="stat-label" data-translate="dashboard.totalDeliveries">Total Deliveries</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +12.5%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="stat-number" id="activeDrivers">89</div>
+                        <div class="stat-label" data-translate="dashboard.activeDrivers">Active Drivers</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +3.2%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="stat-number" id="activeMerchants">156</div>
+                        <div class="stat-label" data-translate="dashboard.activeMerchants">Active Merchants</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +8.1%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-number" id="totalRevenue">$45,892</div>
+                        <div class="stat-label" data-translate="dashboard.totalRevenue">Total Revenue</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +15.3%
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts and Activities Section -->
+                <div class="charts-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 data-translate="dashboard.deliveryTrends">Delivery Trends</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="deliveryChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 data-translate="dashboard.recentActivities">Recent Activities</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="recent-activities" id="recentActivities">
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-user-plus"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">New driver registered</div>
+                                        <div class="activity-time">5 minutes ago</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Delivery completed</div>
+                                        <div class="activity-time">12 minutes ago</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-store"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">New merchant approved</div>
+                                        <div class="activity-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Driver reported issue</div>
+                                        <div class="activity-time">2 hours ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 data-translate="dashboard.quickActions">Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <a href="drivers-management.html" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="action-title" data-translate="dashboard.manageDrivers">Manage Drivers</div>
+                                <div class="action-description" data-translate="dashboard.manageDriversDesc">View and manage driver applications</div>
+                            </a>
+                            
+                            <a href="merchant-management.html" class="action-card">
+                                <div class="action-icon">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <div class="action-title" data-translate="dashboard.manageMerchants">Manage Merchants</div>
+                                <div class="action-description" data-translate="dashboard.manageMerchantsDesc">View and manage merchant accounts</div>
+                            </a>
+                            
+                            <a href="#" class="action-card" onclick="generateReport()">
+                                <div class="action-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="action-title" data-translate="dashboard.generateReport">Generate Report</div>
+                                <div class="action-description" data-translate="dashboard.generateReportDesc">Create delivery performance reports</div>
+                            </a>
+                            
+                            <a href="#" class="action-card" onclick="manageSettings()">
+                                <div class="action-icon">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="action-title" data-translate="dashboard.settings">Settings</div>
+                                <div class="action-description" data-translate="dashboard.settingsDesc">Configure system settings</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard functionality
+        class DashboardManager {
+            constructor() {
+                this.init();
+            }
+
+            async init() {
+                // Check authentication
+                if (!this.checkAuthentication()) return;
+
+                // Initialize components
+                this.loadDashboardData();
+                this.setupRealTimeUpdates();
+                this.initializeCharts();
+                
+                // Initialize bilingual support
+                if (typeof initializeBilingual === 'function') {
+                    initializeBilingual();
+                }
+            }
+
+            checkAuthentication() {
+                const token = localStorage.getItem('aws-native-token');
+                if (!token) {
+                    window.location.href = 'login-aws-native.html';
+                    return false;
+                }
+                return true;
+            }
+
+            async loadDashboardData() {
+                showLoading(true);
+                
+                try {
+                    // Simulate API calls for dashboard data
+                    const data = await this.fetchDashboardStats();
+                    this.updateStats(data);
+                    this.updateActivities();
+                    
+                    showNotification('Dashboard data loaded successfully', 'success');
+                } catch (error) {
+                    console.error('Error loading dashboard data:', error);
+                    showNotification('Error loading dashboard data', 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            async fetchDashboardStats() {
+                // Simulate API call
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve({
+                            totalDeliveries: 1248 + Math.floor(Math.random() * 100),
+                            activeDrivers: 89 + Math.floor(Math.random() * 20),
+                            activeMerchants: 156 + Math.floor(Math.random() * 30),
+                            totalRevenue: 45892 + Math.floor(Math.random() * 5000)
+                        });
+                    }, 1000);
+                });
+            }
+
+            updateStats(data) {
+                document.getElementById('totalDeliveries').textContent = data.totalDeliveries.toLocaleString();
+                document.getElementById('activeDrivers').textContent = data.activeDrivers;
+                document.getElementById('activeMerchants').textContent = data.activeMerchants;
+                document.getElementById('totalRevenue').textContent = `$${data.totalRevenue.toLocaleString()}`;
+            }
+
+            updateActivities() {
+                const activities = [
+                    { icon: 'user-plus', title: 'New driver registered', time: '5 minutes ago' },
+                    { icon: 'truck', title: 'Delivery completed', time: '12 minutes ago' },
+                    { icon: 'store', title: 'New merchant approved', time: '1 hour ago' },
+                    { icon: 'exclamation-triangle', title: 'Driver reported issue', time: '2 hours ago' },
+                    { icon: 'check-circle', title: 'Order payment processed', time: '3 hours ago' }
+                ];
+
+                const container = document.getElementById('recentActivities');
+                container.innerHTML = activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-${activity.icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-time">${activity.time}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            initializeCharts() {
+                // Simple chart using canvas
+                const canvas = document.getElementById('deliveryChart');
+                const ctx = canvas.getContext('2d');
+                
+                // Generate sample data
+                const data = Array.from({length: 7}, () => Math.floor(Math.random() * 100) + 50);
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                
+                this.drawChart(ctx, canvas, data, days);
+            }
+
+            drawChart(ctx, canvas, data, labels) {
+                const padding = 40;
+                const chartWidth = canvas.width - 2 * padding;
+                const chartHeight = canvas.height - 2 * padding;
+                const maxValue = Math.max(...data);
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Set styles
+                ctx.strokeStyle = '#00C1E8';
+                ctx.fillStyle = 'rgba(0, 193, 232, 0.1)';
+                ctx.lineWidth = 3;
+                
+                // Draw chart area
+                ctx.beginPath();
+                ctx.moveTo(padding, padding + chartHeight);
+                
+                data.forEach((value, index) => {
+                    const x = padding + (index * chartWidth) / (data.length - 1);
+                    const y = padding + chartHeight - (value / maxValue) * chartHeight;
+                    ctx.lineTo(x, y);
+                });
+                
+                ctx.lineTo(padding + chartWidth, padding + chartHeight);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw line
+                ctx.beginPath();
+                ctx.moveTo(padding, padding + chartHeight);
+                
+                data.forEach((value, index) => {
+                    const x = padding + (index * chartWidth) / (data.length - 1);
+                    const y = padding + chartHeight - (value / maxValue) * chartHeight;
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // Draw points
+                ctx.fillStyle = '#00C1E8';
+                data.forEach((value, index) => {
+                    const x = padding + (index * chartWidth) / (data.length - 1);
+                    const y = padding + chartHeight - (value / maxValue) * chartHeight;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+                
+                // Draw labels
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                
+                labels.forEach((label, index) => {
+                    const x = padding + (index * chartWidth) / (data.length - 1);
+                    ctx.fillText(label, x, canvas.height - 10);
+                });
+            }
+
+            setupRealTimeUpdates() {
+                // Update stats every 30 seconds
+                setInterval(() => {
+                    this.loadDashboardData();
+                }, 30000);
+            }
+        }
+
+        // Global functions for quick actions
+        function generateReport() {
+            showNotification('Report generation started', 'info');
+            // Simulate report generation
+            setTimeout(() => {
+                showNotification('Report generated successfully', 'success');
+            }, 2000);
+        }
+
+        function manageSettings() {
+            showNotification('Opening settings panel', 'info');
+            // Would open settings modal or navigate to settings page
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            new DashboardManager();
+        });
+    </script>
 
         .realtime-status {
             background: #4ecdc4;
