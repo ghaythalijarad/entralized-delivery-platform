@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Management Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .merchant-card { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+        }
+        .status-pending { border-left: 4px solid #ffc107; }
+        .status-approved { border-left: 4px solid #28a745; }
+        .status-rejected { border-left: 4px solid #dc3545; }
+        .status-suspended { border-left: 4px solid #fd7e14; }
+        .btn { 
+            padding: 8px 16px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #fd7e14; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .stats { display: flex; gap: 20px; margin: 20px 0; }
+        .stat-card { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+        }
+        .stat-number { font-size: 32px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🏪 Merchant Management System Test</h1>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="pendingCount">-</div>
+            <div>Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="approvedCount">-</div>
+            <div>Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="rejectedCount">-</div>
+            <div>Rejected</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="suspendedCount">-</div>
+            <div>Suspended</div>
+        </div>
+    </div>
+
+    <h2>Merchant Applications</h2>
+    <div id="merchantsList"></div>
+
+    <script>
+        // Mock merchant data - Updated with proper merchant types and split owner names
+        const merchants = [
+            {
+                id: 1,
+                businessName: 'Fresh Food Restaurant',
+                ownerFirstName: 'Ahmed',
+                ownerLastName: 'Al-Rashid',
+                email: 'ahmed@freshfood.com',
+                phone: '+966501234567',
+                merchantType: 'restaurant',
+                address: {
+                    street: '123 King Fahd Road',
+                    city: 'Riyadh',
+                    district: 'Al-Malaz',
+                    postalCode: '11473'
+                },
+                status: 'pending',
+                appliedAt: '2024-12-15',
+                description: 'Traditional Arabic cuisine restaurant specializing in local dishes'
+            },
+            {
+                id: 2,
+                businessName: 'MediCare Pharmacy',
+                ownerFirstName: 'Sarah',
+                ownerLastName: 'Johnson',
+                email: 'sarah@medicare.com',
+                phone: '+966502345678',
+                merchantType: 'pharmacy',
+                address: {
+                    street: '456 Prince Sultan Road',
+                    city: 'Jeddah',
+                    district: 'Al-Hamra',
+                    postalCode: '21452'
+                },
+                status: 'approved',
+                appliedAt: '2024-12-13',
+                approvedAt: '2024-12-14',
+                licenseNumber: 'PH-2024-001'
+            },
+            {
+                id: 3,
+                businessName: 'Fashion Paradise Store',
+                ownerFirstName: 'Fatima',
+                ownerLastName: 'Al-Zahra',
+                email: 'fatima@fashionparadise.com',
+                phone: '+966503456789',
+                merchantType: 'store',
+                address: {
+                    street: '789 Corniche Road',
+                    city: 'Dammam',
+                    district: 'Al-Ferdous',
+                    postalCode: '31411'
+                },
+                status: 'rejected',
+                appliedAt: '2024-12-12',
+                rejectedAt: '2024-12-14',
+                rejectionReason: 'Incomplete business registration documents'
+            },
+            {
+                id: 4,
+                businessName: 'Quick Bites Cloud Kitchen',
+                ownerFirstName: 'Omar',
+                ownerLastName: 'Hassan',
+                email: 'omar@quickbites.com',
+                phone: '+966504567890',
+                merchantType: 'cloud_kitchen',
+                address: {
+                    street: '321 Industrial Area',
+                    city: 'Riyadh',
+                    district: 'Al-Sulay',
+                    postalCode: '11564'
+                },
+                status: 'suspended',
+                appliedAt: '2024-12-10',
+                approvedAt: '2024-12-11',
+                suspendedAt: '2024-12-15',
+                suspensionReason: 'Multiple customer complaints about food quality and delayed deliveries'
+            },
+            {
+                id: 5,
+                businessName: 'Spice Garden Restaurant',
+                ownerFirstName: 'Khalid',
+                ownerLastName: 'Al-Mansouri',
+                email: 'khalid@spicegarden.com',
+                phone: '+966505678901',
+                merchantType: 'restaurant',
+                address: {
+                    street: '567 Olaya Street',
+                    city: 'Riyadh',
+                    district: 'Olaya',
+                    postalCode: '11523'
+                },
+                status: 'approved',
+                appliedAt: '2024-12-11',
+                approvedAt: '2024-12-12'
+            },
+            {
+                id: 6,
+                businessName: 'HealthPlus Pharmacy',
+                ownerFirstName: 'Nadia',
+                ownerLastName: 'Al-Khatib',
+                email: 'nadia@healthplus.com',
+                phone: '+966506789012',
+                merchantType: 'pharmacy',
+                address: {
+                    street: '890 Abdullah Al-Suleman Road',
+                    city: 'Jeddah',
+                    district: 'Al-Zahra',
+                    postalCode: '21589'
+                },
+                status: 'pending',
+                appliedAt: '2024-12-14',
+                licenseNumber: 'PH-2024-002'
+            }
+        ];
+
+        function displayMerchants() {
+            const container = document.getElementById('merchantsList');
+            container.innerHTML = '';
+
+            // Merchant type display names
+            const merchantTypeDisplayNames = {
+                'restaurant': 'Restaurant',
+                'store': 'Store',
+                'pharmacy': 'Pharmacy',
+                'cloud_kitchen': 'Cloud Kitchen'
+            };
+
+            merchants.forEach(merchant => {
+                const card = document.createElement('div');
+                card.className = `merchant-card status-${merchant.status}`;
+                
+                const fullAddress = `${merchant.address.street}, ${merchant.address.district}, ${merchant.address.city}`;
+                const ownerName = `${merchant.ownerFirstName} ${merchant.ownerLastName}`;
+                const merchantTypeDisplay = merchantTypeDisplayNames[merchant.merchantType] || merchant.merchantType;
+                
+                card.innerHTML = `
+                    <h3>${merchant.businessName}</h3>
+                    <p><strong>Owner:</strong> ${ownerName}</p>
+                    <p><strong>Type:</strong> ${merchantTypeDisplay}</p>
+                    <p><strong>Email:</strong> ${merchant.email}</p>
+                    <p><strong>Phone:</strong> ${merchant.phone}</p>
+                    <p><strong>Address:</strong> ${fullAddress}</p>
+                    <p><strong>Status:</strong> <span style="text-transform: uppercase; font-weight: bold;">${merchant.status}</span></p>
+                    <p><strong>Applied:</strong> ${merchant.appliedAt}</p>
+                    ${merchant.licenseNumber ? `<p><strong>License:</strong> ${merchant.licenseNumber}</p>` : ''}
+                    ${merchant.rejectionReason ? `<p><strong>Rejection Reason:</strong> ${merchant.rejectionReason}</p>` : ''}
+                    ${merchant.suspensionReason ? `<p><strong>Suspension Reason:</strong> ${merchant.suspensionReason}</p>` : ''}
+                    
+                    <div>
+                        ${merchant.status === 'pending' ? `
+                            <button class="btn btn-success" onclick="approveMerchant(${merchant.id})">✓ Approve</button>
+                            <button class="btn btn-danger" onclick="rejectMerchant(${merchant.id})">✗ Reject</button>
+                        ` : ''}
+                        ${merchant.status === 'approved' ? `
+                            <button class="btn btn-warning" onclick="suspendMerchant(${merchant.id})">⏸ Suspend</button>
+                        ` : ''}
+                        ${merchant.status === 'suspended' ? `
+                            <button class="btn btn-info" onclick="reactivateMerchant(${merchant.id})">▶ Reactivate</button>
+                        ` : ''}
+                        <button class="btn btn-primary" onclick="viewDetails(${merchant.id})">View Details</button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const pending = merchants.filter(m => m.status === 'pending').length;
+            const approved = merchants.filter(m => m.status === 'approved').length;
+            const rejected = merchants.filter(m => m.status === 'rejected').length;
+            const suspended = merchants.filter(m => m.status === 'suspended').length;
+
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('rejectedCount').textContent = rejected;
+            document.getElementById('suspendedCount').textContent = suspended;
+        }
+
+        function approveMerchant(id) {
+            const merchant = merchants.find(m => m.id === id);
+            if (merchant) {
+                merchant.status = 'approved';
+                merchant.approvedAt = new Date().toISOString().split('T')[0];
+                displayMerchants();
+                alert(`✅ ${merchant.businessName} has been approved!`);
+            }
+        }
+
+        function rejectMerchant(id) {
+            const reason = prompt('Rejection reason:');
+            if (reason) {
+                const merchant = merchants.find(m => m.id === id);
+                if (merchant) {
+                    merchant.status = 'rejected';
+                    merchant.rejectedAt = new Date().toISOString().split('T')[0];
+                    merchant.rejectionReason = reason;
+                    displayMerchants();
+                    alert(`❌ ${merchant.businessName} has been rejected.`);
+                }
+            }
+        }
+
+        function viewDetails(id) {
+            const merchant = merchants.find(m => m.id === id);
+            if (merchant) {
+                const merchantTypeDisplayNames = {
+                    'restaurant': 'Restaurant',
+                    'store': 'Store',
+                    'pharmacy': 'Pharmacy',
+                    'cloud_kitchen': 'Cloud Kitchen'
+                };
+                
+                const ownerName = `${merchant.ownerFirstName} ${merchant.ownerLastName}`;
+                const merchantTypeDisplay = merchantTypeDisplayNames[merchant.merchantType] || merchant.merchantType;
+                const fullAddress = `${merchant.address.street}, ${merchant.address.district}, ${merchant.address.city}, ${merchant.address.postalCode}`;
+                
+                let details = `Business: ${merchant.businessName}\n`;
+                details += `Owner: ${ownerName}\n`;
+                details += `Type: ${merchantTypeDisplay}\n`;
+                details += `Email: ${merchant.email}\n`;
+                details += `Phone: ${merchant.phone}\n`;
+                details += `Address: ${fullAddress}\n`;
+                if (merchant.licenseNumber) {
+                    details += `License Number: ${merchant.licenseNumber}\n`;
+                }
+                if (merchant.description) {
+                    details += `Description: ${merchant.description}`;
+                }
+                
+                alert(details);
+            }
+        }
+
+        // Initialize
+        displayMerchants();
+    </script>
+</body>
+</html>

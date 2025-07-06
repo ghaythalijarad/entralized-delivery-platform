@@ -188,7 +188,42 @@ class BilingualManager {
                 settings: { ar: 'الإعدادات', en: 'Settings' },
                 reports: { ar: 'التقارير', en: 'Reports' },
                 analytics: { ar: 'التحليلات', en: 'Analytics' }
-            }
+            },
+            
+            // Merchant Management
+            merchant_management: {
+                merchant_management: { ar: 'إدارة التجار', en: 'Merchant Management' },
+                merchant_management_title: { ar: 'إدارة التجار', en: 'Merchant Management' },
+                merchant_management_subtitle: { ar: 'مراجعة الطلبات وإدارة التجار وإرسال الإشعارات', en: 'Review applications, manage merchants, and send notifications' },
+                back_to_dashboard: { ar: 'العودة إلى لوحة التحكم', en: 'Back to Dashboard' },
+                sign_out: { ar: 'تسجيل خروج', en: 'Sign Out' },
+                
+                // Stats
+                pending_applications: { ar: 'الطلبات المعلقة', en: 'Pending Applications' },
+                approved_merchants: { ar: 'التجار المعتمدين', en: 'Approved Merchants' },
+                rejected_applications: { ar: 'الطلبات المرفوضة', en: 'Rejected Applications' },
+                total_merchants: { ar: 'إجمالي التجار', en: 'Total Merchants' },
+                
+                // Tabs
+                pending_tab: { ar: 'الطلبات المعلقة', en: 'Pending Applications' },
+                approved_tab: { ar: 'التجار المعتمدين', en: 'Approved Merchants' },
+                all_tab: { ar: 'جميع التجار', en: 'All Merchants' },
+                
+                // Review Modal
+                review_application: { ar: 'مراجعة الطلب', en: 'Review Application' },
+                decision: { ar: 'القرار', en: 'Decision' },
+                select_decision: { ar: 'اختر القرار', en: 'Select Decision' },
+                approve: { ar: 'اعتماد', en: 'Approve' },
+                reject: { ar: 'رفض', en: 'Reject' },
+                comments: { ar: 'التعليقات', en: 'Comments' },
+                review_comments_placeholder: { ar: 'أضف أي تعليقات للتاجر...', en: 'Add any comments for the merchant...' },
+                cancel: { ar: 'إلغاء', en: 'Cancel' },
+                submit_review: { ar: 'إرسال المراجعة', en: 'Submit Review' },
+                
+                // General
+                loading_merchants: { ar: 'جاري تحميل التجار...', en: 'Loading merchants...' },
+                no_merchants: { ar: 'لا يوجد تجار', en: 'No merchants found' },
+            },
         };
         
         this.init();
