@@ -14,8 +14,8 @@
     <script src="https://unpkg.com/@aws-amplify/pubsub@latest/dist/aws-amplify-pubsub.min.js"></script>
     
     <!-- Bilingual Support -->
-    <script src="bilingual.js"></script>
-    <script src="bilingual-extensions.js"></script>
+    <script src="./bilingual.js"></script>
+    <script src="./bilingual-extensions.js"></script>
     
     <style>
         * {
@@ -66,7 +66,7 @@
         .logo {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #00C1E8, #0099CC);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -144,9 +144,9 @@
         }
 
         .lang-btn.active {
-            background: #00C1E8;
+            background: #667eea;
             color: white;
-            border-color: #00C1E8;
+            border-color: #667eea;
         }
 
         .user-menu {
@@ -222,7 +222,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #00C1E8, #0099CC);
+            background: linear-gradient(90deg, #667eea, #764ba2);
         }
 
         .stat-card:hover {
@@ -318,7 +318,7 @@
         }
 
         .section-badge {
-            background: #00C1E8;
+            background: #667eea;
             color: white;
             padding: 4px 8px;
             border-radius: 10px;
@@ -470,7 +470,7 @@
         }
 
         .action-btn:hover {
-            border-color: #00C1E8;
+            border-color: #667eea;
             transform: translateY(-3px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
@@ -563,7 +563,7 @@
             width: 30px;
             height: 30px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #00C1E8;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 10px;
@@ -617,12 +617,12 @@
             border: none;
             cursor: pointer;
             font-size: 16px;
-            color: #00C1E8;
+            color: #667eea;
             transition: all 0.3s ease;
         }
 
         .collapse-btn:hover {
-            color: #0099CC;
+            color: #764ba2;
         }
 
         .nav-section {
@@ -728,10 +728,6 @@
                         <span class="nav-icon">👥</span>
                         <span data-translate="user_management">User Management</span>
                     </a></li>
-                    <li><a href="merchant-management.html" class="nav-link">
-                        <span class="nav-icon">🏪</span>
-                        <span data-translate="merchant_management">Merchant Management</span>
-                    </a></li>
                     <li><a href="role-permissions.html" class="nav-link">
                         <span class="nav-icon">🔐</span>
                         <span data-translate="role_permissions">Role & Permissions</span>
@@ -753,6 +749,14 @@
             <div class="nav-section">
                 <h3 class="nav-section-title" data-translate="operations_mgmt">Operations Management</h3>
                 <ul class="nav-links">
+                    <li><a href="drivers-management.html" class="nav-link">
+                        <span class="nav-icon">🚗</span>
+                        <span data-translate="drivers_management">Drivers Management</span>
+                    </a></li>
+                    <li><a href="merchant-management.html" class="nav-link">
+                        <span class="nav-icon">🏪</span>
+                        <span data-translate="merchant_management">Merchant Management</span>
+                    </a></li>
                     <li><a href="fleet-management.html" class="nav-link">
                         <span class="nav-icon">🚚</span>
                         <span data-translate="fleet_management">Fleet Management</span>
@@ -912,7 +916,7 @@
                 <div class="action-subtitle" data-translate="track_drivers">Track and assign drivers</div>
             </a>
 
-            <a href="merchant-management.html" class="action-btn">
+            <a href="merchants-management.html" class="action-btn">
                 <span class="action-icon">🏪</span>
                 <div class="action-title" data-translate="manage_merchants">Manage Merchants</div>
                 <div class="action-subtitle" data-translate="merchant_portal">Merchant portal access</div>
