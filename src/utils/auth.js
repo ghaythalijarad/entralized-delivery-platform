@@ -68,6 +68,20 @@ function signIn(email, password) {
             // Hide login form, show MFA form
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('mfaForm').style.display = 'block';
+        },
+        newPasswordRequired: function(userAttributes, requiredAttributes) {
+            console.log('New password required. User attributes:', userAttributes);
+            console.log('Required attributes:', requiredAttributes);
+            
+            // Reset the loading state
+            const loginButton = document.getElementById('loginButton');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            loginButton.disabled = false;
+            loadingSpinner.style.display = 'none';
+            
+            // Show the new password form
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('newPasswordForm').style.display = 'block';
         }
     });
 }
@@ -93,6 +107,35 @@ function submitMfaCode(mfaCode) {
             const mfaLoadingSpinner = document.getElementById('mfaLoadingSpinner');
             mfaButton.disabled = false;
             mfaLoadingSpinner.style.display = 'none';
+
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = err.message || JSON.stringify(err);
+            errorMessage.style.display = 'block';
+        }
+    });
+}
+
+/**
+ * Submits a new password when required by Cognito.
+ * @param {string} newPassword - The new password to set.
+ */
+function submitNewPassword(newPassword) {
+    console.log('Submitting new password...');
+    
+    cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
+        onSuccess: function (result) {
+            console.log('New password set successfully:', result);
+            const accessToken = result.getAccessToken().getJwtToken();
+            localStorage.setItem('aws-native-token', accessToken);
+            console.log('Password change successful, authentication complete.');
+            window.location.href = 'dashboard-aws-native.html';
+        },
+        onFailure: function (err) {
+            console.error('New password submission failed:', err);
+            const newPasswordButton = document.getElementById('newPasswordButton');
+            const newPasswordLoadingSpinner = document.getElementById('newPasswordLoadingSpinner');
+            newPasswordButton.disabled = false;
+            newPasswordLoadingSpinner.style.display = 'none';
 
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.textContent = err.message || JSON.stringify(err);

@@ -465,6 +465,24 @@
             </button>
         </form>
 
+        <!-- New Password Form (hidden by default) -->
+        <form id="newPasswordForm" class="form-section" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="newPassword">New Password</label>
+                <input type="password" id="newPassword" class="form-input" placeholder="Enter your new password" required minlength="8">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Confirm New Password</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your new password" required minlength="8">
+            </div>
+
+            <button type="submit" class="login-btn" id="newPasswordButton">
+                <div class="loading-spinner" id="newPasswordLoadingSpinner"></div>
+                <span>Set New Password</span>
+            </button>
+        </form>
+
         <!-- Forgot Password -->
         <div class="forgot-password">
             <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>

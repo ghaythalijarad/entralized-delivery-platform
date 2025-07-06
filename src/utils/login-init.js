@@ -89,6 +89,47 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.error("MFA form not found!");
         }
+
+        // 5. Set up new password form listener
+        const newPasswordForm = document.getElementById('newPasswordForm');
+        if (newPasswordForm) {
+            newPasswordForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validate password confirmation
+                if (newPassword !== confirmPassword) {
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.textContent = 'Passwords do not match. Please try again.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                // Validate password strength (basic validation)
+                if (newPassword.length < 8) {
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.textContent = 'Password must be at least 8 characters long.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                const newPasswordButton = document.getElementById('newPasswordButton');
+                const newPasswordLoadingSpinner = document.getElementById('newPasswordLoadingSpinner');
+
+                newPasswordButton.disabled = true;
+                newPasswordLoadingSpinner.style.display = 'inline-block';
+
+                // Call the submitNewPassword function from auth.js
+                if (typeof submitNewPassword === 'function') {
+                    submitNewPassword(newPassword);
+                } else {
+                    console.error("submitNewPassword function not found!");
+                    throw new Error("New password script failed to load.");
+                }
+            });
+            console.log("New password form event listener attached.");
+        }
     } catch (e) {
         // Display error using our handler
         window.onerror(e.message, e.source, e.lineno, e.colno, e);
