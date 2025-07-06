@@ -340,6 +340,17 @@ document.addEventListener('DOMContentLoaded', function() {
     window.bilingualManager = new BilingualManager();
 });
 
+// Compatibility function for legacy code
+function initializeBilingual() {
+    if (!window.bilingualManager) {
+        window.bilingualManager = new BilingualManager();
+    }
+    return window.bilingualManager;
+}
+
+// Make initializeBilingual available globally
+window.initializeBilingual = initializeBilingual;
+
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = BilingualManager;
