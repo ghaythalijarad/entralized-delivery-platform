@@ -1,32 +1,32 @@
-// This script initializes the login page functionality.
-// It should be the last script loaded on the page.
+/*
+ * This script initializes the login page and sets up event listeners.
+ * It must be loaded AFTER all other scripts (aws-config.js, auth.js, bilingual.js).
+ */
 
-// Add a global error handler to catch and display all script errors
-window.onerror = function(message, source, lineno, colno, error) {
-    try {
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = `An unexpected error occurred: ${message}`;
-            errorMessage.style.display = 'block';
-        }
-        // Also log to console for good measure
-        console.error("Caught by global handler:", message, source, lineno, colno, error);
-    } catch (e) {
-        console.error("Error in global error handler:", e);
+// Global error handler to catch any JavaScript errors
+window.addEventListener('error', function(event) {
+    console.error('Global error caught:', event.error);
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.textContent = 'A technical error occurred. Please refresh the page and try again.';
+        errorMessage.style.display = 'block';
     }
-    return true; // Prevents the default browser error handling
-};
+});
 
-// Global variables
-let performanceStart = Date.now();
+// Function to measure page performance
+function measurePerformance() {
+    const navigationStart = performance.timing.navigationStart;
+    const domContentLoaded = performance.timing.domContentLoadedEventEnd;
+    const loadTime = domContentLoaded - navigationStart;
+    console.log(`Page performance: ${loadTime}ms`);
+}
 
-// Initialize bilingual support and login form
-document.addEventListener('DOMContentLoaded', function() {
+// Main initialization function
+function initializeLoginPage() {
+    console.log("Initializing login page...");
+    
     try {
-        console.log("DOM content loaded. Initializing scripts...");
-        
-        // 0. Check if user is already authenticated with valid session
-        // TEMPORARILY DISABLED FOR DEBUGGING
+        // Check if user is already authenticated (commented out for debugging)
         console.log("Authentication check temporarily disabled for debugging");
         /*
         if (typeof isUserAuthenticated === 'function') {
@@ -98,12 +98,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitMfaCode(mfaCode);
                 } else {
                     console.error("submitMfaCode function not found!");
-                    throw new Error("MFA script failed to load.");
+                    throw new Error("MFA function failed to load.");
                 }
             });
             console.log("MFA form event listener attached.");
-        } else {
-            console.error("MFA form not found!");
         }
 
         // 5. Set up new password form listener
@@ -114,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
 
-                // Validate password confirmation
+                // Check if passwords match
                 if (newPassword !== confirmPassword) {
                     const errorMessage = document.getElementById('errorMessage');
                     errorMessage.textContent = 'Passwords do not match. Please try again.';
@@ -122,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                // Validate password strength (basic validation)
+                // Check password strength (minimum 8 characters)
                 if (newPassword.length < 8) {
                     const errorMessage = document.getElementById('errorMessage');
                     errorMessage.textContent = 'Password must be at least 8 characters long.';
@@ -141,44 +139,49 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitNewPassword(newPassword);
                 } else {
                     console.error("submitNewPassword function not found!");
-                    throw new Error("New password script failed to load.");
+                    throw new Error("New password function failed to load.");
                 }
             });
             console.log("New password form event listener attached.");
         }
-    } catch (e) {
-        // Display error using our handler
-        window.onerror(e.message, e.source, e.lineno, e.colno, e);
-    }
-});
 
-// Password toggle
+        console.log("Login page initialization complete.");
+
+    } catch (error) {
+        console.error("Login page initialization failed:", error);
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorMessage) {
+            errorMessage.textContent = 'Failed to initialize login page. Please refresh and try again.';
+            errorMessage.style.display = 'block';
+        }
+    }
+}
+
+// Password toggle function (called by onclick in HTML)
 function togglePassword() {
     const passwordInput = document.getElementById('password');
-    const toggle = document.querySelector('.password-toggle');
+    const toggleButton = document.querySelector('.password-toggle');
     
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        toggle.textContent = '🙈';
+        toggleButton.textContent = '🙈';
     } else {
         passwordInput.type = 'password';
-        toggle.textContent = '👁️';
+        toggleButton.textContent = '👁️';
     }
 }
 
-// Placeholder for forgot password functionality
+// Forgot password function (placeholder)
 function forgotPassword() {
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = 'Forgot password feature is not implemented in this demo.';
-    errorMessage.style.display = 'block';
+    alert('Forgot password functionality will be implemented soon.');
 }
 
-// Performance measurement
-function measurePerformance() {
-    const loadTime = Date.now() - performanceStart;
-    console.log(`Page loaded in ${loadTime}ms`);
-    const badge = document.querySelector('.performance-badge');
-    if (badge) {
-        badge.textContent += ` (${loadTime}ms)`;
+// Initialize when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initializeLoginPage);
+
+// Also initialize when the page loads (fallback)
+window.addEventListener('load', function() {
+    if (!document.getElementById('loginForm')) {
+        setTimeout(initializeLoginPage, 100);
     }
-}
+});

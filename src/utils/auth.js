@@ -1,9 +1,9 @@
 /*
  * This script provides authentication functions for an AWS Cognito-based application.
  * It depends on the Amazon Cognito Identity SDK for JavaScript, which must be included in the HTML:
- * <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
- * <script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
- * <script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+ * <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
+ * <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
+ * <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
  */
 
 // Initialize the Amazon Cognito credentials provider
