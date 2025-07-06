@@ -1,46 +1,53 @@
-# AWS Native Architecture - Clean .gitignore
-
-# Node.js (for potential future frontend builds)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Environment variables
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*build/
+*develop-eggs/
+*dist/
+*downloads/
+*eggs/
+*.egg-info/
+*env/
+*venv/
+delivery_env/
 .env
-.env.local
-.env.production
+
+# AWS SAM
+.aws-sam/
+
+# macOS
+.DS_Store
+
+# Database
+delivery_platform.db
+*.sqlite3
 
 # Backup files
-backup/
 *.bak
 
-# Temporary files
-*.tmp
-*.temp
+# IDE / Editor
+.vscode/
+.idea/
+
+# Deployment artifacts from other platforms
+Dockerfile
+apprunner.yaml
+Procfile
+amplify.yml
+amplify_simple.yml
+amplify_static.yml
+amplify_static_only.yml
+
+# Logs
 *.log
 
-# AWS credentials (should never be committed)
-aws-credentials.json
-credentials.json
+# Local configs
+samconfig.toml
 
-# Build artifacts (if any)
-dist/
-build/
-
-# Cache files
-.cache/
-*.cache
+# Shell scripts and temporary files
+*.md
 test_login_flow.html
 apprunner-config.json
 requirements_production.txt
@@ -48,16 +55,3 @@ root_start.py
 run_server.py
 runtime.txt
 simple_start.py
-
-# Ignore root-level clutter
-/*.html
-/*.js
-/*.py
-/*.sh
-/*.md
-/*.yaml
-/*.yml
-
-# Allow necessary root files
-!/README.md
-!/amplify.yml

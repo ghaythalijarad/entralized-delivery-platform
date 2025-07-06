@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+
+Resources:
+  CentralDeliveryHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: api
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "Authorization"
+          - "Content-Type"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  FastApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: fastapi-template/
+      PackageType: Zip
+      Handler: app.lambda_handler.lambda_handler
+      Runtime: python3.9
+      Environment:
+        Variables:
+          ROOT_PATH: /api
+          RDS_ENDPOINT: delivery-platform-db.clo2o2squsbf.eu-north-1.rds.amazonaws.com
+          RDS_PORT: "5432"
+          RDS_DB_NAME: delivery_platform
+          RDS_USERNAME: ghayth
+          RDS_PASSWORD: Gha%40551987
+          SECRET_KEY: prod-secret-key-centralized-delivery-platform-2025
+          ENVIRONMENT: production
+          DATABASE_URL: postgresql://ghayth:Gha%40551987@delivery-platform-db.clo2o2squsbf.eu-north-1.rds.amazonaws.com:5432/delivery_platform?sslmode=require
+          COGNITO_REGION: us-east-1
+          COGNITO_USER_POOL_ID: us-east-1_9IItcBz7P
+          COGNITO_APP_CLIENT_ID: 5r4pff0krdrblr5nkcfuglo4j1
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CentralDeliveryHttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  ConnectionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: CentralizedDeliveryPlatform-Connections
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${CentralDeliveryHttpApi}.execute-api.${AWS::Region}.amazonaws.com/api/"
