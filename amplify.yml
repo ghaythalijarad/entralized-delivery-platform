@@ -3,7 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - echo "Building driver management system backend..."
+        - echo "Building centralized platform backend..."
         - npm install -g @aws-amplify/cli
         - amplify configure --usage-data-off
         - echo "Backend build completed"
@@ -11,32 +11,34 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Installing dependencies for driver management system..."
-        - echo "Verifying driver API configuration..."
+        - echo "Installing dependencies for centralized platform..."
+        - echo "Verifying API configuration..."
         - ls -la src/utils/
-        - echo "Checking driver management pages..."
+        - echo "Checking management pages..."
         - ls -la src/pages/
         - echo "Checking AWS Lambda backend integration..."
         - ls -la config/aws/ 2>/dev/null || echo "AWS config directory not found"
     build:
       commands:
-        - echo "Building driver management frontend..."
+        - echo "Building centralized platform frontend..."
         - echo "Copying static assets..."
         - mkdir -p dist
         - cp -r src/* dist/
         - cp -r assets/* dist/ 2>/dev/null || echo "No assets directory found"
-        - echo "Creating index.html redirect for driver management..."
-        - echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Driver Management System</title><meta http-equiv="refresh" content="0; url=pages/drivers-management.html"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:40px;background:linear-gradient(135deg,#2196F3 0%,#21CBF3 100%);color:white;text-align:center;min-height:100vh;display:flex;flex-direction:column;justify-content:center}.container{max-width:600px;margin:0 auto;background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;backdrop-filter:blur(10px)}</style></head><body><div class="container"><h1>🚗 Driver Management System</h1><p>Redirecting to <a href="pages/drivers-management.html">Driver Dashboard</a>...</p></div></body></html>' > dist/index.html
+        - echo "Creating index.html redirect to login page..."
+        - echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Centralized Platform</title><meta http-equiv="refresh" content="0; url=pages/login-aws-native.html"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:40px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;text-align:center;min-height:100vh;display:flex;flex-direction:column;justify-content:center}.container{max-width:600px;margin:0 auto;background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;backdrop-filter:blur(10px)}</style></head><body><div class="container"><h1>🏢 Centralized Platform</h1><p>Redirecting to <a href="pages/login-aws-native.html">Login Page</a>...</p></div></body></html>' > dist/index.html
         - echo "Build completed successfully"
     postBuild:
       commands:
         - echo "Post-build optimizations..."
-        - echo "Driver Management System deployed successfully!"
+        - echo "Centralized Platform deployed successfully!"
         - echo "Available pages:"
-        - echo "- /pages/drivers-management.html (Main driver dashboard)"
-        - echo "- /pages/dashboard.html (General dashboard)"
+        - echo "- /pages/login-aws-native.html (Login page)"
+        - echo "- /pages/dashboard-aws-native.html (Main dashboard)"
+        - echo "- /pages/drivers-management.html (Driver management)"
+        - echo "- /pages/merchant-management.html (Merchant management)"
         - echo "Backend features:"
-        - echo "- AWS Lambda functions for driver CRUD operations"
+        - echo "- AWS Lambda functions for CRUD operations"
         - echo "- DynamoDB with optimized GSI indexes"
         - echo "- API Gateway with CORS support"
         - echo "- Cognito user management integration"
