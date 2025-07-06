@@ -32,11 +32,11 @@ if [ ! -f "dist/index.html" ]; then
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Management System</title>
-    <meta http-equiv="refresh" content="0; url=pages/merchant-management.html">
+    <meta http-equiv="refresh" content="0; url=pages/login-aws-native.html">
 </head>
 <body>
     <h1>🏪 Merchant Management System</h1>
-    <p>Redirecting to <a href="pages/merchant-management.html">Admin Dashboard</a>...</p>
+    <p>Redirecting to <a href="pages/login-aws-native.html">Login Page</a>...</p>
 </body>
 </html>
 EOF

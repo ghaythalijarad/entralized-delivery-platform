@@ -24,7 +24,7 @@ frontend:
         - cp -r src/* dist/
         - cp -r assets/* dist/ 2>/dev/null || echo "No assets directory found"
         - echo "Creating index.html redirect..."
-        - echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=pages/merchant-management.html"><title>Merchant Management System</title></head><body><p>Redirecting to <a href="pages/merchant-management.html">Merchant Management</a>...</p></body></html>' > dist/index.html
+        - echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=pages/login-aws-native.html"><title>Merchant Management System</title></head><body><p>Redirecting to <a href="pages/login-aws-native.html">Login Page</a>...</p></body></html>' > dist/index.html
         - echo "Build completed successfully"
     postBuild:
       commands:
