@@ -154,30 +154,23 @@ else
     fi
 fi
 
-# Check if Amplify app exists
-echo -e "${BLUE}🔍 Checking for existing Amplify app...${NC}"
+# Use existing Amplify app
+echo -e "${BLUE}🔍 Using existing Amplify app...${NC}"
 
-EXISTING_APP=$(aws amplify list-apps --region $REGION --query "apps[?name=='$APP_NAME'].appId" --output text 2>/dev/null || echo "")
+APP_ID="d26nn5u6blbq6z"
+echo -e "${GREEN}✅ Using existing Amplify app: ${APP_ID}${NC}"
 
-if [ -z "$EXISTING_APP" ] || [ "$EXISTING_APP" = "None" ]; then
-    echo -e "${BLUE}📱 Creating new Amplify app...${NC}"
-    
-    # Create new Amplify app
-    APP_RESULT=$(aws amplify create-app \
-        --name "$APP_NAME" \
-        --description "Driver Management System with AWS Lambda backend - approve, reject, suspend driver applications" \
-        --platform WEB \
-        --environment-variables NODE_ENV=production,DRIVER_API_MODE=production,BACKEND_TYPE=aws-lambda \
-        --enable-branch-auto-build \
-        --region $REGION \
-        --output json)
-    
-    APP_ID=$(echo $APP_RESULT | jq -r '.app.appId')
-    echo -e "${GREEN}✅ Created Amplify app: ${APP_ID}${NC}"
-else
-    APP_ID=$EXISTING_APP
-    echo -e "${GREEN}✅ Using existing Amplify app: ${APP_ID}${NC}"
-fi
+# Update app description for driver management
+echo -e "${BLUE}📝 Updating app description for driver management...${NC}"
+aws amplify update-app \
+    --app-id $APP_ID \
+    --name "centralized-platform-driver-management" \
+    --description "Centralized Platform - Driver Management System with AWS Lambda backend" \
+    --platform WEB \
+    --region $REGION \
+    --output json > /dev/null
+
+echo -e "${GREEN}✅ App description updated${NC}"
 
 # Check if branch exists
 echo -e "${BLUE}🌿 Setting up branch...${NC}"
@@ -204,13 +197,13 @@ else
     echo -e "${GREEN}✅ Using existing branch: ${BRANCH}${NC}"
 fi
 
-# Update environment variables
-echo -e "${BLUE}⚙️  Updating environment variables...${NC}"
+# Update environment variables for driver management
+echo -e "${BLUE}⚙️  Updating environment variables for driver management...${NC}"
 
 aws amplify update-branch \
     --app-id $APP_ID \
     --branch-name $BRANCH \
-    --environment-variables NODE_ENV=production,DRIVER_API_MODE=production,BACKEND_TYPE=aws-lambda,BUILD_ENV=amplify \
+    --environment-variables NODE_ENV=production,SYSTEM_TYPE=driver-management,DRIVER_API_MODE=production,BACKEND_TYPE=aws-lambda,BUILD_ENV=amplify \
     --region $REGION
 
 echo -e "${GREEN}✅ Environment variables updated${NC}"
@@ -278,6 +271,9 @@ APP_DETAILS=$(aws amplify get-app \
 
 DEFAULT_DOMAIN=$(echo $APP_DETAILS | jq -r '.app.defaultDomain')
 APP_URL="https://$BRANCH.$DEFAULT_DOMAIN"
+
+# Override with known URL for existing app
+APP_URL="https://main.d26nn5u6blbq6z.amplifyapp.com"
 
 echo ""
 echo -e "${GREEN}🎉 Driver Management System Deployed Successfully!${NC}"
