@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Control Center - Delivery Management Hub</title>
     
-    <!-- Amazon Cognito Identity SDK - UPDATED -->
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
+    <!-- AWS Amplify SDK -->
+    <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/auth@latest/dist/aws-amplify-auth.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/api@latest/dist/aws-amplify-api.min.js"></script>
     
     <!-- Unified Design System -->
     <link href="../utils/unified-design.css" rel="stylesheet">
     
     <!-- Bilingual Support -->
-    <script src="../utils/auth-manager.js"></script>
+    <script type="module" src="../utils/auth-manager.js"></script>
     <script src="../utils/bilingual.js"></script>
     <script src="../utils/bilingual-extensions.js"></script>
     <script src="../utils/unified-navigation.js"></script>
@@ -499,46 +499,33 @@
       5. auth.js - Defines signIn, signOut; needed by login-init.js.
       6. login-init.js - This MUST be last. It runs all the setup logic and depends on all other scripts.
     -->
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1149.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/aws-cognito-sdk.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.10/dist/amazon-cognito-identity.min.js"></script>
-    
-    <script src="../utils/aws-config.js"></script>
-    <script src="../utils/auth-manager.js"></script>
-    <script src="../utils/auth.js"></script>
-    <script src="../utils/bilingual.js"></script>
-    <script src="../utils/bilingual-extensions.js"></script>
-    <script src="../utils/unified-navigation.js"></script>
+    <!-- AWS Configuration and Login Logic -->
+    <script src="../aws-exports.js"></script>
+    <script type="module" src="../utils/login-init.js"></script>
     
     <script>
-        // Initialize unified navigation for login page
+        // Initialize page after all modules are loaded
         document.addEventListener('DOMContentLoaded', async function() {
             try {
-                // Initialize AuthManager first
-                await AuthManager.initialize();
-                
-                // Check if user is already authenticated
-                const isAuthenticated = await AuthManager.isAuthenticated();
-                if (isAuthenticated) {
-                    // User is already logged in, redirect to dashboard
-                    window.location.replace('dashboard-aws-native.html');
-                    return;
+                // Initialize bilingual support first
+                if (typeof initializeBilingualSupport === 'function') {
+                    initializeBilingualSupport('en');
                 }
                 
-                // Initialize navigation for login page
+                // Initialize unified navigation (hidden for login page)
                 if (typeof UnifiedNavigation !== 'undefined') {
-                    // Initialize with login page specific settings
                     UnifiedNavigation.init({
-                        showNavigation: false, // Don't show navigation on login page
-                        showTopbar: false // Don't show topbar on login page
+                        showNavigation: false,
+                        showTopbar: false
                     });
                 }
                 
                 console.log('Login page initialized successfully');
             } catch (error) {
                 console.error('Login page initialization error:', error);
-                // Continue with login page display
-                if (typeof UnifiedNavigation !== 'undefined') {
+            }
+        });
+    </script>
                     UnifiedNavigation.init({
                         showNavigation: false,
                         showTopbar: false

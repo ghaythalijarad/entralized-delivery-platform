@@ -249,13 +249,5 @@ class AuthManager {
     }
 }
 
-// Create global instance
-const authManager = new AuthManager();
-
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AuthManager;
-}
-
-// Make available globally
-window.AuthManager = authManager;
+export default authManager;

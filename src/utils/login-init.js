@@ -1,3 +1,7 @@
+// Add Amplify import
+import { Auth } from 'aws-amplify';
+import authManager from './auth-manager.js';
+
 /**
  * Login Page Initialization Script
  * 
