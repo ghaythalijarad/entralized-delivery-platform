@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drivers Management - Central Control System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Bilingual Support -->
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/bilingual-extensions.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .lang-btn {
+            padding: 8px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .stats-row {
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .filters-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .driver-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            border: none;
+            font-weight: 600;
+            color: #333;
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-suspended { background: #fff3cd; color: #856404; }
+        .status-pending { background: #d1ecf1; color: #0c5460; }
+
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            margin: 0 0.2rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-approve { background: #28a745; color: white; }
+        .btn-reject { background: #dc3545; color: white; }
+        .btn-suspend { background: #ffc107; color: #333; }
+        .btn-view { background: #17a2b8; color: white; }
+        .btn-edit { background: #007bff; color: white; }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .driver-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .application-card {
+            border: 2px solid #f1f3f4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .application-card.pending {
+            border-color: #17a2b8;
+            background: #f0f9ff;
+        }
+
+        .document-preview {
+            width: 100px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .document-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RTL Support */
+        body[dir="rtl"] .language-switcher {
+            right: auto;
+            left: 20px;
+        }
+
+        body[dir="rtl"] .driver-avatar {
+            margin-right: 0;
+            margin-left: 1rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .content-area {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+            
+            .btn-action {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ar">العربية</button>
+    </div>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 data-translate="drivers.pageTitle">Drivers Management</h1>
+            <p class="subtitle" data-translate="drivers.subtitle">Manage driver applications, approvals, and status</p>
+        </div>
+
+        <div class="content-area">
+            <!-- Statistics Row -->
+            <div class="row stats-row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalDrivers">0</div>
+                        <div class="stat-label" data-translate="drivers.totalDrivers">Total Drivers</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeDrivers">0</div>
+                        <div class="stat-label" data-translate="drivers.activeDrivers">Active Drivers</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingApplications">0</div>
+                        <div class="stat-label" data-translate="drivers.pendingApplications">Pending Applications</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="suspendedDrivers">0</div>
+                        <div class="stat-label" data-translate="drivers.suspendedDrivers">Suspended Drivers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="filters-section">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control search-box" id="searchDrivers" 
+                               data-translate-placeholder="drivers.searchPlaceholder" 
+                               placeholder="Search drivers by name, phone, or email...">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="" data-translate="drivers.allStatuses">All Statuses</option>
+                            <option value="active" data-translate="drivers.active">Active</option>
+                            <option value="inactive" data-translate="drivers.inactive">Inactive</option>
+                            <option value="suspended" data-translate="drivers.suspended">Suspended</option>
+                            <option value="pending" data-translate="drivers.pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="vehicleFilter">
+                            <option value="" data-translate="drivers.allVehicles">All Vehicles</option>
+                            <option value="car" data-translate="drivers.car">Car</option>
+                            <option value="motorcycle" data-translate="drivers.motorcycle">Motorcycle</option>
+                            <option value="bicycle" data-translate="drivers.bicycle">Bicycle</option>
+                            <option value="truck" data-translate="drivers.truck">Truck</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="addDriverBtn">
+                            <i class="fas fa-plus"></i> <span data-translate="drivers.addDriver">Add Driver</span>
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-info w-100" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> <span data-translate="common.refresh">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drivers Table -->
+            <div class="driver-table">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th data-translate="drivers.driver">Driver</th>
+                                <th data-translate="drivers.contact">Contact</th>
+                                <th data-translate="drivers.vehicle">Vehicle</th>
+                                <th data-translate="drivers.status">Status</th>
+                                <th data-translate="drivers.joinDate">Join Date</th>
+                                <th data-translate="drivers.rating">Rating</th>
+                                <th data-translate="drivers.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody">
+                            <!-- Dynamic content will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="text-center mt-4">
+                <div class="loading-spinner" id="loadingSpinner"></div>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Drivers pagination" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Dynamic pagination will be loaded here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Driver Details Modal -->
+    <div class="modal fade" id="driverModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-translate="drivers.driverDetails">Driver Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="driverModalBody">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="common.close">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveDriverBtn" data-translate="common.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Application Modal -->
+    <div class="modal fade" id="applicationModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-translate="drivers.applicationReview">Driver Application Review</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="applicationModalBody">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="rejectBtn" data-translate="drivers.reject">Reject</button>
+                    <button type="button" class="btn btn-warning" id="suspendBtn" data-translate="drivers.suspend">Suspend</button>
+                    <button type="button" class="btn btn-success" id="approveBtn" data-translate="drivers.approve">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Driver Modal -->
+    <div class="modal fade" id="addDriverModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDriverModalTitle" data-translate="drivers.addNewDriver">Add New Driver</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="driverForm">
+                        <input type="hidden" id="driverId">
+                        
+                        <!-- Personal Information -->
+                        <h6 class="mb-3" data-translate="drivers.personalInfo">Personal Information</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" data-translate="drivers.firstName">First Name</label>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" data-translate="drivers.middleName">Middle Name</label>
+                                <input type="text" class="form-control" id="middleName">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" data-translate="drivers.lastName">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Information -->
+                        <h6 class="mb-3" data-translate="drivers.contactInfo">Contact Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.phone">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.email">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Address -->
+                        <h6 class="mb-3" data-translate="drivers.address">Address</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.street">Street Address</label>
+                                <input type="text" class="form-control" id="streetAddress" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label" data-translate="drivers.city">City</label>
+                                <input type="text" class="form-control" id="city" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label" data-translate="drivers.zipCode">ZIP Code</label>
+                                <input type="text" class="form-control" id="zipCode">
+                            </div>
+                        </div>
+                        
+                        <!-- Vehicle Information -->
+                        <h6 class="mb-3" data-translate="drivers.vehicleInfo">Vehicle Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.vehicleType">Vehicle Type</label>
+                                <select class="form-select" id="vehicleType" required>
+                                    <option value="">Select Vehicle Type</option>
+                                    <option value="car">Car</option>
+                                    <option value="motorcycle">Motorcycle</option>
+                                    <option value="bicycle">Bicycle</option>
+                                    <option value="truck">Truck</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.licensePlate">License Plate</label>
+                                <input type="text" class="form-control" id="licensePlate">
+                            </div>
+                        </div>
+                        
+                        <!-- Documents -->
+                        <h6 class="mb-3" data-translate="drivers.documents">Documents</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.driverLicense">Driver's License</label>
+                                <input type="file" class="form-control" id="driverLicense" accept="image/*">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.vehicleRegistration">Vehicle Registration</label>
+                                <input type="file" class="form-control" id="vehicleRegistration" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <!-- Emergency Contact -->
+                        <h6 class="mb-3" data-translate="drivers.emergencyContact">Emergency Contact</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.emergencyName">Emergency Contact Name</label>
+                                <input type="text" class="form-control" id="emergencyName">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate="drivers.emergencyPhone">Emergency Contact Phone</label>
+                                <input type="tel" class="form-control" id="emergencyPhone">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="common.cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveNewDriverBtn" data-translate="common.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Authentication check -->
+    <script src="../utils/auth.js"></script>
+    
+    <!-- Drivers Management Script -->
+    <script>
+        // Check authentication first
+        function checkAuthentication() {
+            const token = localStorage.getItem('aws-native-token');
+            if (!token) {
+                window.location.href = 'login-aws-native.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Call authentication check on page load
+        if (!checkAuthentication()) {
+            // User will be redirected, stop execution
+        } else {
+            // Initialize the page
+            initializeDriversManagement();
+        }
+
+        function initializeDriversManagement() {
+            // Initialize bilingual support
+            if (typeof initializeBilingual === 'function') {
+                initializeBilingual();
+            }
+
+            // Initialize the Drivers Management System
+            const driversManager = new DriversManagementSystem();
+        }
+
+        class DriversManagementSystem {
+            constructor() {
+                this.drivers = [];
+                this.filteredDrivers = [];
+                this.currentPage = 1;
+                this.driversPerPage = 10;
+                this.currentFilter = {
+                    search: '',
+                    status: '',
+                    vehicle: ''
+                };
+                
+                this.init();
+            }
+
+            async init() {
+                this.setupEventListeners();
+                await this.loadDrivers();
+                this.updateStatistics();
+                this.renderDriversTable();
+            }
+
+            setupEventListeners() {
+                // Search and filters
+                document.getElementById('searchDrivers').addEventListener('input', (e) => {
+                    this.currentFilter.search = e.target.value;
+                    this.filterDrivers();
+                });
+
+                document.getElementById('statusFilter').addEventListener('change', (e) => {
+                    this.currentFilter.status = e.target.value;
+                    this.filterDrivers();
+                });
+
+                document.getElementById('vehicleFilter').addEventListener('change', (e) => {
+                    this.currentFilter.vehicle = e.target.value;
+                    this.filterDrivers();
+                });
+
+                // Buttons
+                document.getElementById('addDriverBtn').addEventListener('click', () => {
+                    this.showAddDriverModal();
+                });
+
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadDrivers();
+                });
+
+                document.getElementById('saveNewDriverBtn').addEventListener('click', () => {
+                    this.saveDriver();
+                });
+
+                // Modal action buttons
+                document.getElementById('approveBtn').addEventListener('click', () => {
+                    this.approveDriver();
+                });
+
+                document.getElementById('rejectBtn').addEventListener('click', () => {
+                    this.rejectDriver();
+                });
+
+                document.getElementById('suspendBtn').addEventListener('click', () => {
+                    this.suspendDriver();
+                });
+
+                // Language switcher
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const lang = e.target.dataset.lang;
+                        this.switchLanguage(lang);
+                    });
+                });
+            }
+
+            async loadDrivers() {
+                this.showLoading(true);
+                try {
+                    // Mock data for demonstration
+                    // In production, this would be an API call
+                    this.drivers = [
+                        {
+                            id: 'D001',
+                            firstName: 'Ahmed',
+                            middleName: 'Mohammed',
+                            lastName: 'Al-Rashid',
+                            phoneNumber: '+966501234567',
+                            email: 'ahmed.rashid@email.com',
+                            streetAddress: '123 King Fahd Road',
+                            city: 'Riyadh',
+                            zipCode: '12345',
+                            vehicleType: 'car',
+                            licensePlate: 'ABC-123',
+                            status: 'active',
+                            joinDate: '2024-01-15',
+                            rating: 4.8,
+                            totalDeliveries: 234,
+                            emergencyName: 'Sara Al-Rashid',
+                            emergencyPhone: '+966509876543',
+                            documents: {
+                                driverLicense: 'license_001.jpg',
+                                vehicleRegistration: 'registration_001.jpg'
+                            }
+                        },
+                        {
+                            id: 'D002',
+                            firstName: 'Fatima',
+                            middleName: 'Ali',
+                            lastName: 'Hassan',
+                            phoneNumber: '+966502345678',
+                            email: 'fatima.hassan@email.com',
+                            streetAddress: '456 Olaya Street',
+                            city: 'Riyadh',
+                            zipCode: '12346',
+                            vehicleType: 'motorcycle',
+                            licensePlate: 'XYZ-789',
+                            status: 'pending',
+                            joinDate: '2024-03-10',
+                            rating: 0,
+                            totalDeliveries: 0,
+                            emergencyName: 'Mohammed Hassan',
+                            emergencyPhone: '+966508765432',
+                            documents: {
+                                driverLicense: 'license_002.jpg',
+                                vehicleRegistration: 'registration_002.jpg'
+                            }
+                        },
+                        {
+                            id: 'D003',
+                            firstName: 'Omar',
+                            middleName: 'Abdullah',
+                            lastName: 'Al-Zahrani',
+                            phoneNumber: '+966503456789',
+                            email: 'omar.zahrani@email.com',
+                            streetAddress: '789 Prince Mohammed Road',
+                            city: 'Jeddah',
+                            zipCode: '21453',
+                            vehicleType: 'bicycle',
+                            licensePlate: '',
+                            status: 'suspended',
+                            joinDate: '2023-11-20',
+                            rating: 4.2,
+                            totalDeliveries: 156,
+                            emergencyName: 'Aisha Al-Zahrani',
+                            emergencyPhone: '+966507654321',
+                            documents: {
+                                driverLicense: 'license_003.jpg',
+                                vehicleRegistration: ''
+                            }
+                        }
+                    ];
+                    
+                    this.filteredDrivers = [...this.drivers];
+                    this.updateStatistics();
+                    this.renderDriversTable();
+                } catch (error) {
+                    console.error('Error loading drivers:', error);
+                    this.showAlert('Error loading drivers data', 'danger');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            filterDrivers() {
+                this.filteredDrivers = this.drivers.filter(driver => {
+                    const matchesSearch = !this.currentFilter.search || 
+                        driver.firstName.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
+                        driver.lastName.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
+                        driver.phoneNumber.includes(this.currentFilter.search) ||
+                        driver.email.toLowerCase().includes(this.currentFilter.search.toLowerCase());
+                    
+                    const matchesStatus = !this.currentFilter.status || driver.status === this.currentFilter.status;
+                    const matchesVehicle = !this.currentFilter.vehicle || driver.vehicleType === this.currentFilter.vehicle;
+                    
+                    return matchesSearch && matchesStatus && matchesVehicle;
+                });
+                
+                this.currentPage = 1;
+                this.renderDriversTable();
+            }
+
+            updateStatistics() {
+                const stats = {
+                    total: this.drivers.length,
+                    active: this.drivers.filter(d => d.status === 'active').length,
+                    pending: this.drivers.filter(d => d.status === 'pending').length,
+                    suspended: this.drivers.filter(d => d.status === 'suspended').length
+                };
+
+                document.getElementById('totalDrivers').textContent = stats.total;
+                document.getElementById('activeDrivers').textContent = stats.active;
+                document.getElementById('pendingApplications').textContent = stats.pending;
+                document.getElementById('suspendedDrivers').textContent = stats.suspended;
+            }
+
+            renderDriversTable() {
+                const startIndex = (this.currentPage - 1) * this.driversPerPage;
+                const endIndex = startIndex + this.driversPerPage;
+                const driversToShow = this.filteredDrivers.slice(startIndex, endIndex);
+
+                const tbody = document.getElementById('driversTableBody');
+                tbody.innerHTML = driversToShow.map(driver => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="driver-avatar">
+                                    ${driver.firstName.charAt(0)}${driver.lastName.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${driver.firstName} ${driver.middleName} ${driver.lastName}</div>
+                                    <small class="text-muted">ID: ${driver.id}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>${driver.phoneNumber}</div>
+                            <small class="text-muted">${driver.email}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold">${this.getVehicleDisplay(driver.vehicleType)}</div>
+                            ${driver.licensePlate ? `<small class="text-muted">${driver.licensePlate}</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="status-badge status-${driver.status}">
+                                ${this.getStatusDisplay(driver.status)}
+                            </span>
+                        </td>
+                        <td>${new Date(driver.joinDate).toLocaleDateString()}</td>
+                        <td>
+                            ${driver.rating > 0 ? `
+                                <div class="fw-bold">${driver.rating.toFixed(1)} ⭐</div>
+                                <small class="text-muted">${driver.totalDeliveries} deliveries</small>
+                            ` : '<span class="text-muted">No ratings yet</span>'}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn-action btn-view" onclick="driversManager.viewDriver('${driver.id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" onclick="driversManager.editDriver('${driver.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${driver.status === 'pending' ? `
+                                    <button class="btn-action btn-approve" onclick="driversManager.quickApprove('${driver.id}')" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-action btn-reject" onclick="driversManager.quickReject('${driver.id}')" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : ''}
+                                ${driver.status === 'active' ? `
+                                    <button class="btn-action btn-suspend" onclick="driversManager.quickSuspend('${driver.id}')" title="Suspend">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+                this.renderPagination();
+            }
+
+            renderPagination() {
+                const totalPages = Math.ceil(this.filteredDrivers.length / this.driversPerPage);
+                const pagination = document.getElementById('pagination');
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = '';
+                
+                // Previous button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="driversManager.changePage(${this.currentPage - 1})">Previous</a>
+                    </li>
+                `;
+
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHTML += `
+                        <li class="page-item ${i === this.currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="driversManager.changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                }
+
+                // Next button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="driversManager.changePage(${this.currentPage + 1})">Next</a>
+                    </li>
+                `;
+
+                pagination.innerHTML = paginationHTML;
+            }
+
+            changePage(page) {
+                const totalPages = Math.ceil(this.filteredDrivers.length / this.driversPerPage);
+                if (page < 1 || page > totalPages) return;
+                
+                this.currentPage = page;
+                this.renderDriversTable();
+            }
+
+            getVehicleDisplay(vehicleType) {
+                const vehicles = {
+                    car: 'Car',
+                    motorcycle: 'Motorcycle',
+                    bicycle: 'Bicycle',
+                    truck: 'Truck'
+                };
+                return vehicles[vehicleType] || vehicleType;
+            }
+
+            getStatusDisplay(status) {
+                const statuses = {
+                    active: 'Active',
+                    inactive: 'Inactive',
+                    suspended: 'Suspended',
+                    pending: 'Pending Review'
+                };
+                return statuses[status] || status;
+            }
+
+            viewDriver(driverId) {
+                const driver = this.drivers.find(d => d.id === driverId);
+                if (!driver) return;
+
+                const modalBody = document.getElementById('driverModalBody');
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Personal Information</h6>
+                            <table class="table table-borderless">
+                                <tr><td><strong>Full Name:</strong></td><td>${driver.firstName} ${driver.middleName} ${driver.lastName}</td></tr>
+                                <tr><td><strong>Phone:</strong></td><td>${driver.phoneNumber}</td></tr>
+                                <tr><td><strong>Email:</strong></td><td>${driver.email}</td></tr>
+                                <tr><td><strong>Address:</strong></td><td>${driver.streetAddress}, ${driver.city} ${driver.zipCode}</td></tr>
+                                <tr><td><strong>Vehicle:</strong></td><td>${this.getVehicleDisplay(driver.vehicleType)} ${driver.licensePlate ? `(${driver.licensePlate})` : ''}</td></tr>
+                                <tr><td><strong>Status:</strong></td><td><span class="status-badge status-${driver.status}">${this.getStatusDisplay(driver.status)}</span></td></tr>
+                                <tr><td><strong>Join Date:</strong></td><td>${new Date(driver.joinDate).toLocaleDateString()}</td></tr>
+                                <tr><td><strong>Emergency Contact:</strong></td><td>${driver.emergencyName} - ${driver.emergencyPhone}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Performance</h6>
+                            <div class="text-center">
+                                <div class="display-4 text-primary">${driver.rating.toFixed(1)}</div>
+                                <div>⭐⭐⭐⭐⭐</div>
+                                <div class="mt-2">${driver.totalDeliveries} total deliveries</div>
+                            </div>
+                            
+                            <h6 class="mt-4">Documents</h6>
+                            <div class="mb-2">
+                                <strong>Driver's License:</strong><br>
+                                ${driver.documents.driverLicense ? 
+                                    `<img src="./assets/${driver.documents.driverLicense}" class="document-preview" alt="Driver License">` : 
+                                    '<span class="text-muted">Not uploaded</span>'}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Vehicle Registration:</strong><br>
+                                ${driver.documents.vehicleRegistration ? 
+                                    `<img src="./assets/${driver.documents.vehicleRegistration}" class="document-preview" alt="Vehicle Registration">` : 
+                                    '<span class="text-muted">Not uploaded</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                new bootstrap.Modal(document.getElementById('driverModal')).show();
+            }
+
+            editDriver(driverId) {
+                const driver = this.drivers.find(d => d.id === driverId);
+                if (!driver) return;
+
+                // Fill the form with driver data
+                document.getElementById('driverId').value = driver.id;
+                document.getElementById('firstName').value = driver.firstName;
+                document.getElementById('middleName').value = driver.middleName;
+                document.getElementById('lastName').value = driver.lastName;
+                document.getElementById('phoneNumber').value = driver.phoneNumber;
+                document.getElementById('email').value = driver.email;
+                document.getElementById('streetAddress').value = driver.streetAddress;
+                document.getElementById('city').value = driver.city;
+                document.getElementById('zipCode').value = driver.zipCode;
+                document.getElementById('vehicleType').value = driver.vehicleType;
+                document.getElementById('licensePlate').value = driver.licensePlate;
+                document.getElementById('emergencyName').value = driver.emergencyName;
+                document.getElementById('emergencyPhone').value = driver.emergencyPhone;
+
+                document.getElementById('addDriverModalTitle').textContent = 'Edit Driver';
+                new bootstrap.Modal(document.getElementById('addDriverModal')).show();
+            }
+
+            showAddDriverModal() {
+                document.getElementById('driverForm').reset();
+                document.getElementById('driverId').value = '';
+                document.getElementById('addDriverModalTitle').textContent = 'Add New Driver';
+                new bootstrap.Modal(document.getElementById('addDriverModal')).show();
+            }
+
+            async saveDriver() {
+                const formData = {
+                    id: document.getElementById('driverId').value || `D${Date.now().toString().slice(-6)}`,
+                    firstName: document.getElementById('firstName').value,
+                    middleName: document.getElementById('middleName').value,
+                    lastName: document.getElementById('lastName').value,
+                    phoneNumber: document.getElementById('phoneNumber').value,
+                    email: document.getElementById('email').value,
+                    streetAddress: document.getElementById('streetAddress').value,
+                    city: document.getElementById('city').value,
+                    zipCode: document.getElementById('zipCode').value,
+                    vehicleType: document.getElementById('vehicleType').value,
+                    licensePlate: document.getElementById('licensePlate').value,
+                    emergencyName: document.getElementById('emergencyName').value,
+                    emergencyPhone: document.getElementById('emergencyPhone').value
+                };
+
+                // Validate required fields
+                if (!formData.firstName || !formData.lastName || !formData.phoneNumber || !formData.email) {
+                    this.showAlert('Please fill in all required fields', 'danger');
+                    return;
+                }
+
+                try {
+                    const existingDriverIndex = this.drivers.findIndex(d => d.id === formData.id);
+                    
+                    if (existingDriverIndex >= 0) {
+                        // Update existing driver
+                        this.drivers[existingDriverIndex] = {
+                            ...this.drivers[existingDriverIndex],
+                            ...formData
+                        };
+                        this.showAlert('Driver updated successfully', 'success');
+                    } else {
+                        // Add new driver
+                        const newDriver = {
+                            ...formData,
+                            status: 'pending',
+                            joinDate: new Date().toISOString().split('T')[0],
+                            rating: 0,
+                            totalDeliveries: 0,
+                            documents: {
+                                driverLicense: '',
+                                vehicleRegistration: ''
+                            }
+                        };
+                        this.drivers.push(newDriver);
+                        this.showAlert('Driver added successfully', 'success');
+                    }
+
+                    this.filterDrivers();
+                    this.updateStatistics();
+                    bootstrap.Modal.getInstance(document.getElementById('addDriverModal')).hide();
+                } catch (error) {
+                    console.error('Error saving driver:', error);
+                    this.showAlert('Error saving driver', 'danger');
+                }
+            }
+
+            async quickApprove(driverId) {
+                await this.updateDriverStatus(driverId, 'active');
+                this.showAlert('Driver approved successfully', 'success');
+            }
+
+            async quickReject(driverId) {
+                await this.updateDriverStatus(driverId, 'inactive');
+                this.showAlert('Driver application rejected', 'warning');
+            }
+
+            async quickSuspend(driverId) {
+                await this.updateDriverStatus(driverId, 'suspended');
+                this.showAlert('Driver suspended', 'warning');
+            }
+
+            async updateDriverStatus(driverId, newStatus) {
+                const driver = this.drivers.find(d => d.id === driverId);
+                if (driver) {
+                    driver.status = newStatus;
+                    this.filterDrivers();
+                    this.updateStatistics();
+                }
+            }
+
+            approveDriver() {
+                // Implementation for approval from modal
+                console.log('Approve driver from modal');
+            }
+
+            rejectDriver() {
+                // Implementation for rejection from modal
+                console.log('Reject driver from modal');
+            }
+
+            suspendDriver() {
+                // Implementation for suspension from modal
+                console.log('Suspend driver from modal');
+            }
+
+            switchLanguage(lang) {
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+                
+                document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+                document.documentElement.setAttribute('lang', lang);
+                
+                // Update bilingual manager if available
+                if (window.bilingualManager) {
+                    window.bilingualManager.switchLanguage(lang);
+                }
+            }
+
+            showLoading(show) {
+                const spinner = document.getElementById('loadingSpinner');
+                spinner.style.display = show ? 'block' : 'none';
+            }
+
+            showAlert(message, type) {
+                // Create and show bootstrap alert
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 5000);
+            }
+        }
+
+        // Make driversManager globally accessible for onclick handlers
+        let driversManager;
+        
+        function initializeDriversManagement() {
+            // Initialize bilingual support
+            if (typeof initializeBilingual === 'function') {
+                initializeBilingual();
+            }
+
+            // Initialize the Drivers Management System
+            driversManager = new DriversManagementSystem();
+        }
+    </script>
+</body>
+</html>

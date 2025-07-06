@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>إدارة المستخدمين - منصة التوصيل المركزية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="auth.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .page-title::after {
+            content: '';
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: block;
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+        
+        .stats-cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .controls-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .search-filter-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e3e6f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8391a2;
+        }
+        
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e3e6f0;
+            border-radius: 10px;
+            background: white;
+            color: #5a6c7d;
+            min-width: 150px;
+        }
+        
+        .btn-create-user {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-create-user:hover {
+            background: linear-gradient(135deg, #218838 0%, #1ab394 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .users-table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .users-table {
+            margin: 0;
+            border: none;
+        }
+        
+        .users-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .users-table thead th {
+            border: none;
+            padding: 20px 15px;
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+        }
+        
+        .users-table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .users-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.01);
+        }
+        
+        .users-table tbody td {
+            padding: 20px 15px;
+            vertical-align: middle;
+            border: none;
+            text-align: center;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0 auto 10px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .badge-group {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .badge-admin {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+        }
+        
+        .badge-manager {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+        
+        .badge-viewer {
+            background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);
+            color: white;
+        }
+        
+        .badge-group:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-groups {
+            background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);
+            color: white;
+        }
+        
+        .btn-groups:hover {
+            background: linear-gradient(135deg, #6610f2 0%, #5a067a 100%);
+            transform: translateY(-2px);
+        }
+        
+        .modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            border-bottom: none;
+            padding: 25px;
+        }
+        
+        .modal-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .form-control {
+            border: 2px solid #e3e6f0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #e3e6f0;
+        }
+        
+        .alert-custom {
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .pagination .page-link {
+            border: 2px solid #e3e6f0;
+            color: #667eea;
+            padding: 10px 15px;
+            margin: 0 2px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination .page-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-cards {
+                flex-direction: column;
+            }
+            
+            .search-filter-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container {
+                min-width: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .users-table {
+                font-size: 0.9rem;
+            }
+            
+            .users-table tbody td {
+                padding: 15px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Page Header -->
+        <h1 class="page-title">
+            <i class="fas fa-users-cog"></i>
+            إدارة المستخدمين
+        </h1>
+        
+        <!-- Statistics Cards -->
+        <div class="stats-cards" id="statsCards">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">إجمالي المستخدمين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="adminUsers">0</div>
+                <div class="stat-label">المديرين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="managerUsers">0</div>
+                <div class="stat-label">المدراء</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="viewerUsers">0</div>
+                <div class="stat-label">المشاهدين</div>
+            </div>
+        </div>
+        
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="search-filter-container">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchUsers" placeholder="البحث في المستخدمين..." />
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <select class="filter-select" id="filterGroup">
+                    <option value="">جميع المجموعات</option>
+                    <option value="admin">المديرين</option>
+                    <option value="manager">المدراء</option>
+                    <option value="viewer">المشاهدين</option>
+                </select>
+                <button class="btn-create-user" id="createUserBtn" data-action="users:create">
+                    <i class="fas fa-plus"></i>
+                    إضافة مستخدم جديد
+                </button>
+            </div>
+        </div>
+        
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+        
+        <!-- Users Table -->
+        <div class="users-table-container">
+            <table class="table users-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-user"></i> المستخدم</th>
+                        <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
+                        <th><i class="fas fa-users"></i> المجموعات</th>
+                        <th><i class="fas fa-calendar"></i> تاريخ الإنشاء</th>
+                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Loading state -->
+                    <tr class="loading-row">
+                        <td colspan="5" class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <div class="mt-2">جاري تحميل المستخدمين...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <nav>
+                <ul class="pagination" id="pagination">
+                    <!-- Pagination items will be populated by JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus"></i>
+                        إضافة مستخدم جديد
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" id="newUsername" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="newEmail" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">كلمة المرور</label>
+                                <input type="password" class="form-control" id="newPassword" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الاسم الكامل</label>
+                                <input type="text" class="form-control" id="newFullName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">المجموعات</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="groupAdmin" value="admin">
+                                    <label for="groupAdmin">مدير (Admin)</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="groupManager" value="manager">
+                                    <label for="groupManager">مدير فرعي (Manager)</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="groupViewer" value="viewer">
+                                    <label for="groupViewer">مشاهد (Viewer)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">
+                        <i class="fas fa-save"></i>
+                        حفظ المستخدم
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Groups Modal -->
+    <div class="modal fade" id="editGroupsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users"></i>
+                        تعديل مجموعات المستخدم
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>المستخدم: <span id="editGroupsUsername"></span></strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المجموعات الحالية</label>
+                        <div class="checkbox-group" id="currentGroups">
+                            <!-- Current groups will be populated -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المجموعات المتاحة</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editGroupAdmin" value="admin">
+                                <label for="editGroupAdmin">مدير (Admin)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editGroupManager" value="manager">
+                                <label for="editGroupManager">مدير فرعي (Manager)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="editGroupViewer" value="viewer">
+                                <label for="editGroupViewer">مشاهد (Viewer)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="saveGroupsBtn">
+                        <i class="fas fa-save"></i>
+                        حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        تأكيد الحذف
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من حذف المستخدم؟</p>
+                    <div class="alert alert-danger">
+                        <strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء!
+                    </div>
+                    <div><strong>المستخدم: <span id="deleteUsername"></span></strong></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i>
+                        حذف المستخدم
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- User Management JavaScript -->
+    <script>
+        class UserManagement {
+            constructor() {
+                this.users = [];
+                this.filteredUsers = [];
+                this.currentPage = 1;
+                this.usersPerPage = 10;
+                this.currentEditUser = null;
+                
+                this.init();
+            }
+            
+            async init() {
+                // Check permissions
+                if (!window.authManager.canPerform('users:read')) {
+                    this.showAlert('ليس لديك صلاحية لعرض المستخدمين', 'danger');
+                    return;
+                }
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Load users
+                await this.loadUsers();
+                
+                // Setup UI based on permissions
+                this.setupPermissions();
+            }
+            
+            setupEventListeners() {
+                // Search
+                document.getElementById('searchUsers').addEventListener('input', (e) => {
+                    this.filterUsers(e.target.value, document.getElementById('filterGroup').value);
+                });
+                
+                // Filter
+                document.getElementById('filterGroup').addEventListener('change', (e) => {
+                    this.filterUsers(document.getElementById('searchUsers').value, e.target.value);
+                });
+                
+                // Create user button
+                document.getElementById('createUserBtn').addEventListener('click', () => {
+                    this.showCreateUserModal();
+                });
+                
+                // Save user button
+                document.getElementById('saveUserBtn').addEventListener('click', () => {
+                    this.createUser();
+                });
+                
+                // Save groups button
+                document.getElementById('saveGroupsBtn').addEventListener('click', () => {
+                    this.updateUserGroups();
+                });
+                
+                // Delete confirmation button
+                document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                    this.deleteUser();
+                });
+            }
+            
+            setupPermissions() {
+                // Hide create button if no permission
+                if (!window.authManager.canPerform('users:create')) {
+                    document.getElementById('createUserBtn').style.display = 'none';
+                }
+            }
+            
+            async loadUsers() {
+                try {
+                    this.showLoading(true);
+                    
+                    // Load Cognito users
+                    const response = await window.apiGet('/admin/cognito/users');
+                    
+                    if (response && response.users) {
+                        this.users = response.users;
+                        this.filteredUsers = [...this.users];
+                        this.updateStatistics();
+                        this.renderUsers();
+                        this.renderPagination();
+                    } else {
+                        throw new Error('فشل في تحميل المستخدمين');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    this.showAlert('فشل في تحميل المستخدمين: ' + error.message, 'danger');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            filterUsers(searchTerm, groupFilter) {
+                this.filteredUsers = this.users.filter(user => {
+                    const matchesSearch = !searchTerm || 
+                        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+                    
+                    const matchesGroup = !groupFilter || 
+                        user.groups.some(group => group.toLowerCase() === groupFilter.toLowerCase());
+                    
+                    return matchesSearch && matchesGroup;
+                });
+                
+                this.currentPage = 1;
+                this.renderUsers();
+                this.renderPagination();
+            }
+            
+            updateStatistics() {
+                const stats = {
+                    total: this.users.length,
+                    admin: this.users.filter(u => u.groups.includes('admin')).length,
+                    manager: this.users.filter(u => u.groups.includes('manager')).length,
+                    viewer: this.users.filter(u => u.groups.includes('viewer')).length
+                };
+                
+                document.getElementById('totalUsers').textContent = stats.total;
+                document.getElementById('adminUsers').textContent = stats.admin;
+                document.getElementById('managerUsers').textContent = stats.manager;
+                document.getElementById('viewerUsers').textContent = stats.viewer;
+            }
+            
+            renderUsers() {
+                const tbody = document.getElementById('usersTableBody');
+                const startIndex = (this.currentPage - 1) * this.usersPerPage;
+                const endIndex = startIndex + this.usersPerPage;
+                const pageUsers = this.filteredUsers.slice(startIndex, endIndex);
+                
+                if (pageUsers.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <div>لا توجد مستخدمين</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = pageUsers.map(user => this.renderUserRow(user)).join('');
+            }
+            
+            renderUserRow(user) {
+                const initials = user.username.substring(0, 2).toUpperCase();
+                const groupBadges = user.groups.map(group => this.renderGroupBadge(group)).join('');
+                const canEdit = window.authManager.canPerform('users:update');
+                const canDelete = window.authManager.canPerform('users:delete');
+                
+                return `
+                    <tr class="user-row">
+                        <td>
+                            <div class="user-avatar">${initials}</div>
+                            <div class="user-name">${user.username}</div>
+                        </td>
+                        <td>
+                            <div class="user-email">${user.email || 'غير محدد'}</div>
+                        </td>
+                        <td>
+                            ${groupBadges || '<span class="text-muted">لا توجد مجموعات</span>'}
+                        </td>
+                        <td>
+                            <span class="text-muted">غير محدد</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                ${canEdit ? `
+                                    <button class="btn-action btn-groups" onclick="userManagement.showEditGroupsModal('${user.username}', ${JSON.stringify(user.groups).replace(/"/g, '&quot;')})">
+                                        <i class="fas fa-users"></i>
+                                        المجموعات
+                                    </button>
+                                ` : ''}
+                                ${canDelete ? `
+                                    <button class="btn-action btn-delete" onclick="userManagement.showDeleteModal('${user.username}')">
+                                        <i class="fas fa-trash"></i>
+                                        حذف
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            renderGroupBadge(group) {
+                const groupClasses = {
+                    'admin': 'badge-admin',
+                    'manager': 'badge-manager',
+                    'viewer': 'badge-viewer'
+                };
+                
+                const groupNames = {
+                    'admin': 'مدير',
+                    'manager': 'مدير فرعي',
+                    'viewer': 'مشاهد'
+                };
+                
+                const className = groupClasses[group.toLowerCase()] || 'badge-group';
+                const displayName = groupNames[group.toLowerCase()] || group;
+                
+                return `<span class="badge-group ${className}">${displayName}</span>`;
+            }
+            
+            renderPagination() {
+                const totalPages = Math.ceil(this.filteredUsers.length / this.usersPerPage);
+                const paginationContainer = document.getElementById('paginationContainer');
+                const pagination = document.getElementById('pagination');
+                
+                if (totalPages <= 1) {
+                    paginationContainer.style.display = 'none';
+                    return;
+                }
+                
+                paginationContainer.style.display = 'block';
+                
+                let paginationHTML = '';
+                
+                // Previous button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="userManagement.changePage(${this.currentPage - 1})">السابق</a>
+                    </li>
+                `;
+                
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHTML += `
+                        <li class="page-item ${i === this.currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="userManagement.changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                }
+                
+                // Next button
+                paginationHTML += `
+                    <li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="userManagement.changePage(${this.currentPage + 1})">التالي</a>
+                    </li>
+                `;
+                
+                pagination.innerHTML = paginationHTML;
+            }
+            
+            changePage(page) {
+                const totalPages = Math.ceil(this.filteredUsers.length / this.usersPerPage);
+                if (page < 1 || page > totalPages) return;
+                
+                this.currentPage = page;
+                this.renderUsers();
+                this.renderPagination();
+            }
+            
+            showCreateUserModal() {
+                // Reset form
+                document.getElementById('createUserForm').reset();
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+                modal.show();
+            }
+            
+            async createUser() {
+                try {
+                    const formData = {
+                        username: document.getElementById('newUsername').value,
+                        email: document.getElementById('newEmail').value,
+                        password: document.getElementById('newPassword').value,
+                        full_name: document.getElementById('newFullName').value
+                    };
+                    
+                    // Validate form
+                    if (!formData.username || !formData.email || !formData.password || !formData.full_name) {
+                        this.showAlert('يرجى ملء جميع الحقول', 'danger');
+                        return;
+                    }
+                    
+                    // Create user via API (this might need to be implemented in backend)
+                    const response = await window.apiPost('/users', formData);
+                    
+                    if (response && response.success) {
+                        this.showAlert('تم إنشاء المستخدم بنجاح', 'success');
+                        
+                        // Add groups if selected
+                        const selectedGroups = [];
+                        if (document.getElementById('groupAdmin').checked) selectedGroups.push('admin');
+                        if (document.getElementById('groupManager').checked) selectedGroups.push('manager');
+                        if (document.getElementById('groupViewer').checked) selectedGroups.push('viewer');
+                        
+                        // Add to groups
+                        for (const group of selectedGroups) {
+                            try {
+                                await window.apiPost(`/admin/cognito/users/${formData.username}/groups/${group}`);
+                            } catch (error) {
+                                console.error(`Error adding user to group ${group}:`, error);
+                            }
+                        }
+                        
+                        // Close modal and reload
+                        bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+                        await this.loadUsers();
+                        
+                    } else {
+                        throw new Error(response?.message || 'فشل في إنشاء المستخدم');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error creating user:', error);
+                    this.showAlert('فشل في إنشاء المستخدم: ' + error.message, 'danger');
+                }
+            }
+            
+            showEditGroupsModal(username, currentGroups) {
+                this.currentEditUser = username;
+                
+                // Set username
+                document.getElementById('editGroupsUsername').textContent = username;
+                
+                // Set current groups checkboxes
+                document.getElementById('editGroupAdmin').checked = currentGroups.includes('admin');
+                document.getElementById('editGroupManager').checked = currentGroups.includes('manager');
+                document.getElementById('editGroupViewer').checked = currentGroups.includes('viewer');
+                
+                // Show current groups
+                const currentGroupsContainer = document.getElementById('currentGroups');
+                currentGroupsContainer.innerHTML = currentGroups.map(group => this.renderGroupBadge(group)).join('');
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editGroupsModal'));
+                modal.show();
+            }
+            
+            async updateUserGroups() {
+                if (!this.currentEditUser) return;
+                
+                try {
+                    const newGroups = [];
+                    if (document.getElementById('editGroupAdmin').checked) newGroups.push('admin');
+                    if (document.getElementById('editGroupManager').checked) newGroups.push('manager');
+                    if (document.getElementById('editGroupViewer').checked) newGroups.push('viewer');
+                    
+                    const currentUser = this.users.find(u => u.username === this.currentEditUser);
+                    const currentGroups = currentUser ? currentUser.groups : [];
+                    
+                    // Groups to add
+                    const groupsToAdd = newGroups.filter(group => !currentGroups.includes(group));
+                    
+                    // Groups to remove
+                    const groupsToRemove = currentGroups.filter(group => !newGroups.includes(group));
+                    
+                    // Add groups
+                    for (const group of groupsToAdd) {
+                        await window.apiPost(`/admin/cognito/users/${this.currentEditUser}/groups/${group}`);
+                    }
+                    
+                    // Remove groups
+                    for (const group of groupsToRemove) {
+                        await window.apiDelete(`/admin/cognito/users/${this.currentEditUser}/groups/${group}`);
+                    }
+                    
+                    this.showAlert('تم تحديث مجموعات المستخدم بنجاح', 'success');
+                    
+                    // Close modal and reload
+                    bootstrap.Modal.getInstance(document.getElementById('editGroupsModal')).hide();
+                    await this.loadUsers();
+                    
+                } catch (error) {
+                    console.error('Error updating user groups:', error);
+                    this.showAlert('فشل في تحديث مجموعات المستخدم: ' + error.message, 'danger');
+                }
+            }
+            
+            showDeleteModal(username) {
+                this.currentEditUser = username;
+                document.getElementById('deleteUsername').textContent = username;
+                
+                const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+                modal.show();
+            }
+            
+            async deleteUser() {
+                if (!this.currentEditUser) return;
+                
+                try {
+                    // Note: Cognito user deletion might need to be implemented in backend
+                    // For now, this is a placeholder
+                    this.showAlert('حذف المستخدمين من Cognito غير مفعل حالياً', 'warning');
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+                    
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    this.showAlert('فشل في حذف المستخدم: ' + error.message, 'danger');
+                }
+            }
+            
+            showLoading(show) {
+                const loadingRow = document.querySelector('.loading-row');
+                if (loadingRow) {
+                    loadingRow.style.display = show ? '' : 'none';
+                }
+            }
+            
+            showAlert(message, type = 'info') {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertId = 'alert_' + Date.now();
+                
+                const alertHTML = `
+                    <div id="${alertId}" class="alert alert-${type} alert-custom alert-dismissible fade show">
+                        <div>
+                            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                alertContainer.insertAdjacentHTML('beforeend', alertHTML);
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    const alert = document.getElementById(alertId);
+                    if (alert) {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Initialize user management when page loads
+        let userManagement;
+        document.addEventListener('DOMContentLoaded', () => {
+            userManagement = new UserManagement();
+        });
+    </script>
+</body>
+</html>
