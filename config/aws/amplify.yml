@@ -3,19 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Setting up organized project structure"
-        - echo "Source files in src/, config in config/, docs in docs/"
+        - echo "Starting pre-build phase"
     build:
       commands:
-        - echo "Building from organized structure"
-        - cp -r src/pages/* .
-        - cp -r src/utils/* .
-        - echo "Clean build completed"
+        - echo "Build phase - static files ready"
     postBuild:
       commands:
-        - echo "Post-build: Organized file structure deployed"
+        - echo "Post-build completed"
   artifacts:
-    baseDirectory: .
+    baseDirectory: /
     files:
       - '**/*'
   cache:

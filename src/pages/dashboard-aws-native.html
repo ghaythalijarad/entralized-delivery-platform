@@ -1525,13 +1525,20 @@
                 // Initialize AuthManager first
                 await AuthManager.initialize();
                 
-                // Check authentication
-                const isAuthenticated = await AuthManager.requireAuth();
+                // Check authentication with timeout to prevent hanging
+                const authTimeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Auth check timeout')), 10000)
+                );
+                
+                const authCheck = AuthManager.requireAuth();
+                const isAuthenticated = await Promise.race([authCheck, authTimeout]);
+                
                 if (!isAuthenticated) {
+                    console.log('Authentication failed, stopping dashboard initialization');
                     return; // Will redirect to login
                 }
                 
-                // Initialize other components
+                // Initialize other components only after successful authentication
                 initializeBilingual();
                 
                 // Update user profile in navigation
@@ -1571,15 +1578,23 @@
             managerNav.style.display = 'none';
             supportNav.style.display = 'none';
 
-            if (userType === 'admin') {
-                adminNav.style.display = 'block';
-                managerNav.style.display = 'block';
-                supportNav.style.display = 'block';
-            } else if (userType === 'manager') {
-                managerNav.style.display = 'block';
-                supportNav.style.display = 'block';
-            } else if (userType === 'support') {
-                supportNav.style.display = 'block';
+            // Validate userType and set navigation
+            switch (userType) {
+                case 'admin':
+                    adminNav.style.display = 'block';
+                    managerNav.style.display = 'block';
+                    supportNav.style.display = 'block';
+                    break;
+                case 'manager':
+                    managerNav.style.display = 'block';
+                    supportNav.style.display = 'block';
+                    break;
+                case 'support':
+                    supportNav.style.display = 'block';
+                    break;
+                default:
+                    console.warn('Unknown userType:', userType);
+                    break;
             }
         }
 

@@ -1,7 +1,3 @@
-// Add Amplify import
-import { Auth } from 'aws-amplify';
-import authManager from './auth-manager.js';
-
 /**
  * Login Page Initialization Script
  * 
@@ -13,24 +9,41 @@ import authManager from './auth-manager.js';
  * - MFA and new password flows
  * 
  * Dependencies:
- * - auth.js (for authentication functions)
+ * - auth-manager.js (for authentication functions)
  * - bilingual.js (for language switching)
- * - AWS Cognito SDK
+ * - AWS Amplify SDK
  */
 
 // Check if user is already authenticated when page loads
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Login page loaded, checking authentication status...');
+    
+    // Prevent authentication check if already in progress
+    if (window.AuthManager && window.AuthManager._authCheckInProgress) {
+        console.log('Auth check already in progress, skipping...');
+        return;
+    }
+    
     try {
-        const isAuth = await window.AuthManager.isAuthenticated();
-        if (isAuth) {
-            console.log('User is already authenticated, redirecting to dashboard...');
-            window.location.replace('pages/dashboard-aws-native.html');
-            return;
+        // Only check if we have AuthManager available
+        if (window.AuthManager) {
+            const isAuth = await window.AuthManager.isAuthenticated();
+            if (isAuth) {
+                console.log('User is already authenticated, redirecting to dashboard...');
+                // Use replace to prevent back button issues
+                window.location.replace('pages/dashboard-aws-native.html');
+                return;
+            }
         }
     } catch (err) {
         console.error('Auth check failed', err);
+        // Clear any corrupted auth data
+        if (window.AuthManager) {
+            window.AuthManager.clearAuthData();
+        }
     }
+    
+    // Initialize login page only if not authenticated
     initializeLoginPage();
 });
 
@@ -88,8 +101,16 @@ function initializeLoginForm() {
         loginButton.disabled = true;
         loadingSpinner.style.display = 'inline-block';
         errorMessage.style.display = 'none';
+        
         try {
+            // Ensure AuthManager is available and initialized
+            if (!window.AuthManager) {
+                throw new Error('Authentication system not available');
+            }
+            
+            await window.AuthManager.initialize();
             const { challenge } = await window.AuthManager.signIn(username, password);
+            
             if (challenge === 'MFA') {
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('mfaForm').style.display = 'block';
@@ -97,6 +118,7 @@ function initializeLoginForm() {
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('newPasswordForm').style.display = 'block';
             } else {
+                // Login successful, redirect to dashboard
                 window.location.replace('pages/dashboard-aws-native.html');
             }
         } catch (error) {

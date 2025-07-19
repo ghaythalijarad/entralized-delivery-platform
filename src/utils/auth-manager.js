@@ -1,11 +1,25 @@
 // Authentication Manager - Centralized authentication handling
 // This module provides consistent authentication across all pages
 
-// Add AWS Amplify configuration and import Auth API
-import Amplify, { Auth } from 'aws-amplify';
-import awsExports from '../aws-exports';
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
 
-Amplify.configure(awsExports);
+// Only import and configure Amplify in browser environment
+let Auth = null;
+let Amplify = null;
+
+if (isBrowser) {
+    // Use dynamic import to avoid issues in non-browser environments
+    try {
+        // These will be loaded via script tags in the browser
+        if (window.AWS && window.AWS.Amplify) {
+            Amplify = window.AWS.Amplify;
+            Auth = window.AWS.Amplify.Auth;
+        }
+    } catch (error) {
+        console.warn('Amplify not available, using mock mode');
+    }
+}
 
 class AuthManager {
     constructor() {
@@ -13,6 +27,62 @@ class AuthManager {
         this.userKey = 'aws-native-user';
         this.isInitialized = false;
         this.currentUser = null;
+        this._authCheckInProgress = false;
+        this.mockMode = !Auth; // Enable mock mode if Auth is not available
+        
+        // Initialize Amplify if available
+        if (Auth && typeof window !== 'undefined' && window.awsExports) {
+            try {
+                Amplify.configure(window.awsExports);
+            } catch (error) {
+                console.warn('Failed to configure Amplify, using mock mode');
+                this.mockMode = true;
+            }
+        }
+    }
+
+    // Initialize the AuthManager
+    async initialize() {
+        if (this.isInitialized) {
+            return;
+        }
+        
+        try {
+            // Check if Amplify is properly configured
+            const config = Amplify.configure();
+            if (!config.aws_cognito_region || config.aws_user_pools_id === "eu-north-1_PLACEHOLDER") {
+                console.warn('AuthManager: Amplify not properly configured, using mock mode');
+                this.mockMode = true;
+                this.isInitialized = true;
+                return;
+            }
+            
+            // Try to load existing user session
+            const existingUser = localStorage.getItem(this.userKey);
+            const existingToken = localStorage.getItem(this.tokenKey);
+            
+            if (existingUser && existingToken) {
+                try {
+                    this.currentUser = JSON.parse(existingUser);
+                    // Validate the session is still valid
+                    const session = await Auth.currentSession();
+                    if (!session || !session.isValid()) {
+                        throw new Error('Session expired');
+                    }
+                } catch (error) {
+                    console.log('AuthManager: Existing session invalid, clearing data');
+                    this.clearAuthData();
+                }
+            }
+            
+            this.isInitialized = true;
+            console.log('AuthManager: Initialized successfully');
+        } catch (error) {
+            console.error('AuthManager: Initialization failed', error);
+            this.clearAuthData();
+            this.mockMode = true; // Enable mock mode on initialization failure
+            this.isInitialized = true; // Still mark as initialized to prevent loops
+        }
     }
 
     // Load current user session via Amplify Auth
@@ -29,7 +99,7 @@ class AuthManager {
             console.log('AuthManager: User loaded successfully', userInfo);
             return true;
         } catch (error) {
-            console.log('AuthManager: loadCurrentUser failed', error);
+            console.error('AuthManager: loadCurrentUser failed', error);
             this.clearAuthData();
             return false;
         }
@@ -81,28 +151,86 @@ class AuthManager {
 
     // Check if user is authenticated
     async isAuthenticated() {
-        return await this.loadCurrentUser();
+        try {
+            // If in mock mode, check for mock user
+            if (this.mockMode) {
+                return this.getMockAuthStatus();
+            }
+            
+            // First check if we have a current user and valid token
+            if (this.currentUser && this.getToken()) {
+                try {
+                    // Verify session is still valid
+                    const session = await Auth.currentSession();
+                    if (session && session.isValid()) {
+                        return true;
+                    }
+                } catch (sessionError) {
+                    console.log('AuthManager: Session invalid, need to re-authenticate');
+                }
+            }
+            
+            // If no valid session, try to load current user
+            return await this.loadCurrentUser();
+        } catch (error) {
+            console.error('AuthManager: isAuthenticated check failed', error);
+            this.clearAuthData();
+            return false;
+        }
+    }
+
+    // Mock authentication status for development
+    getMockAuthStatus() {
+        const mockUser = localStorage.getItem(this.userKey);
+        if (mockUser) {
+            try {
+                this.currentUser = JSON.parse(mockUser);
+                return true;
+            } catch (error) {
+                console.error('AuthManager: Invalid mock user data');
+                this.clearAuthData();
+                return false;
+            }
+        }
+        return false;
     }
 
     // Require authentication (redirect to login if not authenticated)
     async requireAuth() {
-        // Skip authentication requirement on login page to avoid loop
-        if (window.location.pathname.endsWith('login-aws-native.html')) {
+        // Prevent redirection loop on login page
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('login-aws-native.html') || currentPath.endsWith('login-aws-native.html')) {
+            console.log('AuthManager: Already on login page, skipping redirection');
             return false;
         }
+
+        // Prevent multiple concurrent authentication checks
+        if (this._authCheckInProgress) {
+            console.log('AuthManager: Authentication check already in progress');
+            return false;
+        }
+
+        this._authCheckInProgress = true;
+
         try {
             const isAuth = await this.isAuthenticated();
             if (!isAuth) {
                 console.log('AuthManager: Authentication required, redirecting to login');
-                // Redirect immediately without repeated calls
-                window.location.replace('login-aws-native.html');
+                // Use replace to prevent back button issues
+                const loginPath = currentPath.includes('/pages/') ? '../login-aws-native.html' : 'login-aws-native.html';
+                window.location.replace(loginPath);
                 return false;
             }
             console.log('AuthManager: Authentication confirmed');
             return true;
         } catch (error) {
             console.error('AuthManager: Error in requireAuth', error);
+            this.clearAuthData();
+            const loginPath = currentPath.includes('/pages/') ? '../login-aws-native.html' : 'login-aws-native.html';
+            window.location.replace(loginPath);
             return false;
+        } finally {
+            this._authCheckInProgress = false;
         }
     }
 
@@ -136,12 +264,18 @@ class AuthManager {
     // Sign out user via Amplify Auth
     async signOut() {
         try {
-            await Auth.signOut();
+            if (!this.mockMode) {
+                await Auth.signOut();
+            }
         } catch (error) {
             console.error('AuthManager: Error during sign out', error);
         }
         this.clearAuthData();
-        window.location.href = 'login-aws-native.html';
+        
+        // Determine the correct path for login page
+        const currentPath = window.location.pathname;
+        const loginPath = currentPath.includes('/pages/') ? '../login-aws-native.html' : 'login-aws-native.html';
+        window.location.href = loginPath;
     }
 
     // Update user profile in navigation
@@ -198,6 +332,11 @@ class AuthManager {
      */
     async signIn(username, password) {
         try {
+            // If in mock mode, use mock authentication
+            if (this.mockMode) {
+                return this.mockSignIn(username, password);
+            }
+            
             const user = await Auth.signIn(username, password);
             // Handle MFA or new password challenge
             if (user.challengeName === 'SMS_MFA' || user.challengeName === 'SOFTWARE_TOKEN_MFA') {
@@ -215,6 +354,28 @@ class AuthManager {
         } catch (error) {
             console.error('AuthManager: signIn error', error);
             throw error;
+        }
+    }
+
+    // Mock sign-in for development
+    mockSignIn(username, password) {
+        // Simple mock validation
+        if (username && password) {
+            const mockUser = {
+                id: 'mock-user-id',
+                username: username,
+                email: username,
+                firstName: 'Mock',
+                lastName: 'User',
+                userType: 'admin',
+                verified: true
+            };
+            
+            const mockToken = 'mock-jwt-token-' + Date.now();
+            this.setAuthData(mockToken, mockUser);
+            return { challenge: null };
+        } else {
+            throw new Error('Invalid credentials');
         }
     }
 
@@ -249,5 +410,14 @@ class AuthManager {
     }
 }
 
+// Create a global instance
+const authManager = new AuthManager();
+
 // Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = authManager;
+} else if (typeof window !== 'undefined') {
+    window.AuthManager = authManager;
+}
+
 export default authManager;

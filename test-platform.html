@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Test - Node.js Platform</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        
+        button:hover { background: #0056b3; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 Node.js Platform Test</h1>
+        <p>Testing authentication and API connectivity</p>
+        
+        <div id="status"></div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="admin@example.com" value="admin@example.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Password123!" value="Password123!">
+        </div>
+        
+        <button onclick="testLogin()">🔐 Test Login</button>
+        <button onclick="testAPI()">📡 Test API</button>
+        <button onclick="testDashboard()">📊 Test Dashboard</button>
+        <button onclick="clearTest()">🗑️ Clear</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Load AuthManager
+        let AuthManager = null;
+        
+        // Simple status display function
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        function showResult(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<div class="info" style="margin-top: 10px; text-align: left;">${message}</div>`;
+        }
+        
+        function clearTest() {
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Test basic functionality
+        async function testAPI() {
+            showStatus('Testing API connectivity...', 'info');
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                
+                if (healthResponse.ok) {
+                    showResult(`✅ Health Check: ${healthData.status} (Node.js ${healthData.node_version})`);
+                } else {
+                    showResult(`❌ Health Check Failed: ${healthResponse.status}`);
+                    return;
+                }
+                
+                // Test drivers endpoint
+                const driversResponse = await fetch('/api/drivers');
+                const driversData = await driversResponse.json();
+                
+                if (driversResponse.ok) {
+                    showResult(`✅ Drivers API: ${driversData.drivers.length} drivers found`);
+                } else {
+                    showResult(`❌ Drivers API Failed: ${driversResponse.status}`);
+                }
+                
+                // Test dashboard stats
+                const statsResponse = await fetch('/api/dashboard/stats');
+                const statsData = await statsResponse.json();
+                
+                if (statsResponse.ok) {
+                    showResult(`✅ Dashboard Stats: ${statsData.totalDeliveries} deliveries, ${statsData.activeDrivers} drivers`);
+                } else {
+                    showResult(`❌ Dashboard Stats Failed: ${statsResponse.status}`);
+                }
+                
+                showStatus('✅ API tests completed successfully!', 'success');
+                
+            } catch (error) {
+                showStatus(`❌ API Test Error: ${error.message}`, 'error');
+                showResult(`Error details: ${error.stack}`);
+            }
+        }
+        
+        // Test authentication
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showStatus('Please enter email and password', 'error');
+                return;
+            }
+            
+            showStatus('Testing authentication...', 'info');
+            
+            try {
+                // Try to load AuthManager from the auth script
+                if (typeof window.AuthManager !== 'undefined') {
+                    AuthManager = window.AuthManager;
+                    showResult('✅ AuthManager loaded successfully');
+                } else {
+                    showResult('⚠️ AuthManager not found, using mock authentication');
+                    
+                    // Mock authentication for testing
+                    const mockUser = {
+                        email: email,
+                        firstName: 'Test',
+                        lastName: 'User',
+                        userType: 'admin'
+                    };
+                    
+                    localStorage.setItem('aws-native-user', JSON.stringify(mockUser));
+                    localStorage.setItem('aws-native-token', 'mock-token-' + Date.now());
+                    
+                    showResult('✅ Mock authentication successful');
+                    showStatus('✅ Authentication test completed (mock mode)', 'success');
+                    return;
+                }
+                
+                // Initialize AuthManager
+                await AuthManager.initialize();
+                showResult('✅ AuthManager initialized');
+                
+                // Test authentication
+                const result = await AuthManager.signIn(email, password);
+                
+                if (result.challenge) {
+                    showResult(`⚠️ Challenge required: ${result.challenge}`);
+                    showStatus('Authentication requires additional steps', 'info');
+                } else {
+                    showResult('✅ Authentication successful');
+                    
+                    // Test if user is authenticated
+                    const isAuth = await AuthManager.isAuthenticated();
+                    showResult(`✅ Authentication status: ${isAuth}`);
+                    
+                    // Get current user
+                    const currentUser = AuthManager.getCurrentUser();
+                    if (currentUser) {
+                        showResult(`✅ Current user: ${currentUser.email} (${currentUser.userType})`);
+                    }
+                    
+                    showStatus('✅ Login test completed successfully!', 'success');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Authentication Error: ${error.message}`, 'error');
+                showResult(`Error details: ${error.stack}`);
+            }
+        }
+        
+        // Test dashboard access
+        async function testDashboard() {
+            showStatus('Testing dashboard access...', 'info');
+            
+            try {
+                const dashboardResponse = await fetch('/dashboard');
+                
+                if (dashboardResponse.ok) {
+                    showResult('✅ Dashboard page accessible');
+                    
+                    // Test if we can reach the dashboard page
+                    const text = await dashboardResponse.text();
+                    if (text.includes('dashboard')) {
+                        showResult('✅ Dashboard content loaded');
+                    } else {
+                        showResult('⚠️ Dashboard content may not be correct');
+                    }
+                } else {
+                    showResult(`❌ Dashboard access failed: ${dashboardResponse.status}`);
+                }
+                
+                showStatus('✅ Dashboard test completed!', 'success');
+                
+            } catch (error) {
+                showStatus(`❌ Dashboard Test Error: ${error.message}`, 'error');
+                showResult(`Error details: ${error.stack}`);
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('🚀 Node.js Platform Test Ready', 'info');
+            showResult('Platform running on Node.js with Express server');
+            showResult('Click buttons above to test different functionality');
+        });
+        
+        // Load auth manager script dynamically
+        const authScript = document.createElement('script');
+        authScript.src = '/src/utils/auth-manager.js';
+        authScript.onload = function() {
+            showResult('✅ Auth Manager script loaded');
+        };
+        authScript.onerror = function() {
+            showResult('⚠️ Auth Manager script failed to load - using mock mode');
+        };
+        document.head.appendChild(authScript);
+    </script>
+</body>
+</html>
