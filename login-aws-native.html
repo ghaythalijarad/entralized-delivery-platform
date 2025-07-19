@@ -6,16 +6,45 @@
     <title>Admin Control Center - Delivery Management Hub</title>
     
     <!-- AWS Amplify SDK -->
-    <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/auth@latest/dist/aws-amplify-auth.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/api@latest/dist/aws-amplify-api.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/core@5.8.0/dist/aws-amplify-core.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/auth@5.6.0/dist/aws-amplify-auth.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/api@5.4.0/dist/aws-amplify-api.min.js"></script>
+    
+    <!-- Initialize Amplify -->
+    <script>
+        // Initialize Amplify with mock configuration
+        window.AWS = window.AWS || {};
+        if (window.aws_amplify_core && window.aws_amplify_auth) {
+            window.AWS.Amplify = window.aws_amplify_core.Amplify;
+            window.AWS.Amplify.Auth = window.aws_amplify_auth.Auth;
+            
+            // Configure with mock data for development
+            const mockConfig = {
+                Auth: {
+                    region: 'us-east-1',
+                    userPoolId: 'us-east-1_PLACEHOLDER',
+                    userPoolWebClientId: 'placeholder-client-id',
+                    mandatorySignIn: true
+                }
+            };
+            
+            try {
+                window.AWS.Amplify.configure(mockConfig);
+                console.log('Amplify configured for development');
+            } catch (error) {
+                console.warn('Amplify configuration failed, using mock mode');
+            }
+        } else {
+            console.warn('Amplify SDK not loaded, authentication will use mock mode');
+        }
+    </script>
     
     <!-- Unified Design System -->
     <link href="src/utils/unified-design.css" rel="stylesheet">
     
     <!-- Bilingual Support -->
     <script src="src/utils/auth-manager.js"></script>
-    <script src="src/utils/login-init.js"></script>
+    <script src="src/utils/login-init-new.js"></script>
     <script src="src/utils/bilingual.js"></script>
     <script src="src/utils/bilingual-extensions.js"></script>
     <script src="src/utils/unified-navigation.js"></script>

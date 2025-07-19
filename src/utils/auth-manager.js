@@ -1,23 +1,28 @@
 // Authentication Manager - Centralized authentication handling
 // This module provides consistent authentication across all pages
 
-// Check if we're in a browser environment
-const isBrowser = typeof window !== 'undefined';
-
-// Only import and configure Amplify in browser environment
+// Browser environment check and Amplify initialization
 let Auth = null;
 let Amplify = null;
 
-if (isBrowser) {
-    // Use dynamic import to avoid issues in non-browser environments
-    try {
-        // These will be loaded via script tags in the browser
+if (typeof window !== 'undefined') {
+    // Wait for Amplify to be available
+    const initializeAmplify = () => {
         if (window.AWS && window.AWS.Amplify) {
             Amplify = window.AWS.Amplify;
             Auth = window.AWS.Amplify.Auth;
+            console.log('✅ Amplify Auth loaded successfully');
+            return true;
         }
-    } catch (error) {
-        console.warn('Amplify not available, using mock mode');
+        return false;
+    };
+    
+    // Try to initialize immediately
+    if (!initializeAmplify()) {
+        // If not available, wait for window load
+        window.addEventListener('load', () => {
+            setTimeout(initializeAmplify, 1000);
+        });
     }
 }
 
