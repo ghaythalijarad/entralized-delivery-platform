@@ -67,6 +67,8 @@ async function initializeLoginPage() {
         initializeLoginForm();
         initializeMfaForm();
         initializeNewPasswordForm();
+        initializeForgotPasswordForm();
+        initializeResetPasswordForm();
         initializePasswordToggle();
         
         // Initialize language switching if available
@@ -114,32 +116,9 @@ function initializeLoginForm() {
         // Show loading state
         setLoadingState(true);
         
+        // Real authentication using Cognito
         try {
-            // Check if AuthManager is available
-            if (!AuthManager) {
-                console.warn('⚠️ AuthManager not available, using mock authentication');
-                
-                // Mock authentication for development
-                const mockUser = {
-                    email: username,
-                    firstName: 'Test',
-                    lastName: 'User',
-                    userType: 'admin'
-                };
-                
-                localStorage.setItem('aws-native-user', JSON.stringify(mockUser));
-                localStorage.setItem('aws-native-token', 'mock-token-' + Date.now());
-                
-                showSuccess('Mock authentication successful!');
-                setTimeout(() => {
-                    window.location.replace('src/pages/dashboard-aws-native.html');
-                }, 1000);
-                return;
-            }
-            
-            // Real authentication
             const result = await AuthManager.signIn(username, password);
-            
             if (result.challenge === 'MFA') {
                 console.log('📱 MFA challenge required');
                 showForm('mfaForm');
@@ -151,17 +130,15 @@ function initializeLoginForm() {
             } else {
                 console.log('✅ Login successful');
                 showSuccess('Login successful! Redirecting...');
-                setTimeout(() => {
-                    window.location.replace('src/pages/dashboard-aws-native.html');
-                }, 1000);
+                setTimeout(() => window.location.replace('/dashboard'), 1000);
             }
-            
         } catch (error) {
             console.error('❌ Login error:', error);
             showError(error.message || 'Login failed. Please try again.');
         } finally {
             setLoadingState(false);
         }
+        return;
     });
     
     console.log('✅ Login form initialized');
@@ -194,9 +171,7 @@ function initializeMfaForm() {
             if (AuthManager && AuthManager.confirmSignIn) {
                 await AuthManager.confirmSignIn(code);
                 showSuccess('MFA verification successful!');
-                setTimeout(() => {
-                    window.location.replace('src/pages/dashboard-aws-native.html');
-                }, 1000);
+                setTimeout(() => window.location.replace('/dashboard'), 1000);
             } else {
                 throw new Error('MFA confirmation not available');
             }
@@ -249,9 +224,7 @@ function initializeNewPasswordForm() {
             if (AuthManager && AuthManager.completeNewPassword) {
                 await AuthManager.completeNewPassword(newPassword);
                 showSuccess('Password updated successfully!');
-                setTimeout(() => {
-                    window.location.replace('src/pages/dashboard-aws-native.html');
-                }, 1000);
+                setTimeout(() => window.location.replace('/dashboard'), 1000);
             } else {
                 throw new Error('Password update not available');
             }
@@ -267,8 +240,141 @@ function initializeNewPasswordForm() {
 }
 
 /**
- * Initialize password toggle functionality
+ * Initialize the forgot password form
  */
+function initializeForgotPasswordForm() {
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    
+    if (!forgotPasswordForm) {
+        console.log('ℹ️ Forgot password form not found (optional)');
+        return;
+    }
+    
+    forgotPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('resetEmail')?.value?.trim();
+        
+        if (!email) {
+            showError('Please enter your email address');
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showError('Please enter a valid email address');
+            return;
+        }
+        
+        setLoadingState(true, 'forgotPassword');
+        
+        try {
+            if (AuthManager && AuthManager.forgotPassword) {
+                const result = await AuthManager.forgotPassword(email);
+                showSuccess('Reset code sent to your email. Please check your inbox.');
+                
+                // Store email for the reset form
+                document.getElementById('resetPasswordForm').setAttribute('data-email', email);
+                
+                // Show the reset password form
+                setTimeout(() => {
+                    showForm('resetPasswordForm');
+                }, 1500);
+            } else {
+                throw new Error('Password reset not available');
+            }
+        } catch (error) {
+            console.error('❌ Forgot password error:', error);
+            if (error.code === 'UserNotFoundException') {
+                showError('No account found with this email address');
+            } else if (error.code === 'LimitExceededException') {
+                showError('Too many requests. Please try again later');
+            } else {
+                showError(error.message || 'Failed to send reset code. Please try again.');
+            }
+        } finally {
+            setLoadingState(false, 'forgotPassword');
+        }
+    });
+    
+    console.log('✅ Forgot password form initialized');
+}
+
+/**
+ * Initialize the reset password form
+ */
+function initializeResetPasswordForm() {
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    
+    if (!resetPasswordForm) {
+        console.log('ℹ️ Reset password form not found (optional)');
+        return;
+    }
+    
+    resetPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = resetPasswordForm.getAttribute('data-email');
+        const resetCode = document.getElementById('resetCode')?.value?.trim();
+        const newPassword = document.getElementById('resetNewPassword')?.value;
+        const confirmPassword = document.getElementById('resetConfirmPassword')?.value;
+        
+        if (!resetCode) {
+            showError('Please enter the reset code');
+            return;
+        }
+        
+        if (!newPassword || !confirmPassword) {
+            showError('Please fill in both password fields');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showError('Passwords do not match');
+            return;
+        }
+        
+        if (newPassword.length < 8) {
+            showError('Password must be at least 8 characters long');
+            return;
+        }
+        
+        setLoadingState(true, 'resetPassword');
+        
+        try {
+            if (AuthManager && AuthManager.confirmForgotPassword) {
+                await AuthManager.confirmForgotPassword(email, resetCode, newPassword);
+                showSuccess('Password reset successful! You can now log in with your new password.');
+                
+                // Clear the form and go back to login
+                setTimeout(() => {
+                    showForm('loginForm');
+                    document.getElementById('resetPasswordForm').removeAttribute('data-email');
+                    resetPasswordForm.reset();
+                }, 2000);
+            } else {
+                throw new Error('Password reset confirmation not available');
+            }
+        } catch (error) {
+            console.error('❌ Reset password error:', error);
+            if (error.code === 'CodeMismatchException') {
+                showError('Invalid reset code. Please check your email and try again.');
+            } else if (error.code === 'ExpiredCodeException') {
+                showError('Reset code has expired. Please request a new one.');
+                setTimeout(() => showForm('forgotPasswordForm'), 1500);
+            } else if (error.code === 'InvalidPasswordException') {
+                showError('Password does not meet security requirements');
+            } else {
+                showError(error.message || 'Password reset failed. Please try again.');
+            }
+        } finally {
+            setLoadingState(false, 'resetPassword');
+        }
+    });
+    
+    console.log('✅ Reset password form initialized');
+}
 function initializePasswordToggle() {
     // Make togglePassword function available globally
     window.togglePassword = function(fieldId = 'password') {
@@ -293,13 +399,20 @@ function initializePasswordToggle() {
  * Show/hide forms
  */
 function showForm(formId) {
-    const forms = ['loginForm', 'mfaForm', 'newPasswordForm'];
+    const forms = ['loginForm', 'mfaForm', 'newPasswordForm', 'forgotPasswordForm', 'resetPasswordForm'];
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    
     forms.forEach(id => {
         const form = document.getElementById(id);
         if (form) {
             form.style.display = id === formId ? 'block' : 'none';
         }
     });
+    
+    // Show/hide the forgot password link (only show on login form)
+    if (forgotPasswordLink) {
+        forgotPasswordLink.style.display = formId === 'loginForm' ? 'block' : 'none';
+    }
 }
 
 /**
@@ -309,13 +422,17 @@ function setLoadingState(loading, formType = 'login') {
     const buttons = {
         login: document.getElementById('loginButton'),
         mfa: document.getElementById('mfaButton'),
-        newPassword: document.getElementById('newPasswordButton')
+        newPassword: document.getElementById('newPasswordButton'),
+        forgotPassword: document.getElementById('forgotPasswordButton'),
+        resetPassword: document.getElementById('resetPasswordButton')
     };
     
     const spinners = {
         login: document.getElementById('loadingSpinner'),
         mfa: document.getElementById('mfaLoadingSpinner'),
-        newPassword: document.getElementById('newPasswordLoadingSpinner')
+        newPassword: document.getElementById('newPasswordLoadingSpinner'),
+        forgotPassword: document.getElementById('forgotPasswordLoadingSpinner'),
+        resetPassword: document.getElementById('resetPasswordLoadingSpinner')
     };
     
     const button = buttons[formType];
@@ -372,13 +489,6 @@ function showMessage(message, type = 'info') {
 }
 
 /**
- * Forgot password functionality
- */
-window.forgotPassword = function() {
-    showMessage('Forgot password functionality will be available soon. Please contact your administrator.', 'info');
-};
-
-/**
  * Clear authentication data (for debugging)
  */
 window.clearAuthData = function() {
@@ -393,5 +503,6 @@ window.clearAuthData = function() {
 window.showError = showError;
 window.showSuccess = showSuccess;
 window.showMessage = showMessage;
+window.showForm = showForm;
 
 console.log('✅ Login initialization script loaded successfully');

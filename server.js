@@ -153,6 +153,18 @@ app.get('/api/dashboard/stats', (req, res) => {
     });
 });
 
+// Mock authentication endpoint for login testing
+app.post('/auth/login', (req, res) => {
+    const { username, password } = req.body;
+    // Replace with your test credentials
+    if (username === 'g87_a@yahoo.com' && password === 'Password123!') {
+        const token = 'mock-access-token-' + Date.now();
+        const user = { email: username, firstName: 'Test', lastName: 'User' };
+        return res.json({ success: true, token: { access_token: token, user } });
+    }
+    res.status(401).json({ success: false, detail: 'Invalid credentials' });
+});
+
 // Serve main application pages
 app.get('/', (req, res) => {
     res.sendFile(join(__dirname, 'login-aws-native.html'));

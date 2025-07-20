@@ -8,10 +8,21 @@ let Amplify = null;
 if (typeof window !== 'undefined') {
     // Wait for Amplify to be available
     const initializeAmplify = () => {
-        if (window.AWS && window.AWS.Amplify) {
+        // Try different ways Amplify might be exposed
+        if (window.aws_amplify) {
+            Amplify = window.aws_amplify;
+            Auth = window.aws_amplify.Auth;
+            console.log('✅ Amplify Auth loaded successfully (aws_amplify)');
+            return true;
+        } else if (window.AWS && window.AWS.Amplify) {
             Amplify = window.AWS.Amplify;
             Auth = window.AWS.Amplify.Auth;
-            console.log('✅ Amplify Auth loaded successfully');
+            console.log('✅ Amplify Auth loaded successfully (AWS.Amplify)');
+            return true;
+        } else if (window.Amplify) {
+            Amplify = window.Amplify;
+            Auth = window.Amplify.Auth;
+            console.log('✅ Amplify Auth loaded successfully (Amplify)');
             return true;
         }
         return false;
@@ -410,6 +421,44 @@ class AuthManager {
             return result;
         } catch (error) {
             console.error('AuthManager: completeNewPassword error', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Initiate password reset
+     */
+    async forgotPassword(username) {
+        try {
+            if (this.mockMode) {
+                console.log('Mock mode: Password reset email sent to', username);
+                return { success: true, message: 'Password reset email sent' };
+            }
+            
+            const result = await Auth.forgotPassword(username);
+            console.log('Password reset initiated:', result);
+            return result;
+        } catch (error) {
+            console.error('AuthManager: forgotPassword error', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Confirm password reset with code
+     */
+    async confirmForgotPassword(username, code, newPassword) {
+        try {
+            if (this.mockMode) {
+                console.log('Mock mode: Password reset confirmed for', username);
+                return { success: true, message: 'Password reset successful' };
+            }
+            
+            const result = await Auth.forgotPasswordSubmit(username, code, newPassword);
+            console.log('Password reset confirmed:', result);
+            return result;
+        } catch (error) {
+            console.error('AuthManager: confirmForgotPassword error', error);
             throw error;
         }
     }

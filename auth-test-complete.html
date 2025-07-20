@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication System Test - Complete</title>
+    
+    <!-- AWS Amplify SDK - Using more reliable CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/aws-amplify@5.3.11/dist/aws-amplify.min.js"></script>
+    
+    <!-- AWS Configuration -->
+    <script src="src/aws-exports.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        
+        .test-section {
+            padding: 30px;
+            border-right: 1px solid #eee;
+        }
+        
+        .test-section:last-child {
+            border-right: none;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .test-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .results {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .result-success {
+            background: #d1ecf1;
+            border-left-color: #27ae60;
+            color: #155724;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            border-left-color: #e74c3c;
+            color: #721c24;
+        }
+        
+        .result-info {
+            background: #e2e3e5;
+            border-left-color: #3498db;
+            color: #383d41;
+        }
+        
+        .status-panel {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .status-value {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>🔐 Authentication System Test</h1>
+            <p>Complete AWS Cognito Authentication Testing Suite</p>
+        </div>
+        
+        <div class="status-panel">
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-title">AWS Region</div>
+                    <div class="status-value" id="awsRegion">Loading...</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-title">User Pool ID</div>
+                    <div class="status-value" id="userPoolId">Loading...</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-title">App Client ID</div>
+                    <div class="status-value" id="appClientId">Loading...</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-title">Auth Status</div>
+                    <div class="status-value" id="authStatus">Checking...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="test-section">
+                <h2 class="section-title">🔑 Login Testing</h2>
+                
+                <form class="test-form" id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Username/Email</label>
+                        <input type="text" class="form-input" id="loginUsername" value="g87_a@yahoo.com" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" value="Password123!" placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">🔓 Test Login</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearAuthData()">🗑️ Clear Auth Data</button>
+                </form>
+                
+                <div class="test-form">
+                    <h3>Quick Actions</h3>
+                    <button class="btn btn-success" onclick="checkAuthStatus()">✅ Check Auth Status</button>
+                    <button class="btn btn-secondary" onclick="getCurrentUser()">👤 Get Current User</button>
+                    <button class="btn btn-danger" onclick="signOut()">🚪 Sign Out</button>
+                </div>
+                
+                <div class="results" id="loginResults">
+                    <div class="result-item result-info">
+                        <strong>Ready to test login functionality</strong><br>
+                        Default test credentials are pre-filled above.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="section-title">🔄 Password Reset Testing</h2>
+                
+                <form class="test-form" id="forgotPasswordForm">
+                    <div class="form-group">
+                        <label class="form-label">Email for Reset</label>
+                        <input type="email" class="form-input" id="resetEmail" value="g87_a@yahoo.com" placeholder="Enter email">
+                    </div>
+                    <button type="submit" class="btn btn-primary">📧 Send Reset Code</button>
+                </form>
+                
+                <form class="test-form" id="confirmResetForm" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Reset Code</label>
+                        <input type="text" class="form-input" id="resetCode" placeholder="Enter code from email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" id="newPassword" placeholder="Enter new password">
+                    </div>
+                    <button type="submit" class="btn btn-success">🔐 Confirm Reset</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideResetForm()">❌ Cancel</button>
+                </form>
+                
+                <div class="results" id="resetResults">
+                    <div class="result-item result-info">
+                        <strong>Password reset testing ready</strong><br>
+                        Test the forgot password flow here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize AWS Amplify
+        let Auth = null;
+        let Amplify = null;
+        let isInitialized = false;
+
+        // Wait for AWS libraries to load
+        window.addEventListener('load', function() {
+            setTimeout(initializeAmplify, 1000);
+        });
+
+        function initializeAmplify() {
+            // Try different ways Amplify might be exposed
+            if (window.aws_amplify) {
+                Amplify = window.aws_amplify;
+                Auth = window.aws_amplify.Auth;
+            } else if (window.AWS && window.AWS.Amplify) {
+                Amplify = window.AWS.Amplify;
+                Auth = window.AWS.Amplify.Auth;
+            } else if (window.Amplify) {
+                Amplify = window.Amplify;
+                Auth = window.Amplify.Auth;
+            } else {
+                logResult('loginResults', 'AWS Amplify libraries not found. Trying alternative approach...', 'error');
+                // Try again in 2 seconds
+                setTimeout(initializeAmplify, 2000);
+                return;
+            }
+            
+            if (Auth && window.awsExports) {
+                try {
+                    Amplify.configure(window.awsExports);
+                    isInitialized = true;
+                    updateStatusPanel();
+                    logResult('loginResults', 'AWS Amplify initialized successfully', 'success');
+                    logResult('resetResults', 'Password reset system ready', 'info');
+                } catch (error) {
+                    logResult('loginResults', `Configuration error: ${error.message}`, 'error');
+                }
+            } else {
+                logResult('loginResults', 'AWS configuration not found or Auth not available', 'error');
+            }
+                logResult('loginResults', 'AWS Amplify libraries not loaded', 'error');
+                setTimeout(initializeAmplify, 2000);
+            }
+        }
+
+        function updateStatusPanel() {
+            if (window.awsExports) {
+                document.getElementById('awsRegion').textContent = window.awsExports.aws_cognito_region || 'N/A';
+                document.getElementById('userPoolId').textContent = window.awsExports.aws_user_pools_id || 'N/A';
+                document.getElementById('appClientId').textContent = window.awsExports.aws_user_pools_web_client_id || 'N/A';
+            }
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                logResult('loginResults', 'Please enter both username and password', 'error');
+                return;
+            }
+            
+            try {
+                logResult('loginResults', 'Attempting to sign in...', 'info');
+                
+                const user = await Auth.signIn(username, password);
+                
+                if (user.challengeName === 'NEW_PASSWORD_REQUIRED') {
+                    logResult('loginResults', 'New password required for user', 'info');
+                    // Handle new password challenge if needed
+                } else if (user.challengeName === 'SMS_MFA' || user.challengeName === 'SOFTWARE_TOKEN_MFA') {
+                    logResult('loginResults', 'MFA challenge required', 'info');
+                    // Handle MFA if needed
+                } else {
+                    logResult('loginResults', 'Login successful! ✅', 'success');
+                    await updateAuthStatus();
+                }
+            } catch (error) {
+                logResult('loginResults', `Login failed: ${error.message}`, 'error');
+                console.error('Login error:', error);
+            }
+        });
+
+        // Forgot password form handler
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            
+            if (!email) {
+                logResult('resetResults', 'Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                logResult('resetResults', 'Sending reset code...', 'info');
+                
+                const result = await Auth.forgotPassword(email);
+                logResult('resetResults', 'Reset code sent successfully! Check your email.', 'success');
+                
+                // Show the confirmation form
+                document.getElementById('confirmResetForm').style.display = 'block';
+                document.getElementById('forgotPasswordForm').style.display = 'none';
+                
+            } catch (error) {
+                logResult('resetResults', `Reset failed: ${error.message}`, 'error');
+                console.error('Reset error:', error);
+            }
+        });
+
+        // Confirm reset form handler
+        document.getElementById('confirmResetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const code = document.getElementById('resetCode').value;
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (!code || !newPassword) {
+                logResult('resetResults', 'Please enter both code and new password', 'error');
+                return;
+            }
+            
+            try {
+                logResult('resetResults', 'Confirming password reset...', 'info');
+                
+                await Auth.forgotPasswordSubmit(email, code, newPassword);
+                logResult('resetResults', 'Password reset successful! ✅', 'success');
+                
+                // Hide the confirmation form and show the original form
+                hideResetForm();
+                
+            } catch (error) {
+                logResult('resetResults', `Reset confirmation failed: ${error.message}`, 'error');
+                console.error('Reset confirmation error:', error);
+            }
+        });
+
+        function hideResetForm() {
+            document.getElementById('confirmResetForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            document.getElementById('resetCode').value = '';
+            document.getElementById('newPassword').value = '';
+        }
+
+        async function checkAuthStatus() {
+            try {
+                const user = await Auth.currentAuthenticatedUser();
+                logResult('loginResults', `Authenticated as: ${user.username}`, 'success');
+                await updateAuthStatus();
+            } catch (error) {
+                logResult('loginResults', 'Not authenticated', 'info');
+                document.getElementById('authStatus').textContent = 'Not Authenticated';
+            }
+        }
+
+        async function getCurrentUser() {
+            try {
+                const user = await Auth.currentAuthenticatedUser();
+                const attributes = await Auth.userAttributes(user);
+                
+                let userInfo = `Username: ${user.username}\n`;
+                attributes.forEach(attr => {
+                    userInfo += `${attr.Name}: ${attr.Value}\n`;
+                });
+                
+                logResult('loginResults', `User Details:\n${userInfo}`, 'success');
+            } catch (error) {
+                logResult('loginResults', 'No current user found', 'info');
+            }
+        }
+
+        async function signOut() {
+            try {
+                await Auth.signOut();
+                logResult('loginResults', 'Signed out successfully', 'success');
+                document.getElementById('authStatus').textContent = 'Not Authenticated';
+            } catch (error) {
+                logResult('loginResults', `Sign out failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearAuthData() {
+            localStorage.clear();
+            sessionStorage.clear();
+            logResult('loginResults', 'Local auth data cleared', 'info');
+            document.getElementById('authStatus').textContent = 'Data Cleared';
+        }
+
+        async function updateAuthStatus() {
+            try {
+                const user = await Auth.currentAuthenticatedUser();
+                document.getElementById('authStatus').textContent = `✅ ${user.username}`;
+            } catch (error) {
+                document.getElementById('authStatus').textContent = '❌ Not Authenticated';
+            }
+        }
+
+        function logResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const resultItem = document.createElement('div');
+            resultItem.className = `result-item result-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            resultItem.innerHTML = `<strong>[${timestamp}]</strong><br>${message.replace(/\n/g, '<br>')}`;
+            
+            container.appendChild(resultItem);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Initialize auth status check
+        setTimeout(() => {
+            if (isInitialized) {
+                checkAuthStatus();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

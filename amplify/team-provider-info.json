@@ -1,0 +1,23 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wizzadminpanel-dev-82684-authRole",
+      "UnauthRoleArn": "arn:aws:iam::109804294167:role/amplify-wizzadminpanel-dev-82684-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::109804294167:role/amplify-wizzadminpanel-dev-82684-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-wizzadminpanel-dev-82684-deployment",
+      "UnauthRoleName": "amplify-wizzadminpanel-dev-82684-unauthRole",
+      "StackName": "amplify-wizzadminpanel-dev-82684",
+      "StackId": "arn:aws:cloudformation:us-east-1:109804294167:stack/amplify-wizzadminpanel-dev-82684/865472e0-65b6-11f0-a47a-0e9e2ddb4515",
+      "AmplifyAppId": "d2ina1trm0zag3"
+    },
+    "categories": {
+      "auth": {
+        "wizzadminpaneld6b78ece": {}
+      },
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
+    }
+  }
+}

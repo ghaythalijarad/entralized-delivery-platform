@@ -9,7 +9,10 @@
     <script src="https://unpkg.com/@aws-amplify/core@latest/dist/aws-amplify-core.min.js"></script>
     <script src="https://unpkg.com/@aws-amplify/auth@latest/dist/aws-amplify-auth.min.js"></script>
     <script src="https://unpkg.com/@aws-amplify/api@latest/dist/aws-amplify-api.min.js"></script>
-    
+
+    <!-- AWS Amplify Configuration -->
+    <script src="../aws-exports.js"></script>
+
     <!-- Unified Design System -->
     <link href="../utils/unified-design.css" rel="stylesheet">
     
@@ -485,89 +488,60 @@
             </button>
         </form>
 
+        <!-- Forgot Password Form (hidden by default) -->
+        <form id="forgotPasswordForm" class="form-section" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="resetEmail" data-translate="email_label">Email Address</label>
+                <input type="email" id="resetEmail" class="form-input" data-translate-placeholder="email_placeholder" placeholder="Enter your email address" required>
+            </div>
+
+            <button type="submit" class="login-btn" id="forgotPasswordButton">
+                <div class="loading-spinner" id="forgotPasswordLoadingSpinner"></div>
+                <span data-translate="send_reset_code">Send Reset Code</span>
+            </button>
+
+            <div class="forgot-password">
+                <a href="#" onclick="showForm('loginForm')" data-translate="back_to_login">Back to Login</a>
+            </div>
+        </form>
+
+        <!-- Reset Password Confirmation Form (hidden by default) -->
+        <form id="resetPasswordForm" class="form-section" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="resetCode" data-translate="reset_code_label">Reset Code</label>
+                <input type="text" id="resetCode" class="form-input" data-translate-placeholder="reset_code_placeholder" placeholder="Enter the code from your email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="resetNewPassword">New Password</label>
+                <div class="password-container">
+                    <input type="password" id="resetNewPassword" class="form-input" placeholder="Enter your new password" required minlength="8">
+                    <button type="button" class="password-toggle" onclick="togglePassword('resetNewPassword')">👁️</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="resetConfirmPassword">Confirm New Password</label>
+                <div class="password-container">
+                    <input type="password" id="resetConfirmPassword" class="form-input" placeholder="Confirm your new password" required minlength="8">
+                    <button type="button" class="password-toggle" onclick="togglePassword('resetConfirmPassword')">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="resetPasswordButton">
+                <div class="loading-spinner" id="resetPasswordLoadingSpinner"></div>
+                <span data-translate="reset_password">Reset Password</span>
+            </button>
+
+            <div class="forgot-password">
+                <a href="#" onclick="showForm('loginForm')" data-translate="back_to_login">Back to Login</a>
+            </div>
+        </form>
+
         <!-- Forgot Password -->
-        <div class="forgot-password">
-            <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>
+        <div class="forgot-password" id="forgotPasswordLink">
+            <a href="#" onclick="showForm('forgotPasswordForm')" data-translate="forgot_password">Forgot your password?</a>
         </div>
     </div>
-
-    <!-- 
-      SCRIPT LOADING ORDER IS CRITICAL:
-      1. AWS SDK - The core library.
-      2. Cognito SDK - Depends on the AWS SDK.
-      3. aws-config.js - Defines the Cognito User Pool details; needed by auth.js.
-      4. bilingual.js & bilingual-extensions.js - Defines language functions; needed by login-init.js.
-      5. auth.js - Defines signIn, signOut; needed by login-init.js.
-      6. login-init.js - This MUST be last. It runs all the setup logic and depends on all other scripts.
-    -->
-    <!-- AWS Configuration and Login Logic -->
-    <script src="../aws-exports.js"></script>
-    
-    <script>
-        // Password toggle functionality
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const passwordToggle = document.querySelector('.password-toggle');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordToggle.textContent = '🙈';
-            } else {
-                passwordInput.type = 'password';
-                passwordToggle.textContent = '👁️';
-            }
-        }
-
-        // Error message display
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 5000);
-        }
-
-        // Success message display
-        function showSuccess(message) {
-            const successElement = document.getElementById('successMessage');
-            successElement.textContent = message;
-            successElement.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                successElement.style.display = 'none';
-            }, 3000);
-        }
-
-        // Forgot password functionality
-        function forgotPassword() {
-            showSuccess('Password reset functionality will be implemented soon.');
-        }
-
-        // Initialize page after all modules are loaded
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Initialize bilingual support first
-                if (typeof initializeBilingualSupport === 'function') {
-                    initializeBilingualSupport('en');
-                }
-                
-                // Initialize unified navigation (hidden for login page)
-                if (typeof UnifiedNavigation !== 'undefined') {
-                    UnifiedNavigation.init({
-                        showNavigation: false,
-                        showTopbar: false
-                    });
-                }
-                
-                console.log('Login page initialized successfully');
-            } catch (error) {
-                console.error('Login page initialization error:', error);
-            }
-        });
-    </script>
 </body>
 </html>

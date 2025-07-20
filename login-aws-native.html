@@ -5,40 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Control Center - Delivery Management Hub</title>
     
-    <!-- AWS Amplify SDK -->
-    <script src="https://unpkg.com/@aws-amplify/core@5.8.0/dist/aws-amplify-core.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/auth@5.6.0/dist/aws-amplify-auth.min.js"></script>
-    <script src="https://unpkg.com/@aws-amplify/api@5.4.0/dist/aws-amplify-api.min.js"></script>
-    
-    <!-- Initialize Amplify -->
-    <script>
-        // Initialize Amplify with mock configuration
-        window.AWS = window.AWS || {};
-        if (window.aws_amplify_core && window.aws_amplify_auth) {
-            window.AWS.Amplify = window.aws_amplify_core.Amplify;
-            window.AWS.Amplify.Auth = window.aws_amplify_auth.Auth;
-            
-            // Configure with mock data for development
-            const mockConfig = {
-                Auth: {
-                    region: 'us-east-1',
-                    userPoolId: 'us-east-1_PLACEHOLDER',
-                    userPoolWebClientId: 'placeholder-client-id',
-                    mandatorySignIn: true
-                }
-            };
-            
-            try {
-                window.AWS.Amplify.configure(mockConfig);
-                console.log('Amplify configured for development');
-            } catch (error) {
-                console.warn('Amplify configuration failed, using mock mode');
-            }
-        } else {
-            console.warn('Amplify SDK not loaded, authentication will use mock mode');
-        }
-    </script>
-    
+    <!-- AWS Amplify SDK - Using reliable CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/aws-amplify@5.3.11/dist/aws-amplify.min.js"></script>
+
+    <!-- AWS Amplify Configuration -->
+    <script src="src/aws-exports.js"></script>
+
     <!-- Unified Design System -->
     <link href="src/utils/unified-design.css" rel="stylesheet">
     
@@ -331,7 +303,6 @@
             text-align: center;
             margin-top: var(--spacing-md);
         }
-        }
 
         .forgot-password a {
             color: #00C1E8;
@@ -519,84 +490,5 @@
             <a href="#" onclick="forgotPassword()" data-translate="forgot_password">Forgot your password?</a>
         </div>
     </div>
-
-    <!-- 
-      SCRIPT LOADING ORDER IS CRITICAL:
-      1. AWS SDK - The core library.
-      2. Cognito SDK - Depends on the AWS SDK.
-      3. aws-config.js - Defines the Cognito User Pool details; needed by auth.js.
-      4. bilingual.js & bilingual-extensions.js - Defines language functions; needed by login-init.js.
-      5. auth.js - Defines signIn, signOut; needed by login-init.js.
-      6. login-init.js - This MUST be last. It runs all the setup logic and depends on all other scripts.
-    -->
-    <!-- AWS Configuration and Login Logic -->
-    <script src="../aws-exports.js"></script>
-    
-    <script>
-        // Password toggle functionality
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const passwordToggle = document.querySelector('.password-toggle');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordToggle.textContent = '🙈';
-            } else {
-                passwordInput.type = 'password';
-                passwordToggle.textContent = '👁️';
-            }
-        }
-
-        // Error message display
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 5000);
-        }
-
-        // Success message display
-        function showSuccess(message) {
-            const successElement = document.getElementById('successMessage');
-            successElement.textContent = message;
-            successElement.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                successElement.style.display = 'none';
-            }, 3000);
-        }
-
-        // Forgot password functionality
-        function forgotPassword() {
-            showSuccess('Password reset functionality will be implemented soon.');
-        }
-
-        // Initialize page after all modules are loaded
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Initialize bilingual support first
-                if (typeof initializeBilingualSupport === 'function') {
-                    initializeBilingualSupport('en');
-                }
-                
-                // Initialize unified navigation (hidden for login page)
-                if (typeof UnifiedNavigation !== 'undefined') {
-                    UnifiedNavigation.init({
-                        showNavigation: false,
-                        showTopbar: false
-                    });
-                }
-                
-                console.log('Login page initialized successfully');
-            } catch (error) {
-                console.error('Login page initialization error:', error);
-            }
-        });
-    </script>
 </body>
 </html>

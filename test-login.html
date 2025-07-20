@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test - Centralized Platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .test-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+        .credentials {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .loading {
+            color: #856404;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔐 Login Test Platform</h1>
+        
+        <div class="test-section">
+            <h3>📋 Test Credentials</h3>
+            <div class="credentials">
+                <strong>Email:</strong> g87_a@yahoo.com<br>
+                <strong>Password:</strong> Password123!
+            </div>
+            
+            <button class="btn" onclick="testDirectLogin()">Test Direct Login</button>
+            <button class="btn" onclick="testAuthManager()">Test Auth Manager</button>
+            <button class="btn" onclick="testMockAuth()">Test Mock Authentication</button>
+            <button class="btn" onclick="checkCurrentAuth()">Check Current Auth Status</button>
+            <!-- UI Login Tests -->
+            <button class="btn" onclick="testUILogin()">Test UI Login</button>
+            <button class="btn" onclick="testSrcUILogin()">Test Src UI Login</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Available Login Pages</h3>
+            <button class="btn" onclick="openLoginPage('login-aws-native.html')">Main Login Page</button>
+            <button class="btn" onclick="openLoginPage('src/pages/login-aws-native.html')">Src Login Page</button>
+            <button class="btn" onclick="openLoginPage('index.html')">Index Page</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Authentication System Status</h3>
+            <button class="btn" onclick="checkAuthSystem()">Check Auth System</button>
+            <button class="btn" onclick="clearAuthData()">Clear Auth Data</button>
+            <div id="authStatus" class="result info">Click "Check Auth System" to see status...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Test Results</h3>
+            <div id="testResults" class="result info">Click any test button above to see results...</div>
+        </div>
+    </div>
+
+    <script>
+        const testCredentials = {
+            email: 'g87_a@yahoo.com',
+            password: 'Password123!'
+        };
+
+        function log(message, type = 'info') {
+            const resultDiv = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            if (resultDiv.textContent === 'Click any test button above to see results...') {
+                resultDiv.textContent = '';
+            }
+            
+            resultDiv.textContent += logEntry;
+            resultDiv.className = `result ${type}`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function testDirectLogin() {
+            log('🔄 Testing direct login...', 'loading');
+            
+            try {
+                // Test against mock API on current host
+                const loginUrl = `${window.location.origin}/auth/login`;
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: testCredentials.email,
+                        password: testCredentials.password
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log(`✅ Direct login successful!\nResponse: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    // Store tokens if provided
+                    if (data.token) {
+                        if (data.token.access_token) {
+                            localStorage.setItem('access_token', data.token.access_token);
+                        }
+                        if (data.token.user) {
+                            localStorage.setItem('user', JSON.stringify(data.token.user));
+                        }
+                    }
+                } else {
+                    log(`❌ Direct login failed\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Direct login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthManager() {
+            log('🔄 Testing AuthManager...', 'loading');
+            
+            try {
+                // Check if AuthManager is available
+                if (typeof AuthManager !== 'undefined') {
+                    await AuthManager.initialize();
+                    const result = await AuthManager.signIn(testCredentials.email, testCredentials.password);
+                    log(`✅ AuthManager login successful!\nResult: ${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    log('⚠️ AuthManager not available. Loading auth manager...', 'info');
+                    
+                    // Try to load AuthManager
+                    const script = document.createElement('script');
+                    script.src = '/src/utils/auth-manager.js';
+                    script.onload = () => {
+                        log('✅ AuthManager loaded, try again!', 'info');
+                    };
+                    script.onerror = () => {
+                        log('❌ Failed to load AuthManager', 'error');
+                    };
+                    document.head.appendChild(script);
+                }
+                
+            } catch (error) {
+                log(`❌ AuthManager error: ${error.message}`, 'error');
+            }
+        }
+
+        function testMockAuth() {
+            log('🔄 Testing mock authentication...', 'loading');
+            
+            try {
+                // Simulate successful authentication
+                const mockUser = {
+                    email: testCredentials.email,
+                    firstName: 'Test',
+                    lastName: 'User',
+                    userType: 'admin',
+                    verified: true
+                };
+                
+                const mockToken = 'mock-token-' + Date.now();
+                
+                localStorage.setItem('aws-native-user', JSON.stringify(mockUser));
+                localStorage.setItem('aws-native-token', mockToken);
+                
+                log(`✅ Mock authentication successful!\nUser: ${JSON.stringify(mockUser, null, 2)}\nToken: ${mockToken}`, 'success');
+                
+            } catch (error) {
+                log(`❌ Mock authentication error: ${error.message}`, 'error');
+            }
+        }
+
+        // UI login automation using iframe
+        async function testUILogin() {
+            log('🔄 Testing UI login (main page)...', 'loading');
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '/login-aws-native.html';
+            document.body.appendChild(iframe);
+            iframe.onload = () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    doc.getElementById('username').value = testCredentials.email;
+                    doc.getElementById('password').value = testCredentials.password;
+                    const form = doc.getElementById('loginForm');
+                    form && form.submit();
+                    log('✅ UI login form submitted', 'info');
+                    setTimeout(() => {
+                        checkCurrentAuth();
+                        document.body.removeChild(iframe);
+                    }, 3000);
+                } catch (error) {
+                    log(`❌ UI login error: ${error.message}`, 'error');
+                    document.body.removeChild(iframe);
+                }
+            };
+        }
+
+        async function testSrcUILogin() {
+            log('🔄 Testing UI login (src page)...', 'loading');
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '/src/pages/login-aws-native.html';
+            document.body.appendChild(iframe);
+            iframe.onload = () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    doc.getElementById('username').value = testCredentials.email;
+                    doc.getElementById('password').value = testCredentials.password;
+                    const form = doc.getElementById('loginForm');
+                    form && form.submit();
+                    log('✅ UI src login form submitted', 'info');
+                    setTimeout(() => {
+                        checkCurrentAuth();
+                        document.body.removeChild(iframe);
+                    }, 3000);
+                } catch (error) {
+                    log(`❌ UI src login error: ${error.message}`, 'error');
+                    document.body.removeChild(iframe);
+                }
+            };
+        }
+
+        function checkCurrentAuth() {
+            log('🔄 Checking current authentication status...', 'loading');
+            
+            try {
+                const token = localStorage.getItem('aws-native-token') || localStorage.getItem('access_token');
+                const user = localStorage.getItem('aws-native-user') || localStorage.getItem('user');
+                
+                if (token && user) {
+                    log(`✅ User is authenticated!\nToken: ${token.substring(0, 30)}...\nUser: ${user}`, 'success');
+                } else {
+                    log('ℹ️ No authentication data found', 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ Auth check error: ${error.message}`, 'error');
+            }
+        }
+
+        function checkAuthSystem() {
+            const statusDiv = document.getElementById('authStatus');
+            let status = '';
+            
+            // Check for required scripts and objects
+            const checks = [
+                { name: 'AWS SDK', check: () => typeof AWS !== 'undefined' },
+                { name: 'Amplify', check: () => typeof AWS !== 'undefined' && AWS.Amplify },
+                { name: 'AuthManager', check: () => typeof AuthManager !== 'undefined' },
+                { name: 'Local Storage', check: () => typeof localStorage !== 'undefined' },
+                { name: 'Fetch API', check: () => typeof fetch !== 'undefined' }
+            ];
+            
+            status += 'Authentication System Status:\n\n';
+            
+            checks.forEach(check => {
+                const available = check.check();
+                status += `${available ? '✅' : '❌'} ${check.name}: ${available ? 'Available' : 'Not Available'}\n`;
+            });
+            
+            status += '\nLocal Storage Data:\n';
+            status += `• aws-native-token: ${localStorage.getItem('aws-native-token') ? 'Present' : 'Not found'}\n`;
+            status += `• aws-native-user: ${localStorage.getItem('aws-native-user') ? 'Present' : 'Not found'}\n`;
+            status += `• access_token: ${localStorage.getItem('access_token') ? 'Present' : 'Not found'}\n`;
+            status += `• user: ${localStorage.getItem('user') ? 'Present' : 'Not found'}\n`;
+            
+            statusDiv.textContent = status;
+            statusDiv.className = 'result info';
+        }
+
+        function clearAuthData() {
+            localStorage.removeItem('aws-native-token');
+            localStorage.removeItem('aws-native-user');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('id_token');
+            sessionStorage.clear();
+            
+            log('🧹 All authentication data cleared', 'info');
+            checkAuthSystem();
+        }
+
+        function openLoginPage(page) {
+            const url = `http://localhost:3000/${page}`;
+            log(`🌐 Opening login page: ${url}`, 'info');
+            window.open(url, '_blank');
+        }
+
+        // Auto-check auth system on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkAuthSystem, 500);
+        });
+    </script>
+</body>
+</html>
