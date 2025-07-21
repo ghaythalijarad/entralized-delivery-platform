@@ -5,7 +5,7 @@ const awsmobile = {
     "aws_project_region": "us-east-1",
     "aws_cognito_identity_pool_id": "us-east-1:adc1f25d-92de-4cc8-a013-f0cdfdafeace",
     "aws_cognito_region": "us-east-1",
-    "aws_user_pools_id": "us-east-1_XXXXXXXXX",    // replace with your DeliveryPlatformUsers pool ID
+    "aws_user_pools_id": "us-east-1_9IItcBz7P",    // updated with real DeliveryPlatformUsers pool ID
     "aws_user_pools_web_client_id": "5r4pff0krdrblr5nkcfuglo4j1",
     "oauth": {},
     "aws_cognito_username_attributes": [
