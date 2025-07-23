@@ -2,19 +2,16 @@ version: 1
 frontend:
   phases:
     preBuild:
-      runtime-versions:
-        nodejs: 18
       commands:
-        - echo "Installing dependencies..."
-        - npm ci --only=production
+        - npm ci
     build:
       commands:
-        - echo "Building application..."
         - npm run build:dist
   artifacts:
     baseDirectory: dist
     files:
       - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
+  customRules:
+    - source: '</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>'
+      target: '/index.html'
+      status: '200'

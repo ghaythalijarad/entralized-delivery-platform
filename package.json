@@ -19,7 +19,7 @@
     "deploy:full": "node deploy.js full",
     "deploy:hosting": "amplify publish --yes",
     "serve": "node server.js",
-    "test": "node --test test.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "test:watch": "node --test --watch test.js",
     "lint": "eslint .",
     "clean": "rm -rf dist/ .amplify-hosting/",
