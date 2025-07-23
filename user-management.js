@@ -5,15 +5,18 @@
  * Replaces Python user management with AWS Cognito
  */
 
-import { CognitoIdentityProviderClient, 
-         AdminCreateUserCommand, 
-         AdminSetUserPasswordCommand,
-         AdminAddUserToGroupCommand,
-         AdminListUsersCommand,
-         AdminGetUserCommand,
-         AdminDeleteUserCommand,
-         CreateGroupCommand,
-         ListGroupsCommand } from '@aws-sdk/client-cognito-identity-provider';
+import pkg from '@aws-sdk/client-cognito-identity-provider';
+const { 
+    CognitoIdentityProviderClient,
+    AdminCreateUserCommand, 
+    AdminSetUserPasswordCommand,
+    AdminAddUserToGroupCommand,
+    AdminListUsersCommand,
+    AdminGetUserCommand,
+    AdminDeleteUserCommand,
+    CreateGroupCommand,
+    ListGroupsCommand 
+} = pkg;
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
 class UserManager {

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer App - Centralized Delivery Platform</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
+    
+    <!-- Custom utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
+    <script src="../utils/order-api.js"></script>
+    <script src="../utils/merchant-api.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
+    
+    <style>
+        .mobile-frame {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.2);
+            border: 8px solid #333;
+            position: relative;
+        }
+
+        .mobile-frame::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #666;
+            border-radius: 3px;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .location-bar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .merchant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .merchant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .merchant-rating {
+            color: #ffa500;
+        }
+
+        .cart-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .order-tracking {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .status-step {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .status-step::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .status-step.completed::before {
+            background: #28a745;
+        }
+
+        .status-step.active::before {
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .status-step::after {
+            content: '';
+            position: absolute;
+            left: -1.05rem;
+            top: 1rem;
+            width: 2px;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .status-step:last-child::after {
+            display: none;
+        }
+
+        .delivery-info {
+            background: #e8f5e8;
+            border: 1px solid #d4edda;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .driver-info {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+            margin-bottom: 1rem;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+        }
+
+        .category-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Unified Navigation -->
+    <div id="unifiedNavigation"></div>
+
+    <div class="container-fluid mt-4">
+        <!-- Desktop Instructions -->
+        <div class="row d-md-block d-none mb-4">
+            <div class="col-12">
+                <div class="unified-card text-center">
+                    <h3><i class="fas fa-mobile-alt me-2"></i>Customer Mobile App Simulator</h3>
+                    <p class="text-muted">This simulates how customers would interact with your delivery platform through their mobile apps</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile App Frame -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-6">
+                <div class="mobile-frame">
+                    <!-- App Header -->
+                    <div class="app-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Food Delivery</h5>
+                                <small>Fast & Fresh</small>
+                            </div>
+                            <div class="position-relative">
+                                <i class="fas fa-shopping-cart fa-lg"></i>
+                                <span id="cartBadge" class="notification-badge" style="display: none;">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Bar -->
+                    <div class="location-bar">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <div>
+                                <strong>Deliver to</strong>
+                                <br><small class="text-muted">King Fahd Road, Al-Olaya, Riyadh</small>
+                            </div>
+                            <i class="fas fa-chevron-down ms-auto"></i>
+                        </div>
+                    </div>
+
+                    <!-- App Content -->
+                    <div id="appContent">
+                        <!-- Home Screen -->
+                        <div id="homeScreen">
+                            <!-- Category Filter -->
+                            <div class="category-filter">
+                                <div class="category-chip active" data-category="all">
+                                    <i class="fas fa-utensils me-1"></i>All
+                                </div>
+                                <div class="category-chip" data-category="restaurant">
+                                    <i class="fas fa-pizza-slice me-1"></i>Restaurants
+                                </div>
+                                <div class="category-chip" data-category="pharmacy">
+                                    <i class="fas fa-pills me-1"></i>Pharmacy
+                                </div>
+                                <div class="category-chip" data-category="store">
+                                    <i class="fas fa-shopping-bag me-1"></i>Stores
+                                </div>
+                            </div>
+
+                            <!-- Merchants List -->
+                            <div id="merchantsList">
+                                <!-- Merchants will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Merchant Details Screen -->
+                        <div id="merchantScreen" style="display: none;">
+                            <div class="d-flex align-items-center mb-3">
+                                <button class="btn btn-link p-0 me-2" onclick="showHomeScreen()">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <h6 class="mb-0" id="merchantName">Restaurant Details</h6>
+                            </div>
+                            
+                            <div id="merchantDetails">
+                                <!-- Merchant details will be loaded here -->
+                            </div>
+
+                            <div id="menuItems">
+                                <!-- Menu items will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Cart Screen -->
+                        <div id="cartScreen" style="display: none;">
+                            <div class="d-flex align-items-center mb-3">
+                                <button class="btn btn-link p-0 me-2" onclick="showMerchantScreen()">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <h6 class="mb-0">Your Cart</h6>
+                            </div>
+                            
+                            <div id="cartItems">
+                                <!-- Cart items will be loaded here -->
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal">0 SAR</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Delivery Fee:</span>
+                                    <span>15 SAR</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <strong>Total:</strong>
+                                    <strong id="total">15 SAR</strong>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small">Payment Method</label>
+                                    <select class="form-select form-select-sm" id="paymentMethod">
+                                        <option value="card">Credit Card</option>
+                                        <option value="cash">Cash on Delivery</option>
+                                        <option value="wallet">Digital Wallet</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small">Order Priority</label>
+                                    <select class="form-select form-select-sm" id="orderPriority">
+                                        <option value="normal">Normal (Free)</option>
+                                        <option value="high">High Priority (+10 SAR)</option>
+                                        <option value="urgent">Urgent (+25 SAR)</option>
+                                    </select>
+                                </div>
+
+                                <button class="action-button primary-button" onclick="placeOrder()">
+                                    <i class="fas fa-credit-card me-2"></i>Place Order
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Order Tracking Screen -->
+                        <div id="trackingScreen" style="display: none;">
+                            <div class="order-tracking">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Order Tracking</h6>
+                                    <span class="badge bg-light text-dark" id="orderNumber">#ORDER123</span>
+                                </div>
+                                
+                                <div class="status-timeline" id="orderTimeline">
+                                    <!-- Order timeline will be populated here -->
+                                </div>
+                            </div>
+
+                            <div id="driverInfo" class="driver-info" style="display: none;">
+                                <h6 class="mb-3">Your Driver</h6>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <strong id="driverName">Ahmed Al-Rashid</strong>
+                                        <br><small class="text-muted">
+                                            <span id="driverRating">4.8</span> ⭐ • 
+                                            <span id="driverVehicle">Motorcycle</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="fas fa-phone me-1"></i>Call
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="fas fa-comment me-1"></i>Message
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="delivery-info">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span><i class="fas fa-clock me-1"></i>Estimated Delivery</span>
+                                    <strong id="estimatedTime">25-30 min</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-map-marker-alt me-1"></i>Distance</span>
+                                    <span id="deliveryDistance">2.3 km</span>
+                                </div>
+                            </div>
+
+                            <button class="action-button btn btn-outline-danger" onclick="cancelOrder()">
+                                <i class="fas fa-times me-2"></i>Cancel Order
+                            </button>
+
+                            <button class="action-button primary-button" onclick="showHomeScreen()">
+                                <i class="fas fa-home me-2"></i>Order Another
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation -->
+                    <div class="d-flex justify-content-around mt-3 pt-3 border-top">
+                        <button class="btn btn-link text-muted" onclick="showHomeScreen()">
+                            <i class="fas fa-home"></i>
+                            <br><small>Home</small>
+                        </button>
+                        <button class="btn btn-link text-muted" onclick="showOrderHistory()">
+                            <i class="fas fa-history"></i>
+                            <br><small>Orders</small>
+                        </button>
+                        <button class="btn btn-link text-muted position-relative" onclick="showCart()">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span id="bottomCartBadge" class="notification-badge" style="display: none;">0</span>
+                            <br><small>Cart</small>
+                        </button>
+                        <button class="btn btn-link text-muted" onclick="showProfile()">
+                            <i class="fas fa-user"></i>
+                            <br><small>Profile</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Integration Info -->
+            <div class="col-12 col-lg-6">
+                <div class="unified-card">
+                    <h5><i class="fas fa-cogs me-2"></i>Platform Integration</h5>
+                    <p class="text-muted">This customer app connects to your centralized delivery platform</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3">
+                                <h6><i class="fas fa-server me-1"></i>Order API</h6>
+                                <small class="text-muted">
+                                    Orders placed here are sent to your central platform for processing
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3">
+                                <h6><i class="fas fa-store me-1"></i>Merchant Network</h6>
+                                <small class="text-muted">
+                                    Shows approved merchants from your management system
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3">
+                                <h6><i class="fas fa-motorcycle me-1"></i>Driver Dispatch</h6>
+                                <small class="text-muted">
+                                    Uses your optimization algorithms for driver assignment
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light rounded p-3">
+                                <h6><i class="fas fa-bell me-1"></i>Real-time Updates</h6>
+                                <small class="text-muted">
+                                    Receives status updates via your notification system
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6>Integration Endpoints</h6>
+                        <div class="bg-dark text-light rounded p-3 small">
+                            <div class="mb-2"><code>POST /api/orders</code> - Create new order</div>
+                            <div class="mb-2"><code>GET /api/merchants</code> - Get approved merchants</div>
+                            <div class="mb-2"><code>GET /api/orders/{id}</code> - Get order status</div>
+                            <div><code>WebSocket</code> - Real-time notifications</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let orderAPI, merchantAPI;
+        let currentMerchant = null;
+        let cart = [];
+        let currentOrder = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize APIs
+                orderAPI = new OrderAPI();
+                merchantAPI = new MerchantAPI();
+
+                await Promise.all([
+                    orderAPI.initialize(),
+                    merchantAPI.initialize()
+                ]);
+
+                // Load merchants
+                await loadMerchants();
+                
+                // Setup category filters
+                setupCategoryFilters();
+                
+                console.log('Customer app initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize customer app:', error);
+            }
+        });
+
+        async function loadMerchants() {
+            try {
+                const merchants = await merchantAPI.getMerchants('approved');
+                const merchantsList = document.getElementById('merchantsList');
+                
+                merchantsList.innerHTML = merchants.map(merchant => `
+                    <div class="merchant-card" onclick="selectMerchant('${merchant.id}')">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1">${merchant.businessName}</h6>
+                                <small class="text-muted">${merchant.merchantType}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="merchant-rating">
+                                    <i class="fas fa-star"></i> 4.${Math.floor(Math.random() * 10)}
+                                </div>
+                                <small class="text-muted">${Math.floor(Math.random() * 30) + 15} min</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-motorcycle me-1"></i>
+                                ${Math.floor(Math.random() * 15) + 5} SAR delivery
+                            </small>
+                            <small class="text-success">
+                                <i class="fas fa-circle me-1"></i>Open
+                            </small>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading merchants:', error);
+            }
+        }
+
+        function setupCategoryFilters() {
+            const chips = document.querySelectorAll('.category-chip');
+            chips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    chips.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    filterMerchants(this.dataset.category);
+                });
+            });
+        }
+
+        function filterMerchants(category) {
+            // Simulate filtering - in real app, this would re-query the API
+            console.log('Filtering merchants by category:', category);
+        }
+
+        async function selectMerchant(merchantId) {
+            try {
+                const merchants = await merchantAPI.getMerchants('approved');
+                currentMerchant = merchants.find(m => m.id == merchantId);
+                
+                if (currentMerchant) {
+                    showMerchantScreen();
+                    loadMerchantDetails();
+                }
+            } catch (error) {
+                console.error('Error selecting merchant:', error);
+            }
+        }
+
+        function loadMerchantDetails() {
+            document.getElementById('merchantName').textContent = currentMerchant.businessName;
+            
+            // Mock menu items
+            const menuItems = [
+                { id: 1, name: 'Pizza Margherita', price: 45, description: 'Fresh mozzarella, tomato sauce, basil' },
+                { id: 2, name: 'Chicken Shawarma', price: 25, description: 'Grilled chicken, garlic sauce, vegetables' },
+                { id: 3, name: 'Caesar Salad', price: 30, description: 'Romaine lettuce, parmesan, croutons' },
+                { id: 4, name: 'Burger Combo', price: 40, description: 'Beef burger with fries and drink' },
+                { id: 5, name: 'Pasta Carbonara', price: 35, description: 'Creamy pasta with bacon and parmesan' }
+            ];
+
+            document.getElementById('merchantDetails').innerHTML = `
+                <div class="mb-3">
+                    <div class="merchant-rating mb-2">
+                        <i class="fas fa-star"></i> 4.${Math.floor(Math.random() * 10)} • 
+                        <span class="text-muted">${currentMerchant.merchantType}</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>20-30 min • 
+                        <i class="fas fa-motorcycle me-1"></i>15 SAR delivery
+                    </small>
+                </div>
+            `;
+
+            document.getElementById('menuItems').innerHTML = `
+                <h6 class="mb-3">Menu</h6>
+                ${menuItems.map(item => `
+                    <div class="merchant-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${item.name}</h6>
+                                <small class="text-muted">${item.description}</small>
+                                <div class="mt-1">
+                                    <strong>${item.price} SAR</strong>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function addToCart(itemId, itemName, itemPrice) {
+            const existingItem = cart.find(item => item.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({
+                    id: itemId,
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: 1
+                });
+            }
+            
+            updateCartBadge();
+            
+            // Show feedback
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i>';
+            button.classList.add('btn-success');
+            button.classList.remove('btn-primary');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.add('btn-primary');
+                button.classList.remove('btn-success');
+            }, 1000);
+        }
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badges = [document.getElementById('cartBadge'), document.getElementById('bottomCartBadge')];
+            
+            badges.forEach(badge => {
+                if (totalItems > 0) {
+                    badge.textContent = totalItems;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+        }
+
+        function showHomeScreen() {
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('merchantScreen').style.display = 'none';
+            document.getElementById('cartScreen').style.display = 'none';
+            document.getElementById('trackingScreen').style.display = 'none';
+        }
+
+        function showMerchantScreen() {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('merchantScreen').style.display = 'block';
+            document.getElementById('cartScreen').style.display = 'none';
+            document.getElementById('trackingScreen').style.display = 'none';
+        }
+
+        function showCart() {
+            if (cart.length === 0) {
+                alert('Your cart is empty! Please add some items first.');
+                return;
+            }
+            
+            loadCartItems();
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('merchantScreen').style.display = 'none';
+            document.getElementById('cartScreen').style.display = 'block';
+            document.getElementById('trackingScreen').style.display = 'none';
+        }
+
+        function loadCartItems() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            
+            cartItemsDiv.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${item.name}</h6>
+                        <small class="text-muted">${item.price} SAR each</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span class="mx-2">${item.quantity}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeFromCart(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateCartTotal();
+        }
+
+        function updateQuantity(itemId, change) {
+            const item = cart.find(item => item.id === itemId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(itemId);
+                } else {
+                    loadCartItems();
+                    updateCartBadge();
+                }
+            }
+        }
+
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            loadCartItems();
+            updateCartBadge();
+        }
+
+        function updateCartTotal() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const priority = document.getElementById('orderPriority').value;
+            const priorityFee = priority === 'high' ? 10 : priority === 'urgent' ? 25 : 0;
+            const deliveryFee = 15;
+            const total = subtotal + deliveryFee + priorityFee;
+            
+            document.getElementById('subtotal').textContent = `${subtotal} SAR`;
+            document.getElementById('total').textContent = `${total} SAR`;
+        }
+
+        // Update total when priority changes
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'orderPriority') {
+                updateCartTotal();
+            }
+        });
+
+        async function placeOrder() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            
+            try {
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const priority = document.getElementById('orderPriority').value;
+                const priorityFee = priority === 'high' ? 10 : priority === 'urgent' ? 25 : 0;
+                const deliveryFee = 15;
+                const total = subtotal + deliveryFee + priorityFee;
+                
+                const orderData = {
+                    customerId: 'customer_app_' + Math.floor(Math.random() * 1000),
+                    merchantId: currentMerchant.id,
+                    items: cart.map(item => ({
+                        itemId: 'item_' + item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
+                    totalAmount: total,
+                    deliveryFee: deliveryFee,
+                    deliveryAddress: {
+                        street: 'King Fahd Road',
+                        city: 'Riyadh',
+                        district: 'Al-Olaya',
+                        coordinates: { latitude: 24.7136, longitude: 46.6753 }
+                    },
+                    merchantLocation: { latitude: 24.7136 + (Math.random() - 0.5) * 0.05, longitude: 46.6753 + (Math.random() - 0.5) * 0.05 },
+                    paymentMethod: document.getElementById('paymentMethod').value,
+                    priority: priority,
+                    notes: ''
+                };
+                
+                // Create order through API
+                currentOrder = await orderAPI.createOrder(orderData);
+                
+                // Clear cart
+                cart = [];
+                updateCartBadge();
+                
+                // Show tracking screen
+                showOrderTracking();
+                
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('Error placing order: ' + error.message);
+            }
+        }
+
+        function showOrderTracking() {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('merchantScreen').style.display = 'none';
+            document.getElementById('cartScreen').style.display = 'none';
+            document.getElementById('trackingScreen').style.display = 'block';
+            
+            document.getElementById('orderNumber').textContent = '#' + currentOrder.orderId;
+            
+            // Start order status simulation
+            simulateOrderProgress();
+        }
+
+        function simulateOrderProgress() {
+            const statuses = [
+                { status: 'pending', text: 'Order Placed', description: 'Waiting for restaurant confirmation' },
+                { status: 'confirmed', text: 'Order Confirmed', description: 'Restaurant is preparing your food' },
+                { status: 'preparing', text: 'Being Prepared', description: 'Your food is being cooked' },
+                { status: 'ready', text: 'Ready for Pickup', description: 'Looking for a nearby driver' },
+                { status: 'assigned', text: 'Driver Assigned', description: 'Driver is on the way to restaurant' },
+                { status: 'picked_up', text: 'Order Picked Up', description: 'Driver is on the way to you' },
+                { status: 'on_way', text: 'On the Way', description: 'Driver is delivering your order' },
+                { status: 'delivered', text: 'Delivered', description: 'Enjoy your meal!' }
+            ];
+            
+            let currentStatusIndex = 0;
+            
+            function updateStatus() {
+                const timeline = document.getElementById('orderTimeline');
+                
+                timeline.innerHTML = statuses.map((status, index) => {
+                    let statusClass = '';
+                    if (index < currentStatusIndex) statusClass = 'completed';
+                    else if (index === currentStatusIndex) statusClass = 'active';
+                    
+                    return `
+                        <div class="status-step ${statusClass}">
+                            <strong>${status.text}</strong>
+                            <br><small>${status.description}</small>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Show driver info when assigned
+                if (currentStatusIndex >= 4) {
+                    document.getElementById('driverInfo').style.display = 'block';
+                    document.getElementById('driverName').textContent = 'Ahmed Al-Rashid';
+                    document.getElementById('driverRating').textContent = '4.8';
+                    document.getElementById('driverVehicle').textContent = 'Motorcycle';
+                }
+                
+                // Update estimated time
+                const remainingTime = Math.max(5, 30 - (currentStatusIndex * 4));
+                document.getElementById('estimatedTime').textContent = `${remainingTime}-${remainingTime + 5} min`;
+                
+                currentStatusIndex++;
+                
+                if (currentStatusIndex < statuses.length) {
+                    // Continue updating status every 10 seconds
+                    setTimeout(updateStatus, 10000);
+                }
+            }
+            
+            // Start status updates
+            updateStatus();
+        }
+
+        function cancelOrder() {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                alert('Order cancelled. Refund will be processed within 3-5 business days.');
+                showHomeScreen();
+                currentOrder = null;
+            }
+        }
+
+        function showOrderHistory() {
+            alert('Order history feature - would show previous orders');
+        }
+
+        function showProfile() {
+            alert('Profile feature - would show user profile and settings');
+        }
+
+        // Initialize unified navigation
+        unifiedNavigation.init({
+            currentPage: 'customer-app',
+            userName: 'Customer App Demo'
+        });
+    </script>
+</body>
+</html>

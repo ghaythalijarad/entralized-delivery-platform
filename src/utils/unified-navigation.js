@@ -27,6 +27,7 @@ class UnifiedNavigation {
             'drivers-management': 'drivers',
             'merchant-management': 'merchants',
             'user-management': 'users',
+            'order-management': 'orders',
             'login-aws-native': 'login'
         };
         
@@ -121,6 +122,10 @@ class UnifiedNavigation {
             'dashboard': 'Control Center',
             'drivers': 'Drivers Management',
             'merchants': 'Merchants Management',
+            'orders': 'Order Management',
+            'platform-demo': 'Platform Demo',
+            'customer-app': 'Customer App',
+            'merchant-app': 'Merchant App',
             'users': 'User Management',
             'login': 'Admin Login'
         };
@@ -134,6 +139,30 @@ class UnifiedNavigation {
                 label: 'Dashboard',
                 icon: 'fas fa-home',
                 href: 'dashboard-aws-native.html'
+            },
+            {
+                page: 'orders',
+                label: 'Orders',
+                icon: 'fas fa-shopping-cart',
+                href: 'order-management.html'
+            },
+            {
+                page: 'platform-demo',
+                label: 'Live Demo',
+                icon: 'fas fa-rocket',
+                href: 'platform-demo.html'
+            },
+            {
+                page: 'customer-app',
+                label: 'Customer App',
+                icon: 'fas fa-mobile-alt',
+                href: 'customer-app.html'
+            },
+            {
+                page: 'merchant-app',
+                label: 'Merchant App',
+                icon: 'fas fa-tablet-alt',
+                href: 'merchant-app.html'
             },
             {
                 page: 'drivers',
@@ -166,6 +195,11 @@ class UnifiedNavigation {
             'dashboard': [
                 { label: 'Home', href: 'dashboard-aws-native.html' },
                 { label: 'Dashboard' }
+            ],
+            'orders': [
+                { label: 'Home', href: 'dashboard-aws-native.html' },
+                { label: 'Management' },
+                { label: 'Orders' }
             ],
             'drivers': [
                 { label: 'Home', href: 'dashboard-aws-native.html' },

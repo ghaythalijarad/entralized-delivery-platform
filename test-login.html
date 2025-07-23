@@ -112,7 +112,6 @@
         <div class="test-section">
             <h3>🌐 Available Login Pages</h3>
             <button class="btn" onclick="openLoginPage('login-aws-native.html')">Main Login Page</button>
-            <button class="btn" onclick="openLoginPage('src/pages/login-aws-native.html')">Src Login Page</button>
             <button class="btn" onclick="openLoginPage('index.html')">Index Page</button>
         </div>
 
@@ -272,10 +271,10 @@
         }
 
         async function testSrcUILogin() {
-            log('🔄 Testing UI login (src page)...', 'loading');
+            log('🔄 Testing UI login (main page - backup)...', 'loading');
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = '/src/pages/login-aws-native.html';
+            iframe.src = '/login-aws-native.html';
             document.body.appendChild(iframe);
             iframe.onload = () => {
                 try {

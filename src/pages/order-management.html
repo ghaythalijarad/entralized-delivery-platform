@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Centralized Delivery Platform</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
+    
+    <!-- Custom utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
+    <script src="../utils/order-api.js"></script>
+    <script src="../utils/merchant-api.js"></script>
+    <script src="../utils/driver-api.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
+    
+    <style>
+        .order-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--gray-300);
+            transition: var(--transition-normal);
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .order-card.status-pending { border-left-color: var(--warning-color); }
+        .order-card.status-confirmed { border-left-color: var(--info-color); }
+        .order-card.status-preparing { border-left-color: var(--primary-color); }
+        .order-card.status-ready { border-left-color: var(--success-color); }
+        .order-card.status-assigned { border-left-color: var(--info-color); }
+        .order-card.status-picked_up { border-left-color: var(--primary-color); }
+        .order-card.status-on_way { border-left-color: var(--primary-color); }
+        .order-card.status-delivered { border-left-color: var(--success-color); }
+        .order-card.status-cancelled { border-left-color: var(--danger-color); }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: var(--warning-light); color: var(--warning-dark); }
+        .status-confirmed { background: var(--info-light); color: var(--info-dark); }
+        .status-preparing { background: var(--primary-light); color: var(--primary-dark); }
+        .status-ready { background: var(--success-light); color: var(--success-dark); }
+        .status-assigned { background: var(--info-light); color: var(--info-dark); }
+        .status-picked_up { background: var(--primary-light); color: var(--primary-dark); }
+        .status-on_way { background: var(--primary-light); color: var(--primary-dark); }
+        .status-delivered { background: var(--success-light); color: var(--success-dark); }
+        .status-cancelled { background: var(--danger-light); color: var(--danger-dark); }
+
+        .priority-badge {
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.7rem;
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+        }
+
+        .priority-urgent { background: #ff4444; color: white; }
+        .priority-high { background: #ff8800; color: white; }
+        .priority-normal { background: #0088cc; color: white; }
+        .priority-low { background: #888888; color: white; }
+
+        .order-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--gray-300);
+            border: 2px solid var(--white);
+        }
+
+        .timeline-item.completed::before {
+            background: var(--success-color);
+        }
+
+        .timeline-item.active::before {
+            background: var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -1rem;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: var(--gray-300);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .order-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .metric-card {
+            background: var(--white);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+
+        .metric-number {
+            font-size: 2rem;
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-color);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            margin-top: 0.5rem;
+        }
+
+        .dispatch-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .dispatch-searching { background: var(--warning-color); animation: blink 1s infinite; }
+        .dispatch-found { background: var(--success-color); }
+        .dispatch-failed { background: var(--danger-color); }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .real-time-updates {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .update-notification {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            box-shadow: var(--shadow-md);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .driver-assignment {
+            background: var(--info-light);
+            border-left: 4px solid var(--info-color);
+            padding: var(--spacing-md);
+            margin: var(--spacing-sm) 0;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--gray-300);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="unified-navbar">
+        <!-- Navigation content will be loaded by unified-navigation.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <div class="unified-container">
+        <!-- Header -->
+        <div class="unified-header">
+            <div class="header-content">
+                <h1 class="page-title">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    <span data-key="orderManagement">Order Management</span>
+                </h1>
+                <div class="header-actions">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="refreshOrders()">
+                            <i class="fas fa-refresh me-1"></i>
+                            <span data-key="refresh">Refresh</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateOrderModal()">
+                            <i class="fas fa-plus me-1"></i>
+                            <span data-key="createTestOrder">Create Test Order</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Metrics -->
+        <div class="order-metrics">
+            <div class="metric-card">
+                <div class="metric-number" id="totalOrdersCount">-</div>
+                <div class="metric-label" data-key="totalOrders">Total Orders</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number" id="pendingOrdersCount">-</div>
+                <div class="metric-label" data-key="pendingOrders">Pending Orders</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number" id="activeOrdersCount">-</div>
+                <div class="metric-label" data-key="activeDeliveries">Active Deliveries</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number" id="avgDeliveryTime">-</div>
+                <div class="metric-label" data-key="avgDeliveryTime">Avg Delivery Time</div>
+            </div>
+        </div>
+
+        <!-- Filter and Search -->
+        <div class="unified-card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="statusFilter" class="form-label" data-key="filterByStatus">Filter by Status</label>
+                            <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="preparing">Preparing</option>
+                                <option value="ready">Ready</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="picked_up">Picked Up</option>
+                                <option value="on_way">On the Way</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="priorityFilter" class="form-label" data-key="filterByPriority">Filter by Priority</label>
+                            <select class="form-select" id="priorityFilter" onchange="applyFilters()">
+                                <option value="">All Priorities</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="high">High</option>
+                                <option value="normal">Normal</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="searchOrders" class="form-label" data-key="searchOrders">Search Orders</label>
+                            <input type="text" class="form-control" id="searchOrders" 
+                                   placeholder="Search by order ID, customer, or merchant..." 
+                                   oninput="applyFilters()">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="applyFilters()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div id="ordersContainer">
+            <!-- Orders will be dynamically loaded here -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Real-time Updates Panel -->
+    <div class="real-time-updates" id="realTimeUpdates">
+        <!-- Real-time notifications will appear here -->
+    </div>
+
+    <!-- Create Test Order Modal -->
+    <div class="modal fade" id="createOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Create Test Order
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createOrderForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="customerId" class="form-label">Customer ID</label>
+                                    <input type="text" class="form-control" id="customerId" value="customer_123" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="merchantId" class="form-label">Merchant ID</label>
+                                    <select class="form-select" id="merchantId" required>
+                                        <option value="">Select Merchant</option>
+                                        <!-- Will be populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="totalAmount" class="form-label">Total Amount (SAR)</label>
+                                    <input type="number" class="form-control" id="totalAmount" value="75" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="paymentMethod" class="form-label">Payment Method</label>
+                                    <select class="form-select" id="paymentMethod" required>
+                                        <option value="cash">Cash on Delivery</option>
+                                        <option value="card">Credit Card</option>
+                                        <option value="wallet">Digital Wallet</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" required>
+                                        <option value="normal">Normal</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="deliveryAddress" class="form-label">Delivery Address</label>
+                            <textarea class="form-control" id="deliveryAddress" rows="3" 
+                                      placeholder="Street, City, District" required>123 King Fahd Road, Riyadh, Al-Malaz</textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="orderNotes" class="form-label">Order Notes</label>
+                            <textarea class="form-control" id="orderNotes" rows="2" 
+                                      placeholder="Special instructions..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createTestOrder()">
+                        <i class="fas fa-plus me-1"></i>Create Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let orderAPI;
+        let merchantAPI;
+        let driverAPI;
+        let allOrders = [];
+        let filteredOrders = [];
+        let realTimeInterval;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize APIs
+                orderAPI = new OrderAPI();
+                merchantAPI = new MerchantAPI();
+                driverAPI = new DriverAPI();
+
+                await Promise.all([
+                    orderAPI.initialize(),
+                    merchantAPI.initialize(),
+                    driverAPI.initialize()
+                ]);
+
+                // Load initial data
+                await loadOrders();
+                await loadMerchants();
+                updateMetrics();
+                
+                // Setup real-time updates
+                setupRealTimeUpdates();
+                
+                console.log('Order Management initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize Order Management:', error);
+                showError('Failed to initialize. Some features may not work properly.');
+            }
+        });
+
+        async function loadOrders() {
+            showLoading(true);
+            try {
+                const response = await orderAPI.getOrders();
+                allOrders = response.items || [];
+                filteredOrders = [...allOrders];
+                renderOrders();
+                console.log(`Loaded ${allOrders.length} orders`);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError('Failed to load orders. Please refresh the page.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadMerchants() {
+            try {
+                const merchants = await merchantAPI.getMerchants('approved');
+                const merchantSelect = document.getElementById('merchantId');
+                merchantSelect.innerHTML = '<option value="">Select Merchant</option>';
+                
+                merchants.forEach(merchant => {
+                    const option = document.createElement('option');
+                    option.value = merchant.id;
+                    option.textContent = `${merchant.businessName} (${merchant.merchantType})`;
+                    merchantSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading merchants:', error);
+            }
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="unified-card text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                        <h3 class="text-muted">No Orders Found</h3>
+                        <p class="text-muted">No orders match your current filters.</p>
+                        <button class="btn btn-primary" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(order => createOrderCard(order)).join('');
+        }
+
+        function createOrderCard(order) {
+            const statusClass = `status-${order.status}`;
+            const priorityClass = `priority-${order.priority || 'normal'}`;
+            const timeAgo = getTimeAgo(order.createdAt);
+            const estimatedTime = order.estimatedDeliveryTime ? 
+                formatTime(order.estimatedDeliveryTime) : 'TBD';
+
+            return `
+                <div class="order-card ${statusClass}" id="order-${order.orderId}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">
+                                Order #${order.orderId}
+                                <span class="priority-badge ${priorityClass}">${order.priority || 'normal'}</span>
+                            </h5>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-clock me-1"></i>${timeAgo}
+                                ${order.driverId ? `<i class="fas fa-user ms-3 me-1"></i>Driver: ${order.driverId}` : ''}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="status-badge ${statusClass}">${order.status.replace('_', ' ')}</span>
+                            <div class="mt-1">
+                                <strong>${order.totalAmount} SAR</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <small class="text-muted">Customer:</small><br>
+                                <strong>${order.customerId}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Merchant:</small><br>
+                                <strong>${order.merchantId}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <small class="text-muted">Payment:</small><br>
+                                <span class="badge bg-info">${order.paymentMethod || 'cash'}</span>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Est. Delivery:</small><br>
+                                <strong>${estimatedTime}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${order.status === 'pending' || order.status === 'confirmed' ? `
+                        <div class="driver-assignment">
+                            <span class="dispatch-indicator ${getDispatchStatus(order)}"></span>
+                            <small>Driver Dispatch: ${getDispatchStatusText(order)}</small>
+                        </div>
+                    ` : ''}
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${order.orderId}')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                            ${getStatusActions(order)}
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="trackOrder('${order.orderId}')">
+                                <i class="fas fa-map-marker-alt"></i> Track
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getDispatchStatus(order) {
+            if (order.driverId) return 'dispatch-found';
+            if (order.status === 'confirmed') return 'dispatch-searching';
+            return 'dispatch-failed';
+        }
+
+        function getDispatchStatusText(order) {
+            if (order.driverId) return 'Driver Assigned';
+            if (order.status === 'confirmed') return 'Searching for Driver...';
+            return 'Waiting for Confirmation';
+        }
+
+        function getStatusActions(order) {
+            let actions = '';
+            
+            switch (order.status) {
+                case 'pending':
+                    actions = `
+                        <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order.orderId}', 'confirmed')">
+                            <i class="fas fa-check"></i> Confirm
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="updateOrderStatus('${order.orderId}', 'cancelled')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    `;
+                    break;
+                case 'confirmed':
+                    actions = `
+                        <button class="btn btn-sm btn-info" onclick="updateOrderStatus('${order.orderId}', 'preparing')">
+                            <i class="fas fa-utensils"></i> Start Preparing
+                        </button>
+                    `;
+                    break;
+                case 'preparing':
+                    actions = `
+                        <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order.orderId}', 'ready')">
+                            <i class="fas fa-check-circle"></i> Mark Ready
+                        </button>
+                    `;
+                    break;
+                case 'assigned':
+                    actions = `
+                        <button class="btn btn-sm btn-primary" onclick="updateOrderStatus('${order.orderId}', 'picked_up')">
+                            <i class="fas fa-hand-holding"></i> Mark Picked Up
+                        </button>
+                    `;
+                    break;
+                case 'picked_up':
+                    actions = `
+                        <button class="btn btn-sm btn-primary" onclick="updateOrderStatus('${order.orderId}', 'on_way')">
+                            <i class="fas fa-route"></i> On the Way
+                        </button>
+                    `;
+                    break;
+                case 'on_way':
+                    actions = `
+                        <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order.orderId}', 'delivered')">
+                            <i class="fas fa-check-double"></i> Mark Delivered
+                        </button>
+                    `;
+                    break;
+            }
+            
+            return actions;
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                showLoading(true);
+                await orderAPI.updateOrderStatus(orderId, newStatus);
+                
+                // Update local data
+                const orderIndex = allOrders.findIndex(o => o.orderId === orderId);
+                if (orderIndex !== -1) {
+                    allOrders[orderIndex].status = newStatus;
+                    allOrders[orderIndex].updatedAt = new Date().toISOString();
+                }
+                
+                // Re-render orders
+                applyFilters();
+                updateMetrics();
+                
+                // Show real-time notification
+                showRealTimeUpdate({
+                    type: 'order_update',
+                    message: `Order #${orderId} status updated to ${newStatus}`,
+                    timestamp: new Date().toISOString()
+                });
+                
+                showSuccess(`Order status updated to ${newStatus}`);
+                console.log(`Order ${orderId} status updated to ${newStatus}`);
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                showError('Failed to update order status. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function createTestOrder() {
+            const form = document.getElementById('createOrderForm');
+            const formData = new FormData(form);
+            
+            try {
+                showLoading(true);
+                
+                const orderData = {
+                    customerId: document.getElementById('customerId').value,
+                    merchantId: document.getElementById('merchantId').value,
+                    totalAmount: parseFloat(document.getElementById('totalAmount').value),
+                    paymentMethod: document.getElementById('paymentMethod').value,
+                    priority: document.getElementById('priority').value,
+                    deliveryAddress: {
+                        street: document.getElementById('deliveryAddress').value,
+                        city: 'Riyadh',
+                        district: 'Al-Malaz',
+                        coordinates: { latitude: 24.7136, longitude: 46.6753 }
+                    },
+                    notes: document.getElementById('orderNotes').value,
+                    items: [
+                        { itemId: 'item1', name: 'Test Item 1', price: 25, quantity: 1 },
+                        { itemId: 'item2', name: 'Test Item 2', price: 50, quantity: 1 }
+                    ]
+                };
+
+                const newOrder = await orderAPI.createOrder(orderData);
+                
+                // Add to local data
+                allOrders.unshift(newOrder);
+                applyFilters();
+                updateMetrics();
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('createOrderModal')).hide();
+                form.reset();
+                
+                // Show success message
+                showSuccess(`Test order #${newOrder.orderId} created successfully!`);
+                console.log('Test order created:', newOrder);
+            } catch (error) {
+                console.error('Error creating test order:', error);
+                showError('Failed to create test order. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            const searchTerm = document.getElementById('searchOrders').value.toLowerCase();
+
+            filteredOrders = allOrders.filter(order => {
+                const matchesStatus = !statusFilter || order.status === statusFilter;
+                const matchesPriority = !priorityFilter || order.priority === priorityFilter;
+                const matchesSearch = !searchTerm || 
+                    order.orderId.toLowerCase().includes(searchTerm) ||
+                    order.customerId.toLowerCase().includes(searchTerm) ||
+                    order.merchantId.toLowerCase().includes(searchTerm);
+
+                return matchesStatus && matchesPriority && matchesSearch;
+            });
+
+            renderOrders();
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('priorityFilter').value = '';
+            document.getElementById('searchOrders').value = '';
+            filteredOrders = [...allOrders];
+            renderOrders();
+        }
+
+        function updateMetrics() {
+            const total = allOrders.length;
+            const pending = allOrders.filter(o => o.status === 'pending').length;
+            const active = allOrders.filter(o => 
+                ['confirmed', 'preparing', 'ready', 'assigned', 'picked_up', 'on_way'].includes(o.status)
+            ).length;
+            
+            // Calculate average delivery time (mock calculation)
+            const avgTime = '35 min';
+
+            document.getElementById('totalOrdersCount').textContent = total;
+            document.getElementById('pendingOrdersCount').textContent = pending;
+            document.getElementById('activeOrdersCount').textContent = active;
+            document.getElementById('avgDeliveryTime').textContent = avgTime;
+        }
+
+        function setupRealTimeUpdates() {
+            // Simulate real-time updates every 10 seconds
+            realTimeInterval = setInterval(() => {
+                // Check for order status changes, new orders, etc.
+                checkForUpdates();
+            }, 10000);
+        }
+
+        function checkForUpdates() {
+            // Simulate occasional updates
+            if (Math.random() < 0.3 && allOrders.length > 0) {
+                const randomOrder = allOrders[Math.floor(Math.random() * allOrders.length)];
+                showRealTimeUpdate({
+                    type: 'status_update',
+                    message: `Order #${randomOrder.orderId} - Driver en route`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+
+        function showRealTimeUpdate(update) {
+            const container = document.getElementById('realTimeUpdates');
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted">${formatTime(update.timestamp)}</small>
+                        <div>${update.message}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.insertBefore(notification, container.firstChild);
+            
+            // Remove after 10 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 10000);
+            
+            // Keep only last 5 notifications
+            while (container.children.length > 5) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function refreshOrders() {
+            loadOrders();
+        }
+
+        function showCreateOrderModal() {
+            new bootstrap.Modal(document.getElementById('createOrderModal')).show();
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = allOrders.find(o => o.orderId === orderId);
+            if (order) {
+                alert(`Order Details:\n\nOrder ID: ${order.orderId}\nCustomer: ${order.customerId}\nMerchant: ${order.merchantId}\nStatus: ${order.status}\nAmount: ${order.totalAmount} SAR\nCreated: ${order.createdAt}`);
+            }
+        }
+
+        function trackOrder(orderId) {
+            // Simulate order tracking
+            alert(`Order #${orderId} tracking:\n\n📍 Current Location: En route to delivery address\n⏱️ Estimated arrival: 15 minutes\n🚗 Driver: Ahmed Al-Rashid\n📞 Contact: +966501234567`);
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diff = now - time;
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingState').style.display = show ? 'flex' : 'none';
+        }
+
+        function showSuccess(message) {
+            // Implement success toast notification
+            console.log('SUCCESS:', message);
+        }
+
+        function showError(message) {
+            // Implement error toast notification
+            console.error('ERROR:', message);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval);
+            }
+        });
+    </script>
+</body>
+</html>

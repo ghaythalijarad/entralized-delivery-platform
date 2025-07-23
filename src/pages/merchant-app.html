@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant App - Centralized Delivery Platform</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Unified Design System -->
+    <link href="../utils/unified-design.css" rel="stylesheet">
+    
+    <!-- Custom utilities -->
+    <script src="../utils/aws-config.js"></script>
+    <script src="../utils/auth-manager.js"></script>
+    <script src="../utils/order-api.js"></script>
+    <script src="../utils/merchant-api.js"></script>
+    <script src="../utils/bilingual.js"></script>
+    <script src="../utils/unified-navigation.js"></script>
+    
+    <style>
+        .tablet-frame {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.2);
+            border: 6px solid #444;
+            position: relative;
+        }
+
+        .tablet-frame::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: #666;
+            border-radius: 2px;
+        }
+
+        .merchant-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+        }
+
+        .order-notification {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            animation: pulse-notification 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse-notification {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+        }
+
+        .priority-urgent {
+            border-left-color: #dc3545;
+        }
+
+        .priority-high {
+            border-left-color: #ffc107;
+        }
+
+        .priority-normal {
+            border-left-color: #28a745;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .accept-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .accept-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .ready-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .ready-btn:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .kitchen-status {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .prep-time-slider {
+            margin: 1rem 0;
+        }
+
+        .notification-sound {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .online-toggle {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .online-toggle.offline {
+            background: #6c757d;
+        }
+
+        .order-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-step {
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6c757d;
+        }
+
+        .timeline-step.completed::before {
+            background: #28a745;
+        }
+
+        .timeline-step.active::before {
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-step::after {
+            content: '';
+            position: absolute;
+            left: -1.05rem;
+            top: 1rem;
+            width: 2px;
+            height: 100%;
+            background: #e9ecef;
+        }
+
+        .timeline-step:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Unified Navigation -->
+    <div id="unifiedNavigation"></div>
+
+    <div class="container-fluid mt-4">
+        <!-- Desktop Instructions -->
+        <div class="row d-md-block d-none mb-4">
+            <div class="col-12">
+                <div class="unified-card text-center">
+                    <h3><i class="fas fa-store me-2"></i>Merchant Tablet App Simulator</h3>
+                    <p class="text-muted">This simulates how merchants manage orders through their tablet apps connected to your platform</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tablet App Frame -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-8">
+                <div class="tablet-frame">
+                    <!-- Merchant Header -->
+                    <div class="merchant-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-1">Al-Salam Restaurant</h4>
+                                <p class="mb-0 opacity-75">Arabic & Mediterranean Cuisine</p>
+                            </div>
+                            <div class="text-end">
+                                <button id="onlineToggle" class="online-toggle" onclick="toggleOnlineStatus()">
+                                    <i class="fas fa-power-off me-1"></i>ONLINE
+                                </button>
+                                <div class="status-indicator mt-2">
+                                    <i class="fas fa-circle me-1"></i>Active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayOrders">12</div>
+                            <div class="stat-label">Today's Orders</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayRevenue">540</div>
+                            <div class="stat-label">Revenue (SAR)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgPrepTime">18</div>
+                            <div class="stat-label">Avg Prep Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="rating">4.7</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <!-- New Order Notification -->
+                    <div id="newOrderNotification" class="order-notification" style="display: none;" onclick="viewOrderDetails()">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="fas fa-bell me-2"></i>New Order Received!
+                                    <span class="notification-sound" id="notificationCount">1</span>
+                                </h5>
+                                <p class="mb-0" id="notificationDetails">Order #ORD123 - 85 SAR - High Priority</p>
+                            </div>
+                            <div>
+                                <i class="fas fa-chevron-right fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kitchen Status -->
+                    <div class="kitchen-status">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-utensils me-2"></i>Kitchen Status</h5>
+                            <span class="badge bg-success">2 orders in preparation</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Current Prep Time</label>
+                                <div class="prep-time-slider">
+                                    <input type="range" class="form-range" id="prepTimeSlider" 
+                                           min="10" max="60" value="20" onchange="updatePrepTime(this.value)">
+                                    <div class="d-flex justify-content-between">
+                                        <small>10 min</small>
+                                        <small id="currentPrepTime">20 min</small>
+                                        <small>60 min</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Kitchen Capacity</label>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 40%">
+                                        4/10 orders
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Orders -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-list me-2"></i>Active Orders</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="simulateNewOrder()">
+                            <i class="fas fa-plus me-1"></i>Simulate New Order
+                        </button>
+                    </div>
+
+                    <div id="activeOrders">
+                        <!-- Active orders will be displayed here -->
+                    </div>
+
+                    <!-- Order Details Modal -->
+                    <div id="orderDetailsModal" style="display: none;">
+                        <div class="order-card">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Order Details</h5>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="closeOrderDetails()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="orderDetailsContent">
+                                <!-- Order details will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Integration Info -->
+            <div class="col-12 col-xl-4">
+                <div class="unified-card">
+                    <h5><i class="fas fa-link me-2"></i>Platform Integration</h5>
+                    <p class="text-muted">This merchant app connects to your centralized platform</p>
+                    
+                    <div class="mb-4">
+                        <h6><i class="fas fa-bell me-1"></i>Real-time Notifications</h6>
+                        <div class="bg-light rounded p-3">
+                            <small class="text-muted">
+                                Orders are pushed instantly from customer apps through your platform's notification system
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-motorcycle me-1"></i>Driver Dispatch Integration</h6>
+                        <div class="bg-light rounded p-3">
+                            <small class="text-muted">
+                                When merchant accepts order, your dispatch optimizer automatically finds the best driver
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-chart-line me-1"></i>Analytics Integration</h6>
+                        <div class="bg-light rounded p-3">
+                            <small class="text-muted">
+                                Order data, prep times, and performance metrics sync with your admin dashboard
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-cog me-1"></i>API Endpoints</h6>
+                        <div class="bg-dark text-light rounded p-3 small">
+                            <div class="mb-2"><code>GET /api/orders</code> - Get pending orders</div>
+                            <div class="mb-2"><code>PUT /api/orders/{id}/status</code> - Update status</div>
+                            <div class="mb-2"><code>POST /api/orders/{id}/accept</code> - Accept order</div>
+                            <div><code>WebSocket</code> - Real-time order notifications</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6><i class="fas fa-mobile-alt me-1"></i>Cross-Platform Sync</h6>
+                        <div class="bg-light rounded p-3">
+                            <small class="text-muted">
+                                Status updates sync across customer apps, driver apps, and admin dashboard in real-time
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let orderAPI;
+        let isOnline = true;
+        let activeOrders = [];
+        let pendingNotifications = [];
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize APIs
+                orderAPI = new OrderAPI();
+                await orderAPI.initialize();
+
+                // Load initial orders
+                await loadActiveOrders();
+                
+                // Start real-time updates
+                startRealTimeUpdates();
+                
+                // Update stats periodically
+                updateDailyStats();
+                
+                console.log('Merchant app initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize merchant app:', error);
+            }
+        });
+
+        async function loadActiveOrders() {
+            try {
+                // Get orders for this merchant
+                const response = await orderAPI.getOrders({ merchantId: 'merchant_456' });
+                activeOrders = response.items.filter(order => 
+                    ['pending', 'confirmed', 'preparing', 'ready'].includes(order.status)
+                );
+                
+                renderActiveOrders();
+            } catch (error) {
+                console.error('Error loading active orders:', error);
+            }
+        }
+
+        function renderActiveOrders() {
+            const container = document.getElementById('activeOrders');
+            
+            if (activeOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-coffee fa-3x mb-3"></i>
+                        <h6>No active orders</h6>
+                        <p>Waiting for new orders...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = activeOrders.map(order => `
+                <div class="order-card priority-${order.priority}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">Order #${order.orderId}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>${formatTime(order.createdAt)} • 
+                                <i class="fas fa-user me-1"></i>${order.customerId}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-${getPriorityColor(order.priority)}">${order.priority}</span>
+                            <br><strong>${order.totalAmount} SAR</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Items:</strong>
+                        <ul class="list-unstyled mb-0 mt-1">
+                            ${order.items.map(item => `
+                                <li class="small">• ${item.quantity}x ${item.name} (${item.price} SAR)</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="order-timeline">
+                            ${getOrderTimeline(order.status)}
+                        </div>
+                    </div>
+
+                    <div class="order-actions">
+                        ${getOrderActions(order)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getOrderTimeline(currentStatus) {
+            const steps = [
+                { key: 'pending', label: 'Order Received' },
+                { key: 'confirmed', label: 'Order Confirmed' },
+                { key: 'preparing', label: 'Preparing' },
+                { key: 'ready', label: 'Ready for Pickup' }
+            ];
+
+            const statusOrder = ['pending', 'confirmed', 'preparing', 'ready'];
+            const currentIndex = statusOrder.indexOf(currentStatus);
+
+            return steps.map((step, index) => {
+                let statusClass = '';
+                if (index < currentIndex) statusClass = 'completed';
+                else if (index === currentIndex) statusClass = 'active';
+
+                return `
+                    <div class="timeline-step ${statusClass}">
+                        <small><strong>${step.label}</strong></small>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getOrderActions(order) {
+            switch (order.status) {
+                case 'pending':
+                    return `
+                        <button class="action-btn accept-btn" onclick="acceptOrder('${order.orderId}')">
+                            <i class="fas fa-check me-1"></i>Accept Order
+                        </button>
+                        <button class="action-btn reject-btn" onclick="rejectOrder('${order.orderId}')">
+                            <i class="fas fa-times me-1"></i>Reject
+                        </button>
+                    `;
+                case 'confirmed':
+                    return `
+                        <button class="action-btn ready-btn" onclick="startPreparing('${order.orderId}')">
+                            <i class="fas fa-play me-1"></i>Start Preparing
+                        </button>
+                    `;
+                case 'preparing':
+                    return `
+                        <button class="action-btn ready-btn" onclick="markReady('${order.orderId}')">
+                            <i class="fas fa-check me-1"></i>Mark as Ready
+                        </button>
+                    `;
+                case 'ready':
+                    return `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-motorcycle me-1"></i>Waiting for driver pickup
+                        </div>
+                    `;
+                default:
+                    return '';
+            }
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                'urgent': 'danger',
+                'high': 'warning',
+                'normal': 'success'
+            };
+            return colors[priority] || 'secondary';
+        }
+
+        async function acceptOrder(orderId) {
+            try {
+                const prepTime = document.getElementById('prepTimeSlider').value;
+                await orderAPI.updateOrderStatus(orderId, 'confirmed', parseInt(prepTime));
+                
+                // Update local order
+                const order = activeOrders.find(o => o.orderId === orderId);
+                if (order) {
+                    order.status = 'confirmed';
+                    order.estimatedPrepTime = parseInt(prepTime);
+                }
+                
+                renderActiveOrders();
+                showSuccessMessage(`Order ${orderId} accepted! Estimated prep time: ${prepTime} minutes`);
+                
+                // Update stats
+                updateOrderStats(1);
+                
+            } catch (error) {
+                console.error('Error accepting order:', error);
+                alert('Error accepting order: ' + error.message);
+            }
+        }
+
+        async function rejectOrder(orderId) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (!reason) return;
+            
+            try {
+                await orderAPI.updateOrderStatus(orderId, 'cancelled', null, reason);
+                
+                // Remove from active orders
+                activeOrders = activeOrders.filter(o => o.orderId !== orderId);
+                renderActiveOrders();
+                
+                showErrorMessage(`Order ${orderId} rejected: ${reason}`);
+                
+            } catch (error) {
+                console.error('Error rejecting order:', error);
+                alert('Error rejecting order: ' + error.message);
+            }
+        }
+
+        async function startPreparing(orderId) {
+            try {
+                await orderAPI.updateOrderStatus(orderId, 'preparing');
+                
+                // Update local order
+                const order = activeOrders.find(o => o.orderId === orderId);
+                if (order) {
+                    order.status = 'preparing';
+                }
+                
+                renderActiveOrders();
+                showSuccessMessage(`Started preparing order ${orderId}`);
+                
+            } catch (error) {
+                console.error('Error starting preparation:', error);
+                alert('Error starting preparation: ' + error.message);
+            }
+        }
+
+        async function markReady(orderId) {
+            try {
+                await orderAPI.updateOrderStatus(orderId, 'ready');
+                
+                // Update local order
+                const order = activeOrders.find(o => o.orderId === orderId);
+                if (order) {
+                    order.status = 'ready';
+                }
+                
+                renderActiveOrders();
+                showSuccessMessage(`Order ${orderId} marked as ready! Notifying drivers...`);
+                
+            } catch (error) {
+                console.error('Error marking order ready:', error);
+                alert('Error marking order ready: ' + error.message);
+            }
+        }
+
+        function simulateNewOrder() {
+            const orderData = {
+                orderId: 'ORD' + Date.now(),
+                customerId: 'customer_' + Math.floor(Math.random() * 1000),
+                merchantId: 'merchant_456',
+                items: [
+                    { itemId: 'item1', name: 'Chicken Shawarma', price: 25, quantity: 2 },
+                    { itemId: 'item2', name: 'French Fries', price: 12, quantity: 1 },
+                    { itemId: 'item3', name: 'Soft Drink', price: 8, quantity: 2 }
+                ],
+                totalAmount: Math.floor(Math.random() * 100) + 50,
+                deliveryFee: 15,
+                status: 'pending',
+                priority: ['normal', 'high', 'urgent'][Math.floor(Math.random() * 3)],
+                paymentMethod: 'card',
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add to active orders
+            activeOrders.unshift(orderData);
+            renderActiveOrders();
+            
+            // Show notification
+            showNewOrderNotification(orderData);
+        }
+
+        function showNewOrderNotification(order) {
+            const notification = document.getElementById('newOrderNotification');
+            const details = document.getElementById('notificationDetails');
+            const count = document.getElementById('notificationCount');
+            
+            details.textContent = `Order #${order.orderId} - ${order.totalAmount} SAR - ${order.priority} Priority`;
+            count.textContent = '1';
+            notification.style.display = 'block';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 10000);
+            
+            // Play notification sound (in real app)
+            console.log('🔔 New order notification sound would play here');
+        }
+
+        function viewOrderDetails() {
+            document.getElementById('newOrderNotification').style.display = 'none';
+            // In real app, would show detailed order modal
+            alert('Order details view - would show complete order information');
+        }
+
+        function closeOrderDetails() {
+            document.getElementById('orderDetailsModal').style.display = 'none';
+        }
+
+        function toggleOnlineStatus() {
+            isOnline = !isOnline;
+            const toggle = document.getElementById('onlineToggle');
+            
+            if (isOnline) {
+                toggle.textContent = 'ONLINE';
+                toggle.classList.remove('offline');
+                toggle.innerHTML = '<i class="fas fa-power-off me-1"></i>ONLINE';
+            } else {
+                toggle.textContent = 'OFFLINE';
+                toggle.classList.add('offline');
+                toggle.innerHTML = '<i class="fas fa-power-off me-1"></i>OFFLINE';
+            }
+            
+            showSuccessMessage(`Restaurant is now ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+        }
+
+        function updatePrepTime(value) {
+            document.getElementById('currentPrepTime').textContent = value + ' min';
+        }
+
+        function startRealTimeUpdates() {
+            // Simulate real-time order updates
+            setInterval(() => {
+                // Randomly simulate new orders
+                if (Math.random() < 0.1 && isOnline) { // 10% chance every 10 seconds
+                    simulateNewOrder();
+                }
+                
+                // Update kitchen capacity
+                const capacity = Math.floor(Math.random() * 8) + 2; // 2-10 orders
+                const capacityBar = document.querySelector('.progress-bar');
+                capacityBar.style.width = (capacity * 10) + '%';
+                capacityBar.textContent = `${capacity}/10 orders`;
+                
+            }, 10000); // Every 10 seconds
+        }
+
+        function updateDailyStats() {
+            setInterval(() => {
+                // Simulate incrementing stats
+                const todayOrders = document.getElementById('todayOrders');
+                const currentOrders = parseInt(todayOrders.textContent);
+                if (Math.random() < 0.3) { // 30% chance to increment
+                    todayOrders.textContent = currentOrders + 1;
+                    updateOrderStats(1);
+                }
+                
+                // Update revenue
+                const revenue = document.getElementById('todayRevenue');
+                const currentRevenue = parseInt(revenue.textContent);
+                if (Math.random() < 0.3) {
+                    revenue.textContent = currentRevenue + Math.floor(Math.random() * 50) + 25;
+                }
+                
+                // Update average prep time
+                const avgPrepTime = document.getElementById('avgPrepTime');
+                const times = [15, 16, 17, 18, 19, 20, 21, 22];
+                avgPrepTime.textContent = times[Math.floor(Math.random() * times.length)];
+                
+            }, 15000); // Every 15 seconds
+        }
+
+        function updateOrderStats(increment) {
+            const todayRevenue = document.getElementById('todayRevenue');
+            const currentRevenue = parseInt(todayRevenue.textContent);
+            const orderValue = Math.floor(Math.random() * 100) + 30;
+            todayRevenue.textContent = currentRevenue + orderValue;
+        }
+
+        function showSuccessMessage(message) {
+            // Create temporary success notification
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function showErrorMessage(message) {
+            // Create temporary error notification
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-danger position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Initialize unified navigation
+        unifiedNavigation.init({
+            currentPage: 'merchant-app',
+            userName: 'Merchant App Demo'
+        });
+    </script>
+</body>
+</html>
