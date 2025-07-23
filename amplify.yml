@@ -1,9 +1,4 @@
 version: 1
-backend:
-  phases:
-    build:
-      commands:
-        - echo "Backend build phase - no backend changes needed"
 frontend:
   phases:
     preBuild:
@@ -15,24 +10,9 @@ frontend:
     build:
       commands:
         - echo "Building application..."
-        - echo "Creating build directory..."
-        - mkdir -p build
-        - echo "Copying src directory..."
-        - cp -r src/* build/
-        - echo "Copying assets directory..."
-        - cp -r assets build/
-        - echo "Copying root HTML files..."
-        - cp index.html build/
-        - cp login-aws-native.html build/
-        - echo "Listing build directory contents..."
-        - ls -la build
-    postBuild:
-      commands:
-        - echo "Post-build verification..."
-        - ls -la build/
-        - echo "Centralized Platform built and ready for deployment!"
+        - npm run build:dist
   artifacts:
-    baseDirectory: build
+    baseDirectory: dist
     files:
       - '**/*'
   cache:
