@@ -11,18 +11,27 @@ frontend:
         nodejs: 18
       commands:
         - echo "Installing dependencies..."
-        - npm ci
+        - npm ci --only=production
     build:
       commands:
-        - echo "Building frontend..."
-        - npm run build:frontend
+        - echo "Building centralized delivery platform..."
+        - echo "Creating build directory..."
+        - mkdir -p build
+        - echo "Copying main files..."
+        - cp index.html build/
+        - cp login-aws-native.html build/
+        - cp -r src build/ 2>/dev/null || true
+        - cp -r assets build/ 2>/dev/null || true
+        - echo "Ensuring all required files are present..."
+        - ls -la build/
         - echo "Build completed successfully"
     postBuild:
       commands:
-        - echo "Post-build phase completed"
-        - echo "Centralized Platform deployed successfully!"
+        - echo "Post-build verification..."
+        - ls -la build/
+        - echo "Centralized Platform built and ready for deployment!"
   artifacts:
-    baseDirectory: dist
+    baseDirectory: build
     files:
       - '**/*'
   cache:

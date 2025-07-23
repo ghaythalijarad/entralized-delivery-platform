@@ -11,9 +11,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "npm run build:frontend",
-    "build:frontend": "mkdir -p dist && cp -r index.html login-aws-native.html src/ assets/ dist/ 2>/dev/null || true",
-    "build:amplify": "npm run build:frontend",
+    "build": "npm run build:amplify",
+    "build:frontend": "mkdir -p build && cp index.html login-aws-native.html build/ && cp -r src/ assets/ build/ 2>/dev/null || true",
+    "build:amplify": "mkdir -p build && cp index.html login-aws-native.html build/ && cp -r src/ assets/ build/ 2>/dev/null || true",
     "deploy": "node deploy.js",
     "deploy:full": "node deploy.js full",
     "deploy:hosting": "amplify publish --yes",

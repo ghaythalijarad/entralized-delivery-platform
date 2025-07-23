@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centralized Delivery Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .platform-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 600px;
+        }
+        .platform-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .btn-platform {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            margin: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+        .btn-platform:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .feature-list {
+            text-align: left;
+            margin: 2rem 0;
+        }
+        .feature-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="platform-card">
+        <div class="platform-icon">
+            <i class="fas fa-shipping-fast"></i>
+        </div>
+        
+        <h1 class="mb-3">Centralized Delivery Management Platform</h1>
+        <p class="text-muted mb-4">
+            Advanced order processing, merchant coordination, and optimized driver dispatch system
+        </p>
+
+        <div class="feature-list">
+            <div class="feature-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Real-time order processing and tracking
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Advanced dispatch optimization algorithms
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Merchant and driver management systems
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Customer and merchant mobile apps
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Performance analytics and reporting
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="src/pages/platform-demo.html" class="btn btn-platform">
+                <i class="fas fa-rocket me-2"></i>Platform Demo
+            </a>
+            <a href="login-aws-native.html" class="btn btn-platform">
+                <i class="fas fa-sign-in-alt me-2"></i>Admin Login
+            </a>
+        </div>
+
+        <div class="mt-4">
+            <h6>Quick Access</h6>
+            <div class="row g-2 mt-2">
+                <div class="col-6 col-md-3">
+                    <a href="src/pages/order-management.html" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-shopping-cart d-block mb-1"></i>Orders
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="src/pages/customer-app.html" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-mobile-alt d-block mb-1"></i>Customer App
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="src/pages/merchant-app.html" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-store d-block mb-1"></i>Merchant App
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="src/pages/dashboard-aws-native.html" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-chart-line d-block mb-1"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-muted small">
+            <p class="mb-0">
+                <i class="fas fa-cloud me-1"></i>Powered by AWS Amplify • 
+                <i class="fas fa-shield-alt me-1"></i>Enterprise Security • 
+                <i class="fas fa-bolt me-1"></i>High Performance
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
