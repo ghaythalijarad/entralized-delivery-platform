@@ -16,24 +16,23 @@ frontend:
       commands:
         - echo "Building application..."
         - echo "Creating build directory..."
-        - mkdir -p public
-        - echo "Copying root files..."
-        - cp index.html public/
-        - cp login-aws-native.html public/
+        - mkdir -p build
+        - echo "Copying src directory..."
+        - cp -r src/* build/
         - echo "Copying assets directory..."
-        - cp -r assets public/
-        - echo "Copying src directory using rsync and excluding index.html..."
-        - rsync -av --exclude 'index.html' src/ public/
-        - echo "Listing public directory contents for verification..."
-        - ls -la public
-        - echo "Build completed"
+        - cp -r assets build/
+        - echo "Copying root HTML files..."
+        - cp index.html build/
+        - cp login-aws-native.html build/
+        - echo "Listing build directory contents..."
+        - ls -la build
     postBuild:
       commands:
         - echo "Post-build verification..."
-        - ls -la public/
+        - ls -la build/
         - echo "Centralized Platform built and ready for deployment!"
   artifacts:
-    baseDirectory: public
+    baseDirectory: build
     files:
       - '**/*'
   cache:
