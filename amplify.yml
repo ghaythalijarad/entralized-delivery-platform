@@ -22,13 +22,10 @@ frontend:
         - cp login-aws-native.html public/
         - echo "Copying assets directory..."
         - cp -r assets public/
-        - echo "Copying src subdirectories..."
-        - cp -r src/css public/
-        - cp -r src/js public/
-        - cp -r src/pages public/
-        - cp -r src/utils public/
+        - echo "Copying src directory using rsync and excluding index.html..."
+        - rsync -av --exclude 'index.html' src/ public/
         - echo "Listing public directory contents for verification..."
-        - ls -la public/
+        - ls -la public
         - echo "Build completed"
     postBuild:
       commands:
