@@ -20,8 +20,11 @@ frontend:
         - echo "Copying main files..."
         - cp index.html build/
         - cp login-aws-native.html build/
-        - cp -r src build/ 2>/dev/null || true
-        - cp -r assets build/ 2>/dev/null || true
+        - echo "Copying src subdirectories..."
+        - cp -r src/pages build/ 2>/dev/null || true
+        - cp -r src/utils build/ 2>/dev/null || true
+        - cp -r src/components build/ 2>/dev/null || true
+        - cp -r src/config build/ 2>/dev/null || true
         - echo "Ensuring all required files are present..."
         - ls -la build/
         - echo "Build completed successfully"
