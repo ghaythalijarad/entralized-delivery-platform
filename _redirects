@@ -1,0 +1,5 @@
+# Redirects for static multi-page app
+# This file tells Amplify NOT to use SPA redirects
+# Each HTML file should be served as-is without fallback to index.html
+
+# No fallback redirects - serve each page directly
