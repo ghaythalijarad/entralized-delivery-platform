@@ -2,12 +2,13 @@ version: 1
 frontend:
   phases:
     preBuild:
-      commands:
-        - npm ci
+      commands: []
     build:
       commands:
-        - npm run build:dist
+        - echo "Skipping build - static files"
   artifacts:
-    baseDirectory: dist
+    baseDirectory: .
     files:
       - '**/*'
+  cache:
+    paths: []
