@@ -14,25 +14,29 @@ frontend:
         - npm ci --only=production
     build:
       commands:
-        - echo "Building centralized delivery platform..."
+        - echo "Building application..."
         - echo "Creating build directory..."
-        - mkdir -p build
-        - echo "Copying main files..."
-        - cp index.html build/
-        - cp login-aws-native.html build/
-        - echo "Copying src directory contents..."
-        - cp -r src/* build/
-        - cp -r assets build/
-        - echo "Listing build directory contents..."
-        - ls -la build/
+        - mkdir -p public
+        - echo "Copying root files..."
+        - cp index.html public/
+        - cp login-aws-native.html public/
+        - echo "Copying assets directory..."
+        - cp -r assets public/
+        - echo "Copying src subdirectories..."
+        - cp -r src/css public/
+        - cp -r src/js public/
+        - cp -r src/pages public/
+        - cp -r src/utils public/
+        - echo "Listing public directory contents for verification..."
+        - ls -la public/
         - echo "Build completed"
     postBuild:
       commands:
         - echo "Post-build verification..."
-        - ls -la build/
+        - ls -la public/
         - echo "Centralized Platform built and ready for deployment!"
   artifacts:
-    baseDirectory: build
+    baseDirectory: public
     files:
       - '**/*'
   cache:
