@@ -28,10 +28,13 @@ class UnifiedNavigation {
             'merchant-management': 'merchants',
             'user-management': 'users',
             'order-management': 'orders',
-            'login-aws-native': 'login'
+            'login-aws-native': 'login',
+            'customer-app': 'customer-app',
+            'merchant-app': 'merchant-app',
+            'platform-demo': 'platform-demo'
         };
         
-        return pageMap[filename] || 'dashboard';
+        return pageMap[filename] || filename;
     }
 
     loadUserInfo() {
@@ -55,7 +58,7 @@ class UnifiedNavigation {
         
         topBar.innerHTML = `
             <div class="topbar-content">
-                <a href="dashboard-aws-native.html" class="topbar-brand">
+                <a href="/dashboard-aws-native.html" class="topbar-brand">
                     <div class="topbar-logo">
                         <i class="fas fa-truck-fast"></i>
                     </div>
@@ -89,7 +92,18 @@ class UnifiedNavigation {
         const navbar = document.getElementById('unified-navbar');
         if (!navbar) return;
 
-        const navigationItems = this.getNavigationItems();
+        const items = [
+            { page: 'dashboard', label: 'Dashboard', icon: 'fas fa-home', href: '/dashboard-aws-native.html' },
+            { page: 'orders', label: 'Orders', icon: 'fas fa-shopping-cart', href: '/pages/order-management.html' },
+            { page: 'platform-demo', label: 'Live Demo', icon: 'fas fa-rocket', href: '/pages/platform-demo.html' },
+            { page: 'customer-app', label: 'Customer App', icon: 'fas fa-mobile-alt', href: '/pages/customer-app.html' },
+            { page: 'merchant-app', label: 'Merchant App', icon: 'fas fa-tablet-alt', href: '/pages/merchant-app.html' },
+            { page: 'drivers', label: 'Drivers', icon: 'fas fa-car', href: '/pages/drivers-management.html' },
+            { page: 'merchants', label: 'Merchants', icon: 'fas fa-store', href: '/pages/merchant-management.html' },
+            { page: 'users', label: 'Users', icon: 'fas fa-users', href: '/pages/user-management.html' }
+        ];
+        
+        const navigationItems = items.map(item => ({ ...item, active: item.page === this.currentPage }));
         const breadcrumb = this.getBreadcrumb();
 
         navbar.innerHTML = `
@@ -109,7 +123,7 @@ class UnifiedNavigation {
                     ${breadcrumb.map((item, index) => `
                         <div class="breadcrumb-item">
                             ${index > 0 ? '<i class="fas fa-chevron-right breadcrumb-separator"></i>' : ''}
-                            ${item.href ? `<a href="${item.href}" class="breadcrumb-link">${item.label}</a>` : `<span>${item.label}</span>`}
+                            ${item.href ? `<a href="${item.href.startsWith('/') ? item.href : '/'+item.href}" class="breadcrumb-link">${item.label}</a>` : `<span>${item.label}</span>`}
                         </div>
                     `).join('')}
                 </div>
@@ -130,64 +144,6 @@ class UnifiedNavigation {
             'login': 'Admin Login'
         };
         return titles[this.currentPage] || 'Delivery Platform';
-    }
-
-    getNavigationItems() {
-        const items = [
-            {
-                page: 'dashboard',
-                label: 'Dashboard',
-                icon: 'fas fa-home',
-                href: 'dashboard-aws-native.html'
-            },
-            {
-                page: 'orders',
-                label: 'Orders',
-                icon: 'fas fa-shopping-cart',
-                href: 'order-management.html'
-            },
-            {
-                page: 'platform-demo',
-                label: 'Live Demo',
-                icon: 'fas fa-rocket',
-                href: 'platform-demo.html'
-            },
-            {
-                page: 'customer-app',
-                label: 'Customer App',
-                icon: 'fas fa-mobile-alt',
-                href: 'customer-app.html'
-            },
-            {
-                page: 'merchant-app',
-                label: 'Merchant App',
-                icon: 'fas fa-tablet-alt',
-                href: 'merchant-app.html'
-            },
-            {
-                page: 'drivers',
-                label: 'Drivers',
-                icon: 'fas fa-car',
-                href: 'drivers-management.html'
-            },
-            {
-                page: 'merchants',
-                label: 'Merchants',
-                icon: 'fas fa-store',
-                href: 'merchant-management.html'
-            },
-            {
-                page: 'users',
-                label: 'Users',
-                icon: 'fas fa-users',
-                href: 'user-management.html'
-            }
-        ];
-
-        return items.map(item => ({
-            ...item,
-            active: item.page === this.currentPage
-        }));
     }
 
     getBreadcrumb() {
@@ -283,12 +239,10 @@ class UnifiedNavigation {
 
     signOut() {
         if (confirm('Are you sure you want to sign out?')) {
-            // Clear auth data
             localStorage.removeItem('aws-native-token');
             localStorage.removeItem('user-info');
-            
-            // Redirect to login
-            window.location.href = 'login-aws-native.html';
+            // Redirect to login at root
+            window.location.href = '/login-aws-native.html';
         }
     }
 
